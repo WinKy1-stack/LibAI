@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Button, Box, Typography } from '@mui/material';
 import { adminTheme } from './config/theme';
-import UserLayout from './components/user/UserLayout';
+import UserLayoutTailwind from './components/user/UserLayoutTailwind';
 import AdminDashboard from './components/admin/AdminDashboard';
 import './App.css';
 
@@ -16,49 +15,33 @@ function App() {
     <ThemeProvider theme={adminTheme}>
       <CssBaseline />
       
-      {/* Toggle buttons */}
-      <Box
-        sx={{
-          position: 'fixed',
-          top: 10,
-          right: 10,
-          zIndex: 9999,
-          display: 'flex',
-          gap: 1,
-          background: 'white',
-          padding: 1,
-          borderRadius: 2,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-        }}
-      >
-        <Button
-          variant={viewMode === 'user' ? 'contained' : 'outlined'}
-          size="small"
+      {/* Toggle buttons với Tailwind */}
+      <div className="fixed top-4 right-4 z-[9999] flex gap-2 bg-white p-2 rounded-lg shadow-lg">
+        <button
           onClick={() => setViewMode('user')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            viewMode === 'user'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
         >
           User View
-        </Button>
-        <Button
-          variant={viewMode === 'admin' ? 'contained' : 'outlined'}
-          size="small"
+        </button>
+        <button
           onClick={() => setViewMode('admin')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            viewMode === 'admin'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
         >
           Admin View
-        </Button>
-      </Box>
+        </button>
+      </div>
 
       {/* Render based on view mode */}
       {viewMode === 'user' ? (
-        <UserLayout>
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Typography variant="h4" gutterBottom>
-              Giao diện User
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Sử dụng <strong>Heroicons</strong> cho icons
-            </Typography>
-          </Box>
-        </UserLayout>
+        <UserLayoutTailwind />
       ) : (
         <AdminDashboard />
       )}
