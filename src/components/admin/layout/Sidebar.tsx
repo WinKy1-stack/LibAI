@@ -5,6 +5,7 @@ import {
   BookOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const { Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -17,24 +18,29 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
   const screens = useBreakpoint();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
     { 
-      key: "dashboard", 
+      key: "/admin", 
       icon: <DashboardOutlined />, 
       label: "Dashboard" 
     },
     { 
-      key: "users", 
+      key: "/admin/user", 
       icon: <TeamOutlined />, 
       label: "Users" 
     },
     { 
-      key: "books", 
+      key: "/admin/books", 
       icon: <BookOutlined />, 
       label: "Books" 
     },
   ];
+
+  const selectedKey =
+    menuItems.find(({ key }) => typeof key === 'string' && location.pathname.startsWith(key))?.key ?? "/admin";
 
   return (
     <Sider
@@ -68,10 +74,17 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
         {collapsed ? "📚" : "LOGO"}
       </div>
       
-      {/* Menu */}
       <Menu
         mode="inline"
-        defaultSelectedKeys={["dashboard"]}
+        selectedKeys={[selectedKey]}
+        onClick={({ key }) => {
+          if (typeof key === 'string') {
+            navigate(key);
+            if (!screens.md) {
+              onCollapse(true);
+            }
+          }
+        }}
         style={{ 
           border: "none",
           background: "transparent",

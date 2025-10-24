@@ -4,6 +4,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { adminTheme } from './config/theme';
 import UserLayoutTailwind from './components/user/UserLayoutTailwind';
 import DashboardPage from './pages/admin/DashboardPage';
+import UserManagementPage from './pages/admin/UserManagementPage';
+import BooksManagementPage from './pages/admin/BooksManagementPage';
 import './App.css';
 
 function App() {
@@ -39,6 +41,8 @@ function App() {
       <Routes>
         <Route path="/" element={<UserLayoutTailwind />} />
         <Route path="/admin" element={<DashboardPage />} />
+        <Route path="/admin/user" element={<UserManagementPage />} />
+        <Route path="/admin/books" element={<BooksManagementPage />} />
       </Routes>
     </ThemeProvider>
   );
