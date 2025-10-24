@@ -39,8 +39,20 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
     },
   ];
 
-  const selectedKey =
-    menuItems.find(({ key }) => typeof key === 'string' && location.pathname.startsWith(key))?.key ?? "/admin";
+  const selectedKey = (() => {
+    const stringKeys = menuItems
+      .map(({ key }) => key)
+      .filter((key): key is string => typeof key === "string");
+
+    const exactMatch = stringKeys.find((key) => location.pathname === key);
+    if (exactMatch) return exactMatch;
+
+    const partialMatch = stringKeys
+      .filter((key) => location.pathname.startsWith(`${key}/`))
+      .sort((a, b) => b.length - a.length)[0];
+
+    return partialMatch ?? "/admin";
+  })();
 
   return (
     <Sider

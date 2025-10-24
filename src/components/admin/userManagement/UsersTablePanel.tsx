@@ -15,7 +15,9 @@ import {
   Grid,
 } from "antd";
 import {
+  BellOutlined,
   EnvironmentOutlined,
+  InfoCircleOutlined,
   MailOutlined,
   PhoneOutlined,
   TeamOutlined,
@@ -58,34 +60,34 @@ export function UsersTablePanel({
         dataIndex: "name",
         key: "user",
         render: (_, record) => (
-          <Space direction="vertical" size={0}>
-            <Space align="center">
-              <Avatar src={record.avatar} icon={!record.avatar ? <TeamOutlined /> : undefined} size={36}>
-                {record.name.charAt(0)}
-              </Avatar>
-              <div>
-                <Text strong>{record.name}</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Tag color={token.colorPrimary} style={{ color: token.colorWhite, marginInlineEnd: 0 }}>
-                    {roleLabels[record.role]}
-                  </Tag>
-                  <Text type="secondary">{record.id}</Text>
-                </div>
-              </div>
+          <Space align="center" size={12}>
+            <Avatar src={record.avatar} icon={!record.avatar ? <TeamOutlined /> : undefined} size={36}>
+              {record.name.charAt(0)}
+            </Avatar>
+            <Space direction="vertical" size={2}>
+              <Text strong ellipsis={{ tooltip: record.name }}>{record.name}</Text>
+              <Space size={8}>
+                <Tag color={token.colorPrimary} style={{ color: token.colorWhite, marginInlineEnd: 0 }}>
+                  {roleLabels[record.role]}
+                </Tag>
+                <Text type="secondary">{record.id}</Text>
+              </Space>
             </Space>
           </Space>
         ),
         width: 280,
+        ellipsis: true,
       },
       {
         title: "Thông tin liên hệ",
         key: "contact",
         responsive: ["lg"],
+        ellipsis: true,
         render: (_, record) => (
           <Space direction="vertical" size={4}>
             <Space size={6}>
               <MailOutlined />
-              <Text>{record.email}</Text>
+              <Text ellipsis={{ tooltip: record.email }}>{record.email}</Text>
             </Space>
             <Space size={6}>
               <PhoneOutlined />
@@ -104,14 +106,17 @@ export function UsersTablePanel({
         dataIndex: "department",
         key: "department",
         responsive: ["md"],
+        ellipsis: { showTitle: true },
+        width: 150,
       },
       {
         title: "Hiệu suất",
         key: "performance",
+        responsive: ["xl"],
         render: (_, record) => (
-          <Space direction="vertical" size={2}>
-            <Text strong>{record.totalBorrowed} lượt mượn</Text>
-            <Text type="secondary">{record.overdueBooks} sách quá hạn</Text>
+          <Space direction="vertical" size={4} style={{ width: "100%" }}>
+            <Text strong style={{ whiteSpace: "nowrap" }}>{record.totalBorrowed} lượt mượn</Text>
+            <Text type="secondary" style={{ whiteSpace: "nowrap" }}>{record.overdueBooks} sách quá hạn</Text>
             <Progress
               percent={record.completionRate}
               size="small"
@@ -119,7 +124,7 @@ export function UsersTablePanel({
             />
           </Space>
         ),
-        width: 200,
+        width: 180,
       },
       {
         title: "Trạng thái",
@@ -138,10 +143,11 @@ export function UsersTablePanel({
       {
         title: "Hoạt động gần nhất",
         key: "lastLogin",
+        responsive: ["xxl"],
         render: (_, record) => (
-          <Space direction="vertical" size={2}>
-            <Text>{formatDate(record.lastLogin)}</Text>
-            <Text type="secondary">Gia nhập: {formatDate(record.joinDate)}</Text>
+          <Space direction="vertical" size={4}>
+            <Text style={{ whiteSpace: "nowrap" }}>{formatDate(record.lastLogin)}</Text>
+            <Text type="secondary" style={{ whiteSpace: "nowrap" }}>Gia nhập: {formatDate(record.joinDate)}</Text>
           </Space>
         ),
         width: 180,
@@ -149,31 +155,54 @@ export function UsersTablePanel({
       {
         title: "",
         key: "actions",
-        fixed: screens.lg ? undefined : "right",
+        fixed: "right",
         render: () => (
-          <Space size="small">
-            <Button type="link">Chi tiết</Button>
-            <Button type="link">Nhắc nhở</Button>
+          <Space size={4}>
+            {screens.md ? (
+              <>
+                <Button type="link" size="small" icon={<InfoCircleOutlined />}>
+                  Chi tiết
+                </Button>
+                <Button type="link" size="small" icon={<BellOutlined />}>
+                  Nhắc nhở
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button type="link" size="small" icon={<InfoCircleOutlined />} />
+                <Button type="link" size="small" icon={<BellOutlined />} />
+              </>
+            )}
           </Space>
         ),
-        width: 120,
+        width: screens.md ? 140 : 80,
       },
     ],
-    [token.colorPrimary, token.colorWhite, screens.lg],
+    [token.colorPrimary, token.colorWhite, screens.md],
   );
 
   return (
     <Card
-      title={
+      variant="borderless"
+      style={{ borderRadius: 16 }}
+      styles={{ body: { padding: 0 } }}
+    >
+      <div style={{ 
+        padding: '24px 24px 16px', 
+        display: 'flex', 
+        flexDirection: screens.lg ? 'row' : 'column',
+        justifyContent: 'space-between',
+        alignItems: screens.lg ? 'center' : 'flex-start',
+        gap: 16
+      }}>
         <Space direction="vertical" size={0}>
           <Text strong style={{ fontSize: 18 }}>
             Danh sách người dùng
           </Text>
           <Text type="secondary">Kết quả phù hợp: {data.length}</Text>
         </Space>
-      }
-      extra={
-        <Space wrap>
+        
+        <Space wrap style={{ width: screens.lg ? 'auto' : '100%' }}>
           <Select
             value={statusFilter}
             onChange={onStatusChange}
@@ -181,7 +210,7 @@ export function UsersTablePanel({
               { value: "all", label: "Tất cả trạng thái" },
               ...Object.entries(statusLabels).map(([value, label]) => ({ value, label })),
             ]}
-            style={{ minWidth: 160 }}
+            style={{ minWidth: 160, flex: screens.lg ? 'none' : 1 }}
             size={screens.md ? "large" : "middle"}
           />
           <Select
@@ -191,7 +220,7 @@ export function UsersTablePanel({
               { value: "all", label: "Tất cả vai trò" },
               ...Object.entries(roleLabels).map(([value, label]) => ({ value, label })),
             ]}
-            style={{ minWidth: 150 }}
+            style={{ minWidth: 150, flex: screens.lg ? 'none' : 1 }}
             size={screens.md ? "large" : "middle"}
           />
           <Search
@@ -200,15 +229,11 @@ export function UsersTablePanel({
             onSearch={onSearchSubmit}
             onChange={(event) => onSearchChange(event.target.value)}
             value={searchValue}
-            style={{ width: screens.sm ? 240 : "100%" }}
+            style={{ width: screens.sm ? 240 : '100%' }}
             size={screens.md ? "large" : "middle"}
           />
         </Space>
-      }
-      variant="borderless"
-      style={{ borderRadius: 16 }}
-      styles={{ body: { padding: 0 } }}
-    >
+      </div>
       <Table
         columns={columns}
         dataSource={data}
@@ -218,7 +243,7 @@ export function UsersTablePanel({
           position: ["bottomRight"],
         }}
         rowKey="id"
-        scroll={{ x: 960 }}
+        scroll={{ x: 1200 }}
         style={{ borderRadius: 16 }}
       />
     </Card>
