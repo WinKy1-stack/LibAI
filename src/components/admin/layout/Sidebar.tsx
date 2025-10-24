@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Layout, Menu, Button, Grid } from 'antd';
 import {
   DashboardOutlined,
@@ -39,7 +40,7 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
     },
   ];
 
-  const selectedKey = (() => {
+  const selectedKey = useMemo(() => {
     const stringKeys = menuItems
       .map(({ key }) => key)
       .filter((key): key is string => typeof key === "string");
@@ -52,7 +53,7 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
       .sort((a, b) => b.length - a.length)[0];
 
     return partialMatch ?? "/admin";
-  })();
+  }, [location.pathname]);
 
   return (
     <Sider

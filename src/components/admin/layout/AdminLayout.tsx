@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useCallback, type ReactNode } from "react";
 import { ConfigProvider, theme as antdTheme, Layout, Grid } from "antd";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -13,25 +13,34 @@ const readCssVar = (name: string, fallback: string): string => {
   return r ? String(r).trim() : fallback;
 };
 
-function useDesignTokens(mode: "light" | "dark") {
-  const [tokens, setTokens] = useState({});
+// Cache tokens to avoid expensive getComputedStyle calls
+const cachedTokens = {
+  light: null as Record<string, unknown> | null,
+  dark: null as Record<string, unknown> | null,
+};
 
-  useEffect(() => {
-    const primary = readCssVar("--primary", "#ff4757");
-    const success = readCssVar("--success", "#52c41a");
-    const warning = readCssVar("--warning", "#faad14");
-    const error = readCssVar("--error", "#ff4d4f");
-    const radius = Number(readCssVar("--radius", "12"));
+function getDesignTokens(mode: "light" | "dark") {
+  // Return cached if available
+  if (cachedTokens[mode]) {
+    return cachedTokens[mode]!;
+  }
 
-    setTokens({
-      colorPrimary: primary,
-      colorSuccess: success,
-      colorWarning: warning,
-      colorError: error,
-      borderRadius: radius,
-    });
-  }, [mode]);
+  const primary = readCssVar("--primary", "#ff4757");
+  const success = readCssVar("--success", "#52c41a");
+  const warning = readCssVar("--warning", "#faad14");
+  const error = readCssVar("--error", "#ff4d4f");
+  const radius = Number(readCssVar("--radius", "12"));
 
+  const tokens = {
+    colorPrimary: primary,
+    colorSuccess: success,
+    colorWarning: warning,
+    colorError: error,
+    borderRadius: radius,
+  };
+
+  // Cache the result
+  cachedTokens[mode] = tokens;
   return tokens;
 }
 
@@ -43,7 +52,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const screens = useBreakpoint();
   const [collapsed, setCollapsed] = useState(!screens.md); // Auto collapse on mobile
   const [mode, setMode] = useState<"light" | "dark">("light");
-  const tokens = useDesignTokens(mode);
+  const tokens = getDesignTokens(mode);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", mode);
@@ -56,30 +65,57 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, [screens.md]);
 
-  const algorithm = mode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm;
+  const algorithm = useMemo(
+    () => (mode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm),
+    [mode]
+  );
+
+  const themeConfig = useMemo(
+    () => ({ algorithm, token: tokens }),
+    [algorithm, tokens]
+  );
+
+  const layoutStyle = useMemo(
+    () => ({ minHeight: "100vh", height: "100vh" }),
+    []
+  );
+
+  const innerLayoutStyle = useMemo(
+    () => ({ height: "100vh", display: "flex", flexDirection: "column" as const }),
+    []
+  );
+
+  const contentStyle = useMemo(
+    () => ({
+      padding: screens.md ? 24 : 16,
+      flex: 1,
+      overflowY: "auto" as const,
+      width: "100%",
+      background: mode === "dark" ? "#141414" : "#f5f5f5",
+    }),
+    [screens.md, mode]
+  );
+
+  const handleToggle = useCallback(() => {
+    setCollapsed((c) => !c);
+  }, []);
 
   return (
-    <ConfigProvider theme={{ algorithm, token: tokens }}>
-      <Layout style={{ minHeight: "100vh", height: "100vh" }}>
+    <ConfigProvider theme={themeConfig}>
+      <Layout style={layoutStyle}>
         {/* Sidebar */}
         <Sidebar collapsed={collapsed} onCollapse={setCollapsed} mode={mode} />
         
         {/* Main Content Area */}
-        <Layout style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+        <Layout style={innerLayoutStyle}>
           <TopBar 
             collapsed={collapsed} 
-            onToggle={() => setCollapsed((c) => !c)} 
+            onToggle={handleToggle} 
             mode={mode} 
             setMode={setMode} 
           />
 
-          <Content style={{ 
-            padding: screens.md ? 24 : 16, 
-            flex: 1,
-            overflowY: "auto",
-            width: "100%",
-            background: mode === "dark" ? "#141414" : "#f5f5f5",
-          }}>
+          <Content style={contentStyle}>
             {children}
           </Content>
         </Layout>
