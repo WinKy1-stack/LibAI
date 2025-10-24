@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Layout, Menu, Button, Grid } from 'antd';
 import {
   DashboardOutlined,
@@ -5,6 +6,7 @@ import {
   BookOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const { Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -17,24 +19,41 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
   const screens = useBreakpoint();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
     { 
-      key: "dashboard", 
+      key: "/admin", 
       icon: <DashboardOutlined />, 
       label: "Dashboard" 
     },
     { 
-      key: "users", 
+      key: "/admin/user", 
       icon: <TeamOutlined />, 
       label: "Users" 
     },
     { 
-      key: "books", 
+      key: "/admin/books", 
       icon: <BookOutlined />, 
       label: "Books" 
     },
   ];
+
+  const selectedKey = useMemo(() => {
+    const stringKeys = menuItems
+      .map(({ key }) => key)
+      .filter((key): key is string => typeof key === "string");
+
+    const exactMatch = stringKeys.find((key) => location.pathname === key);
+    if (exactMatch) return exactMatch;
+
+    const partialMatch = stringKeys
+      .filter((key) => location.pathname.startsWith(`${key}/`))
+      .sort((a, b) => b.length - a.length)[0];
+
+    return partialMatch ?? "/admin";
+  }, [location.pathname]);
 
   return (
     <Sider
@@ -68,10 +87,17 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
         {collapsed ? "📚" : "LOGO"}
       </div>
       
-      {/* Menu */}
       <Menu
         mode="inline"
-        defaultSelectedKeys={["dashboard"]}
+        selectedKeys={[selectedKey]}
+        onClick={({ key }) => {
+          if (typeof key === 'string') {
+            navigate(key);
+            if (!screens.md) {
+              onCollapse(true);
+            }
+          }
+        }}
         style={{ 
           border: "none",
           background: "transparent",

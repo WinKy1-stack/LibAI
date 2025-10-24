@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useCallback, type ReactNode } from "react";
 import { ConfigProvider, theme as antdTheme, Layout, Grid } from "antd";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -7,32 +7,14 @@ import "../color.css";
 const { Content } = Layout;
 const { useBreakpoint } = Grid;
 
-// ------- Helpers to read CSS variables from color.css ---------
-const readCssVar = (name: string, fallback: string): string => {
-  const r = getComputedStyle(document.documentElement).getPropertyValue(name);
-  return r ? String(r).trim() : fallback;
-};
-
-function useDesignTokens(mode: "light" | "dark") {
-  const [tokens, setTokens] = useState({});
-
-  useEffect(() => {
-    const primary = readCssVar("--primary", "#ff4757");
-    const success = readCssVar("--success", "#52c41a");
-    const warning = readCssVar("--warning", "#faad14");
-    const error = readCssVar("--error", "#ff4d4f");
-    const radius = Number(readCssVar("--radius", "12"));
-
-    setTokens({
-      colorPrimary: primary,
-      colorSuccess: success,
-      colorWarning: warning,
-      colorError: error,
-      borderRadius: radius,
-    });
-  }, [mode]);
-
-  return tokens;
+// Design tokens - pure Ant Design, no CSS variables
+const designTokens = {
+  colorPrimary: "#ff4757",
+  colorSuccess: "#52c41a",
+  colorWarning: "#faad14",
+  colorError: "#ff4d4f",
+  borderRadius: 12,
+  fontFamily: "'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
 }
 
 interface AdminLayoutProps {
@@ -42,10 +24,16 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const screens = useBreakpoint();
   const [collapsed, setCollapsed] = useState(!screens.md); // Auto collapse on mobile
-  const [mode, setMode] = useState<"light" | "dark">("light");
-  const tokens = useDesignTokens(mode);
+  
+  // Load theme from localStorage or default to light
+  const [mode, setMode] = useState<"light" | "dark">(() => {
+    const savedTheme = localStorage.getItem("admin-theme");
+    return (savedTheme === "dark" || savedTheme === "light") ? savedTheme : "light";
+  });
 
+  // Save theme to localStorage whenever it changes
   useEffect(() => {
+    localStorage.setItem("admin-theme", mode);
     document.documentElement.setAttribute("data-theme", mode);
   }, [mode]);
 
@@ -56,30 +44,55 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, [screens.md]);
 
-  const algorithm = mode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm;
+  const themeConfig = useMemo(
+    () => ({
+      algorithm: mode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+      token: designTokens,
+    }),
+    [mode]
+  );
+
+  const layoutStyle = useMemo(
+    () => ({ minHeight: "100vh", height: "100vh" }),
+    []
+  );
+
+  const innerLayoutStyle = useMemo(
+    () => ({ height: "100vh", display: "flex", flexDirection: "column" as const }),
+    []
+  );
+
+  const contentStyle = useMemo(
+    () => ({
+      padding: screens.md ? 24 : 16,
+      flex: 1,
+      overflowY: "auto" as const,
+      width: "100%",
+      background: mode === "dark" ? "#141414" : "#f5f5f5",
+    }),
+    [screens.md, mode]
+  );
+
+  const handleToggle = useCallback(() => {
+    setCollapsed((c) => !c);
+  }, []);
 
   return (
-    <ConfigProvider theme={{ algorithm, token: tokens }}>
-      <Layout style={{ minHeight: "100vh", height: "100vh" }}>
+    <ConfigProvider theme={themeConfig}>
+      <Layout style={layoutStyle}>
         {/* Sidebar */}
         <Sidebar collapsed={collapsed} onCollapse={setCollapsed} mode={mode} />
         
         {/* Main Content Area */}
-        <Layout style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+        <Layout style={innerLayoutStyle}>
           <TopBar 
             collapsed={collapsed} 
-            onToggle={() => setCollapsed((c) => !c)} 
+            onToggle={handleToggle} 
             mode={mode} 
             setMode={setMode} 
           />
 
-          <Content style={{ 
-            padding: screens.md ? 24 : 16, 
-            flex: 1,
-            overflowY: "auto",
-            width: "100%",
-            background: mode === "dark" ? "#141414" : "#f5f5f5",
-          }}>
+          <Content style={contentStyle}>
             {children}
           </Content>
         </Layout>

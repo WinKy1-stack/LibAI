@@ -1,4 +1,4 @@
-import { Card, Space, Typography, Row, Col, Grid, Select } from "antd";
+import { Card, Space, Typography, Row, Col, Grid, Select, theme } from "antd";
 import {
   UserOutlined,
   BookOutlined,
@@ -17,6 +17,7 @@ import { mockOverdueBooks } from "../../data/mockOverdueBooks";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
+const { useToken } = theme;
 
 const dateOptions: Intl.DateTimeFormatOptions = {
   weekday: "long",
@@ -27,6 +28,7 @@ const dateOptions: Intl.DateTimeFormatOptions = {
 
 export default function DashboardPage() {
   const screens = useBreakpoint();
+  const { token } = useToken();
   const [timeRange, setTimeRange] = useState("this-week");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 4;
@@ -70,7 +72,7 @@ export default function DashboardPage() {
                     }}
                   >
                     Xin chào,{" "}
-                    <span style={{ color: "var(--primary)" }}>Thanh Toàn!</span>
+                    <span style={{ color: token.colorPrimary }}>Thanh Toàn!</span>
                   </Title>
                   <Text style={{ fontSize: screens.xs ? 14 : 16 }}>
                     {currentDateString}
