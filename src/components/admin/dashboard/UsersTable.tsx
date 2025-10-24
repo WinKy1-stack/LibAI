@@ -1,8 +1,9 @@
 import type { ColumnsType } from "antd/es/table";
-import { Card, Table, Button, Space, Avatar, Typography } from "antd";
+import { Card, Table, Button, Space, Avatar, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
+const { useToken } = theme;
 
 type UserRecord = {
   key: number;
@@ -20,6 +21,8 @@ const users: UserRecord[] = [
 ];
 
 export default function UsersTable() {
+  const { token } = useToken();
+
   const columns: ColumnsType<UserRecord> = [
     { 
       title: "User ID", 
@@ -91,7 +94,7 @@ export default function UsersTable() {
         scroll={{ x: 480 }}
       />
       <div style={{ textAlign: "center", marginTop: 16 }}>
-        <Button type="link" style={{ color: "var(--primary)" }}>See All</Button>
+        <Button type="link" style={{ color: token.colorPrimary }}>See All</Button>
       </div>
     </Card>
   );

@@ -53,7 +53,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
         {/* Right: icon */}
         <div
           style={{
-            background: "var(--primary, #f25c62)",
+            background: token.colorPrimary,
             borderRadius: "50%",
             width: 44,
             height: 44,

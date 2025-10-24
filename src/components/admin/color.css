@@ -1,26 +1,6 @@
 /* Import Google Font - Quicksand */
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
 
-:root {
-  --primary: #ff4757;            /* red/pink primary like design */
-  --success: #52c41a;
-  --warning: #faad14;
-  --error: #ff4d4f;
-  --radius: 12;                  /* global border radius */
-  --brand-strong: #ff4757;       /* accent text color */
-  --cover-bg: #f2f3f5;           /* placeholder bg for book covers */
-  --stat-icon-bg: #ffe5e8;       /* light pink background for stat icons */
-  --sidebar-bg: #ffffff;         /* sidebar background */
-}
-
-/* Dark mode overrides */
-:root[data-theme="dark"] {
-  --cover-bg: #2b2f36;
-  --brand-strong: #ff6b7a;
-  --stat-icon-bg: rgba(255, 71, 87, 0.15);
-  --sidebar-bg: #001529;
-}
-
 /* Full screen layout - remove all margins and paddings */
 * {
   box-sizing: border-box;
@@ -52,10 +32,7 @@
   height: 100%;
 }
 
-/* Remove dark background from sidebar in light mode */
-.ant-layout-sider-light {
-  background: var(--sidebar-bg) !important;
-}
+/* Sidebar background handled by Ant Design theme */
 
 /* Ensure Header has no extra padding */
 .ant-layout-header {
@@ -119,7 +96,7 @@
 .ant-input-focused {
   outline: none !important;
   box-shadow: 0 0 0 2px rgba(255, 71, 87, 0.1) !important;
-  border-color: var(--primary) !important;
+  border-color: #ff4757 !important;
 }
 
 /* Remove outline from switch */
