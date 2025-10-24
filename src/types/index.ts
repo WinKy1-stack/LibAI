@@ -10,6 +10,22 @@ export interface User {
   updatedAt?: Date;
 }
 
+// Overdue Book types
+export type OverdueStatus = "returned" | "returned-late" | "delaying";
+
+export interface OverdueBook {
+  key: number;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  bookId: string;
+  title: string;
+  author: string;
+  overdueDays: number;
+  status: OverdueStatus;
+  fine: number;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
