@@ -148,27 +148,18 @@ export function BooksTablePanel({
       {
         title: "",
         key: "actions",
-        fixed: "right",
+        fixed: "right" as const,
         render: () => (
-          <Space size={4}>
-            {screens.md ? (
-              <>
-                <Button type="link" size="small" icon={<InfoCircleOutlined />}>
-                  Chi tiết
-                </Button>
-                <Button type="link" size="small" icon={<InboxOutlined />}>
-                  Nhập kho
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button type="link" size="small" icon={<InfoCircleOutlined />} />
-                <Button type="link" size="small" icon={<InboxOutlined />} />
-              </>
-            )}
+          <Space direction="vertical" size={0}>
+            <Button type="link" size="small" icon={<InfoCircleOutlined />}>
+              Chi tiết
+            </Button>
+            <Button type="link" size="small" icon={<InboxOutlined />}>
+              Nhập kho
+            </Button>
           </Space>
         ),
-        width: screens.md ? 140 : 80,
+        width: screens.md ? 120 : 60,
       },
     ],
     [token.colorPrimary, token.colorWhite, screens.md],

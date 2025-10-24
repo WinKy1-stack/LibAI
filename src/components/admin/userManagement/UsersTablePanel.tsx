@@ -155,27 +155,18 @@ export function UsersTablePanel({
       {
         title: "",
         key: "actions",
-        fixed: "right",
+        fixed: "right" as const,
         render: () => (
-          <Space size={4}>
-            {screens.md ? (
-              <>
-                <Button type="link" size="small" icon={<InfoCircleOutlined />}>
-                  Chi tiết
-                </Button>
-                <Button type="link" size="small" icon={<BellOutlined />}>
-                  Nhắc nhở
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button type="link" size="small" icon={<InfoCircleOutlined />} />
-                <Button type="link" size="small" icon={<BellOutlined />} />
-              </>
-            )}
+          <Space direction="vertical" size={0}>
+            <Button type="link" size="small" icon={<InfoCircleOutlined />}>
+              Chi tiết
+            </Button>
+            <Button type="link" size="small" icon={<BellOutlined />}>
+              Nhắc nhở
+            </Button>
           </Space>
         ),
-        width: screens.md ? 140 : 80,
+        width: screens.md ? 120 : 60,
       },
     ],
     [token.colorPrimary, token.colorWhite, screens.md],

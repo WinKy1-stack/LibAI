@@ -1,8 +1,5 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 import { memo, useMemo } from 'react';
-import { adminTheme } from './config/theme';
 import UserLayoutTailwind from './components/user/UserLayoutTailwind';
 import DashboardPage from './pages/admin/DashboardPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
@@ -38,9 +35,7 @@ function App() {
   const isAdminRoute = useMemo(() => location.pathname.startsWith('/admin'), [location.pathname]);
 
   return (
-    <ThemeProvider theme={adminTheme}>
-      <CssBaseline />
-      
+    <>
       {/* Navigation buttons - show on non-admin routes */}
       {!isAdminRoute && <NavigationButtons pathname={location.pathname} />}
 
@@ -51,7 +46,7 @@ function App() {
         <Route path="/admin/user" element={<UserManagementPage />} />
         <Route path="/admin/books" element={<BooksManagementPage />} />
       </Routes>
-    </ThemeProvider>
+    </>
   );
 }
 

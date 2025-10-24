@@ -24,9 +24,16 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const screens = useBreakpoint();
   const [collapsed, setCollapsed] = useState(!screens.md); // Auto collapse on mobile
-  const [mode, setMode] = useState<"light" | "dark">("light");
+  
+  // Load theme from localStorage or default to light
+  const [mode, setMode] = useState<"light" | "dark">(() => {
+    const savedTheme = localStorage.getItem("admin-theme");
+    return (savedTheme === "dark" || savedTheme === "light") ? savedTheme : "light";
+  });
 
+  // Save theme to localStorage whenever it changes
   useEffect(() => {
+    localStorage.setItem("admin-theme", mode);
     document.documentElement.setAttribute("data-theme", mode);
   }, [mode]);
 
