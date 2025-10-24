@@ -1,8 +1,9 @@
 import type { ColumnsType } from "antd/es/table";
-import { Card, Table, Button, Typography } from "antd";
+import { Card, Table, Button, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
+const { useToken } = theme;
 
 type BookRecord = {
   key: number;
@@ -20,6 +21,8 @@ const books: BookRecord[] = [
 ];
 
 export default function BooksTable() {
+  const { token } = useToken();
+
   const columns: ColumnsType<BookRecord> = [
     { 
       title: "Book ID", 
@@ -77,7 +80,7 @@ export default function BooksTable() {
         scroll={{ x: 560 }}
       />
       <div style={{ textAlign: "center", marginTop: 16 }}>
-        <Button type="link" style={{ color: "var(--primary)" }}>See All</Button>
+        <Button type="link" style={{ color: token.colorPrimary }}>See All</Button>
       </div>
     </Card>
   );
