@@ -130,7 +130,7 @@ export function FaqTablePanel({
         responsive: ["lg"],
         render: (status: string) => {
           const stat = statusMap[status] || { label: status, color: "default" };
-          return <Tag color={stat.color as any}>{stat.label}</Tag>;
+          return <Tag color={stat.color}>{stat.label}</Tag>;
         },
         width: 120,
       },
@@ -138,7 +138,7 @@ export function FaqTablePanel({
         title: "Thống kê",
         key: "stats",
         responsive: ["xl"],
-        render: (_: any, record: FaqItem) => (
+        render: (_: unknown, record: FaqItem) => (
           <Space direction="vertical" size={2}>
             <Space size={8}>
               <Tooltip title="Lượt xem">
@@ -171,7 +171,7 @@ export function FaqTablePanel({
         title: "",
         key: "actions",
         fixed: "right" as const,
-        render: (_: any, record: FaqItem) => (
+        render: (_: unknown, record: FaqItem) => (
           <Space direction="vertical" size={0}>
             <Button 
               type="link" 

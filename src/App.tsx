@@ -60,7 +60,7 @@ function App() {
         {/* Admin routes with shared layout */}
         <Route path="/admin" element={<AdminLayoutWrapper />}>
           <Route index element={<DashboardPage />} />
-          <Route path="user" element={<UserManagementPage />} />
+          <Route path="users" element={<UserManagementPage />} />
           <Route path="books" element={<BooksManagementPage />} />
           <Route path="reports" element={<ReportPage />} />
           <Route path="settings" element={<SettingsPage />} />

@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '/logo.png';
+import logoDarkImg from '/logo_darkmode.png';
 
 const { Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -28,7 +29,7 @@ const menuItems = [
     label: "Dashboard" 
   },
   { 
-    key: "/admin/user", 
+    key: "/admin/users", 
     icon: <TeamOutlined />, 
     label: "Users" 
   },
@@ -141,7 +142,7 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: collapsed && !isMobile ? 0 : 12 }}>
           <img 
-            src={logoImg} 
+            src={mode === "dark" ? logoDarkImg : logoImg} 
             alt="LibAI Logo" 
             style={{ 
               height: collapsed && !isMobile ? 32 : 40,

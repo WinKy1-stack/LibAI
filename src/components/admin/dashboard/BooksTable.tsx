@@ -2,12 +2,14 @@ import type { ColumnsType } from "antd/es/table";
 import { Card, Table, Button, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { dashboardBooks, type BookRecord } from "../../../data";
+import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 const { useToken } = theme;
 
 export default function BooksTable() {
   const { token } = useToken();
+  const navigate = useNavigate();
 
   const columns: ColumnsType<BookRecord> = [
     { 
@@ -66,7 +68,7 @@ export default function BooksTable() {
         scroll={{ x: 560 }}
       />
       <div style={{ textAlign: "center", marginTop: 16 }}>
-        <Button type="link" style={{ color: token.colorPrimary }}>See All</Button>
+        <Button type="link" style={{ color: token.colorPrimary }} onClick={() => navigate('/admin/books')}>Xem thêm</Button>
       </div>
     </Card>
   );

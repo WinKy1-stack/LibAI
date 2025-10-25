@@ -1,13 +1,14 @@
 import { useMemo, useState, useEffect } from "react";
-import { Col, Grid, Row, Space, Spin, message, theme } from "antd";
+import { Col, Grid, Row, Space, Spin, Tag, Input, message } from "antd";
 import { 
   HeaderCard,
   FaqStatsOverview,
   FaqTablePanel,
   FaqCategoriesCard,
   FaqActivityCard,
-  FaqEditModal,
 } from "../../components/admin/faq";
+import { GenericFormModal } from "../../components/admin/common";
+import { categoryIcons } from "../../components/admin/faq/constants";
 import {
   mockFaqItems,
   faqCategories,
@@ -21,8 +22,6 @@ const { useBreakpoint } = Grid;
 export default function FaqPage() {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
-  const { token } = theme.useToken();
-  const mode = token.colorBgContainer === "#141414" ? "dark" : "light";
 
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft" | "archived">("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
@@ -31,6 +30,8 @@ export default function FaqPage() {
   const [faqData, setFaqData] = useState<FaqItem[]>(mockFaqItems);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
+  const [tempTags, setTempTags] = useState<string[]>([]);
+  const [inputTag, setInputTag] = useState("");
 
   // Simulate loading data
   useEffect(() => {
@@ -75,27 +76,44 @@ export default function FaqPage() {
   // Handle add new FAQ
   const handleAddFaq = () => {
     setEditingFaq(null);
+    setTempTags([]);
+    setInputTag("");
     setEditModalVisible(true);
   };
 
   // Handle edit FAQ
   const handleEditFaq = (faq: FaqItem) => {
     setEditingFaq(faq);
+    setTempTags(faq.tags || []);
+    setInputTag("");
     setEditModalVisible(true);
   };
 
   // Handle save FAQ
   const handleSaveFaq = (faq: Partial<FaqItem>) => {
+    const faqWithTags = { ...faq, tags: tempTags };
+    
     if (editingFaq) {
       // Update existing FAQ
       setFaqData((prev) =>
-        prev.map((item) => (item.id === faq.id ? { ...item, ...faq } : item))
+        prev.map((item) => (item.id === faq.id ? { ...item, ...faqWithTags } : item))
       );
     } else {
-      // Add new FAQ
-      setFaqData((prev) => [faq as FaqItem, ...prev]);
+      // Add new FAQ with additional fields
+      const newFaq = {
+        ...faqWithTags,
+        id: `faq-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        createdBy: "La Thanh Toàn",
+        views: 0,
+        helpful: 0,
+        notHelpful: 0,
+      } as FaqItem;
+      setFaqData((prev) => [newFaq, ...prev]);
     }
     setEditModalVisible(false);
+    setTempTags([]);
+    setInputTag("");
   };
 
   // Handle delete FAQ
@@ -108,6 +126,20 @@ export default function FaqPage() {
   const handleCloseModal = () => {
     setEditModalVisible(false);
     setEditingFaq(null);
+    setTempTags([]);
+    setInputTag("");
+  };
+
+  // Tag handlers
+  const handleAddTag = () => {
+    if (inputTag && !tempTags.includes(inputTag)) {
+      setTempTags([...tempTags, inputTag]);
+      setInputTag("");
+    }
+  };
+
+  const handleRemoveTag = (removedTag: string) => {
+    setTempTags(tempTags.filter((tag) => tag !== removedTag));
   };
 
   if (loading) {
@@ -165,12 +197,109 @@ export default function FaqPage() {
       </Space>
 
       {/* Edit Modal */}
-      <FaqEditModal
+      <GenericFormModal<FaqItem>
+        title="FAQ"
         visible={editModalVisible}
-        faqItem={editingFaq}
+        editItem={editingFaq}
+        fields={[
+          {
+            name: "question",
+            label: "Câu hỏi",
+            type: "text",
+            required: true,
+            placeholder: "Nhập câu hỏi...",
+            span: { xs: 24, sm: 24, md: 24 },
+          },
+          {
+            name: "answer",
+            label: "Câu trả lời",
+            type: "textarea",
+            required: true,
+            placeholder: "Nhập câu trả lời chi tiết...",
+            rows: 6,
+            maxLength: 2000,
+            span: { xs: 24, sm: 24, md: 24 },
+          },
+          {
+            name: "category",
+            label: "Danh mục",
+            type: "select",
+            required: true,
+            span: { xs: 24, sm: 24, md: 8 },
+            options: faqCategories.map((cat) => ({
+              label: (
+                <Space>
+                  {categoryIcons[cat.id]}
+                  <span>{cat.name}</span>
+                </Space>
+              ),
+              value: cat.id,
+            })),
+          },
+          {
+            name: "status",
+            label: "Trạng thái",
+            type: "select",
+            required: true,
+            span: { xs: 24, sm: 12, md: 8 },
+            options: [
+              { label: "Xuất bản", value: "published" },
+              { label: "Nháp", value: "draft" },
+              { label: "Lưu trữ", value: "archived" },
+            ],
+          },
+          {
+            name: "priority",
+            label: "Độ ưu tiên",
+            type: "number",
+            required: true,
+            min: 1,
+            max: 5,
+            placeholder: "1-5",
+            span: { xs: 24, sm: 12, md: 8 },
+          },
+          {
+            name: "tags",
+            label: "Thẻ tags",
+            type: "custom",
+            span: { xs: 24, sm: 24, md: 24 },
+            render: () => {
+              return (
+              <div>
+                <Space style={{ marginBottom: 8 }}>
+                  <Input
+                    placeholder="Nhập tag..."
+                    value={inputTag}
+                    onChange={(e) => setInputTag(e.target.value)}
+                    onPressEnter={handleAddTag}
+                    style={{ width: 200 }}
+                  />
+                  <a onClick={handleAddTag}>Thêm</a>
+                </Space>
+                <div>
+                  {tempTags.map((tag) => (
+                    <Tag
+                      key={tag}
+                      closable
+                      onClose={() => handleRemoveTag(tag)}
+                      style={{ marginBottom: 8 }}
+                    >
+                      {tag}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+              );
+            },
+          },
+        ]}
         onClose={handleCloseModal}
         onSave={handleSaveFaq}
-        mode={mode}
+        initialValues={{
+          status: "draft",
+          priority: 3,
+        }}
+        width={800}
       />
     </div>
   );

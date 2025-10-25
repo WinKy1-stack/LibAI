@@ -23,3 +23,4 @@ export default function StatusTag({ status }: StatusTagProps) {
 
   return <Tag color={config.color}>{config.text}</Tag>;
 }
+

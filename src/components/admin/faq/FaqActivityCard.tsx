@@ -30,10 +30,8 @@ export function FaqActivityCard({ activities }: FaqActivityCardProps) {
             <List.Item.Meta
               avatar={<Avatar icon={<QuestionCircleOutlined />} />}
               title={
-                <Space>
-                  <Text strong ellipsis style={{ maxWidth: 400 }}>
-                    {item.question}
-                  </Text>
+                <Space direction="vertical" size={4}>
+                  <Text strong>{item.question}</Text>
                   <Tag>{item.category}</Tag>
                 </Space>
               }
