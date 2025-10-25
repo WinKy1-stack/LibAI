@@ -12,7 +12,7 @@ import TopChoicesGrid from "../../components/admin/dashboard/TopChoicesGrid";
 import BooksIssuedTable from "../../components/admin/dashboard/BooksIssuedTable";
 import VisitorsBorrowersChart from "../../components/admin/dashboard/VisitorsBorrowersChart";
 import { OverdueBookTable } from "../../components/admin/overdue";
-import { mockOverdueBooks } from "../../data/mockOverdueBooks";
+import { mockOverdueBooks } from "../../data";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -57,10 +57,12 @@ export default function DashboardPage() {
         display: "flex", 
         justifyContent: "center", 
         alignItems: "center", 
-        minHeight: "60vh", 
+        minHeight: "60vh",
         width: "100%" 
       }}>
-        <Spin size="large" tip="Đang tải dữ liệu..." />
+        <Spin size="large" tip="">
+          <div />
+        </Spin>
       </div>
     );
   }

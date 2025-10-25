@@ -1,4 +1,4 @@
-import type { ReportType, ReportStatus, ReportCategory } from "../../../data/mockReports";
+import type { ReportType, ReportStatus, ReportCategory } from "../../../data";
 
 export const REPORT_TYPE_OPTIONS: Array<{ label: string; value: "all" | ReportType }> = [
   { label: "Tất cả chu kỳ", value: "all" },
