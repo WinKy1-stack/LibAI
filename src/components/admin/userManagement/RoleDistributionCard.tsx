@@ -51,7 +51,7 @@ export function RoleDistributionCard({
             borderRadius: 14,
             background: token.colorFillSecondary,
           }}
-          bordered={false}
+          variant="borderless"
         >
           <Space direction="vertical" size={6}>
             <Text strong style={{ fontSize: 16 }}>

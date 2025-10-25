@@ -8,6 +8,7 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
+import logoImg from '/logo.png';
 
 const { Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -38,7 +39,12 @@ const menuItems = [
   { 
     key: "/admin/reports", 
     icon: <BarChartOutlined />, 
-    label: "Reports" 
+    label: "Reports"
+  },
+  { 
+    key: "/admin/settings", 
+    icon: <SettingOutlined />, 
+    label: "Settings"
   },
 ];
 
@@ -127,7 +133,18 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
         borderBottom: mode === "dark" ? "1px solid rgba(255,255,255,0.1)" : "1px solid #f0f0f0",
         padding: collapsed && !isMobile ? "0" : "0 20px",
       }}>
-        <span>{collapsed && !isMobile ? "📚" : "📚 Library"}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: collapsed && !isMobile ? 0 : 12 }}>
+          <img 
+            src={logoImg} 
+            alt="LibAI Logo" 
+            style={{ 
+              height: collapsed && !isMobile ? 32 : 40,
+              width: "auto",
+              objectFit: "contain"
+            }} 
+          />
+          {!collapsed && <span>LibAI</span>}
+        </div>
         {!collapsed && (
           <Button 
             type="text" 
@@ -162,25 +179,6 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
         }}
         items={menuItems}
       />
-      
-      {/* Sidebar footer - Settings icon */}
-      {!collapsed && (
-        <div style={{ 
-          position: "absolute", 
-          bottom: 24, 
-          left: 0, 
-          right: 0,
-          padding: "0 16px" 
-        }}>
-          <Button 
-            type="text" 
-            icon={<SettingOutlined />} 
-            style={{ width: "100%" }}
-          >
-            Settings
-          </Button>
-        </div>
-      )}
       </Sider>
     </>
   );

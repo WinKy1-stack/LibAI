@@ -6,6 +6,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import BooksManagementPage from './pages/admin/BooksManagementPage';
 import ReportPage from './pages/admin/ReportPage';
+import SettingsPage from './pages/admin/SettingsPage';
 import './App.css';
 
 // Memoize navigation buttons to prevent re-render
@@ -60,6 +61,7 @@ function App() {
           <Route path="user" element={<UserManagementPage />} />
           <Route path="books" element={<BooksManagementPage />} />
           <Route path="reports" element={<ReportPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </>

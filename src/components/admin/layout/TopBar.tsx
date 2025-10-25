@@ -73,8 +73,9 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
     height: 64,
     display: 'flex',
     alignItems: 'center',
+    width: screens.md ? 'calc(100% - 80px)' : '100%',
     marginLeft: screens.md ? 80 : 0, // Space for minimized sidebar on desktop/tablet
-    transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   } as CSSProperties), [mode, screens.md]);
 
   return (

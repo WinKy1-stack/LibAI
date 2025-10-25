@@ -100,10 +100,12 @@ export default function UserManagementPage() {
         display: "flex", 
         justifyContent: "center", 
         alignItems: "center", 
-        minHeight: "60vh", 
+        minHeight: "60vh",
         width: "100%" 
       }}>
-        <Spin size="large" tip="Đang tải dữ liệu..." />
+        <Spin size="large" tip="">
+          <div />
+        </Spin>
       </div>
     );
   }
