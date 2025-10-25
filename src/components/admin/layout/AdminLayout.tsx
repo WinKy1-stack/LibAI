@@ -41,6 +41,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       "/admin/books": "LibAI - Books Management",
       "/admin/reports": "LibAI - Reports",
       "/admin/settings": "LibAI - Settings",
+      "/admin/librarian": "LibAI - Librarian Settings",
     };
 
     const title = pathToTitle[location.pathname] || "LibAI - Admin";
