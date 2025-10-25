@@ -2,12 +2,14 @@ import type { ColumnsType } from "antd/es/table";
 import { Card, Table, Button, Space, Avatar, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { dashboardUsers, type UserRecord } from "../../../data";
+import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 const { useToken } = theme;
 
 export default function UsersTable() {
   const { token } = useToken();
+  const navigate = useNavigate();
 
   const columns: ColumnsType<UserRecord> = [
     { 
@@ -80,7 +82,7 @@ export default function UsersTable() {
         scroll={{ x: 480 }}
       />
       <div style={{ textAlign: "center", marginTop: 16 }}>
-        <Button type="link" style={{ color: token.colorPrimary }}>See All</Button>
+        <Button type="link" style={{ color: token.colorPrimary }} onClick={() => navigate('/admin/users')}>Xem thêm</Button>
       </div>
     </Card>
   );

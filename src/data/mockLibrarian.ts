@@ -69,17 +69,17 @@ export const defaultLibrarianNotifications: LibrarianNotificationSettings = {
 
 // Language Options
 export const languageOptions = [
-  { label: "🇻🇳 Tiếng Việt", value: "vi" },
-  { label: "🇬🇧 English", value: "en" },
-  { label: "🇯🇵 日本語", value: "ja" },
-  { label: "🇰🇷 한국어", value: "ko" },
+  { label: "Tiếng Việt", value: "vi" },
+  { label: "English", value: "en" },
+  { label: "日本語", value: "ja" },
+  { label: "한국어", value: "ko" },
 ];
 
-// Notification Frequency Options
+// Notification Frequency Options  
 export const notificationFrequencyOptions = [
-  { label: "⚡ Thời gian thực", value: "realtime" },
-  { label: "📅 Tổng hợp mỗi giờ", value: "hourly" },
-  { label: "📊 Tổng hợp mỗi ngày", value: "daily" },
-  { label: "📆 Tổng hợp mỗi tuần", value: "weekly" },
+  { label: "Thời gian thực", value: "realtime" },
+  { label: "Tổng hợp mỗi giờ", value: "hourly" },
+  { label: "Tổng hợp mỗi ngày", value: "daily" },
+  { label: "Tổng hợp mỗi tuần", value: "weekly" },
 ];
 

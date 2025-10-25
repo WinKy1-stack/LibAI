@@ -5,13 +5,15 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { useMemo, useState, useEffect } from "react";
-import StatCard from "../../components/admin/dashboard/StatCard";
-import UsersTable from "../../components/admin/dashboard/UsersTable";
-import BooksTable from "../../components/admin/dashboard/BooksTable";
-import TopChoicesGrid from "../../components/admin/dashboard/TopChoicesGrid";
-import BooksIssuedTable from "../../components/admin/dashboard/BooksIssuedTable";
-import VisitorsBorrowersChart from "../../components/admin/dashboard/VisitorsBorrowersChart";
-import { OverdueBookTable } from "../../components/admin/overdue";
+import { 
+  StatCard,
+  UsersTable,
+  BooksTable,
+  TopChoicesGrid,
+  BooksIssuedTable,
+  VisitorsBorrowersChart,
+  OverdueBookTable,
+} from "../../components/admin/dashboard";
 import { mockOverdueBooks } from "../../data";
 
 const { Title, Text } = Typography;

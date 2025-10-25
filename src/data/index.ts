@@ -17,3 +17,6 @@ export * from './mockOverdueBooks';
 
 // Librarian Settings Data
 export * from './mockLibrarian';
+
+// FAQ Data
+export * from './mockFaq';
