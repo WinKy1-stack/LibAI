@@ -1,11 +1,10 @@
-import { Card, Space, Typography, Row, Col, Grid, Select, theme } from "antd";
+import { Card, Space, Typography, Row, Col, Grid, Select, theme, Spin } from "antd";
 import {
   UserOutlined,
   BookOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { useMemo, useState } from "react";
-import AdminLayout from "../../components/admin/layout/AdminLayout";
+import { useMemo, useState, useEffect } from "react";
 import StatCard from "../../components/admin/dashboard/StatCard";
 import UsersTable from "../../components/admin/dashboard/UsersTable";
 import BooksTable from "../../components/admin/dashboard/BooksTable";
@@ -31,6 +30,7 @@ export default function DashboardPage() {
   const { token } = useToken();
   const [timeRange, setTimeRange] = useState("this-week");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const pageSize = 4;
 
   const currentDateString = useMemo(
@@ -38,14 +38,36 @@ export default function DashboardPage() {
     []
   );
 
+  // Simulate loading data
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
+  if (loading) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        minHeight: "60vh", 
+        width: "100%" 
+      }}>
+        <Spin size="large" tip="Đang tải dữ liệu..." />
+      </div>
+    );
+  }
+
   return (
-    <AdminLayout>
-      <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
-        <Space direction="vertical" size={24} style={{ display: "block", width: "100%" }}>
+    <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
+      <Space direction="vertical" size={24} style={{ display: "block", width: "100%" }}>
           
           {/* --- Welcome Card --- */}
           <Card
@@ -156,7 +178,6 @@ export default function DashboardPage() {
             </Col>
           </Row>
         </Space>
-      </div>
-    </AdminLayout>
+    </div>
   );
 }
