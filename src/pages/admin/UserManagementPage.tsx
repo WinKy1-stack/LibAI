@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Col, Grid, Row, Space } from "antd";
+import { useMemo, useState, useEffect } from "react";
+import { Col, Grid, Row, Space, Spin } from "antd";
 import { HeaderCard } from "../../components/admin/userManagement/HeaderCard";
 import { StatsOverview, type UserTotals } from "../../components/admin/userManagement/StatsOverview";
 import { UsersTablePanel } from "../../components/admin/userManagement/UsersTablePanel";
@@ -24,6 +24,16 @@ export default function UserManagementPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | UserStatus>("all");
   const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
   const [searchValue, setSearchValue] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Simulate loading data
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   const totals = useMemo(() => {
     const active = adminUsers.filter((user) => user.status === "active").length;
@@ -84,10 +94,24 @@ export default function UserManagementPage() {
     };
   }, []);
 
+  if (loading) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        minHeight: "60vh", 
+        width: "100%" 
+      }}>
+        <Spin size="large" tip="Đang tải dữ liệu..." />
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
-        <HeaderCard isMobile={isMobile} />
+          <HeaderCard isMobile={isMobile} />
 
           <StatsOverview totals={overviewTotals} />
 
@@ -119,6 +143,6 @@ export default function UserManagementPage() {
 
           <ActivityCard activities={latestUserActivities} />
         </Space>
-      </div>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Col, Grid, Row, Space } from "antd";
+import { useMemo, useState, useEffect } from "react";
+import { Col, Grid, Row, Space, Spin } from "antd";
 import {
   HeaderCard,
   StatsOverview,
@@ -29,6 +29,16 @@ export default function ReportPage() {
   const [categoryFilter, setCategoryFilter] = useState<"all" | ReportCategory>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | ReportStatus>("all");
   const [searchValue, setSearchValue] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Simulate loading data
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filteredReports = useMemo(() => {
     const normalized = searchValue.trim().toLowerCase();
@@ -48,11 +58,25 @@ export default function ReportPage() {
     });
   }, [typeFilter, categoryFilter, statusFilter, searchValue]);
 
+  if (loading) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        minHeight: "60vh", 
+        width: "100%" 
+      }}>
+        <Spin size="large" tip="Đang tải dữ liệu..." />
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
-        {/* Header */}
-        <HeaderCard isMobile={isMobile} />
+          {/* Header */}
+          <HeaderCard isMobile={isMobile} />
 
           {/* Stats Overview */}
           <StatsOverview totals={overviewMetrics} />
@@ -95,7 +119,7 @@ export default function ReportPage() {
             </Col>
           </Row>
         </Space>
-      </div>
+    </div>
   );
 }
 
