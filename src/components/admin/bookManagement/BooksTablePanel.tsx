@@ -19,7 +19,7 @@ import {
   InfoCircleOutlined,
   InboxOutlined,
 } from "@ant-design/icons";
-import type { AdminBook, BookStatus } from "../../../data/mockBooks";
+import type { AdminBook, BookStatus } from "../../../data";
 import { formatLabels, statusLabels } from "./constants";
 import { getStatusMeta, formatDate, timeAgo } from "./utils";
 

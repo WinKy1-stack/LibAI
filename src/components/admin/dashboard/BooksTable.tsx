@@ -1,27 +1,15 @@
 import type { ColumnsType } from "antd/es/table";
 import { Card, Table, Button, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
+import { dashboardBooks, type BookRecord } from "../../../data";
+import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 const { useToken } = theme;
 
-type BookRecord = {
-  key: number;
-  bid: string;
-  title: string;
-  author: string;
-  stock: number;
-};
-
-const books: BookRecord[] = [
-  { key: 1, bid: "#B-10021-30", title: "Ancestor Trouble", author: "Maud Newton", stock: 30 },
-  { key: 2, bid: "#B-39521-31", title: "Life is Everywhere", author: "Lucy Ives", stock: 23 },
-  { key: 3, bid: "#G-95501-51", title: "Stroller", author: "Amanda Parrish", stock: 90 },
-  { key: 4, bid: "#R-773521-67", title: "The Secret Syllabus", author: "Burnham", stock: 6 },
-];
-
 export default function BooksTable() {
   const { token } = useToken();
+  const navigate = useNavigate();
 
   const columns: ColumnsType<BookRecord> = [
     { 
@@ -74,13 +62,13 @@ export default function BooksTable() {
       <Table
         size="middle"
         rowKey="key"
-        dataSource={books}
+        dataSource={dashboardBooks}
         columns={columns}
         pagination={false}
         scroll={{ x: 560 }}
       />
       <div style={{ textAlign: "center", marginTop: 16 }}>
-        <Button type="link" style={{ color: token.colorPrimary }}>See All</Button>
+        <Button type="link" style={{ color: token.colorPrimary }} onClick={() => navigate('/admin/books')}>Xem thêm</Button>
       </div>
     </Card>
   );

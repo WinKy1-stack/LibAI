@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import type { RevenueData } from "../../../data/mockReports";
+import type { RevenueData } from "../../../data";
 
 const { Title, Text } = Typography;
 const { useToken } = theme;

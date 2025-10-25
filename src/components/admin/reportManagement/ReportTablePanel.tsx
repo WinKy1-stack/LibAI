@@ -1,7 +1,7 @@
 import { Card, Table, Tag, Button, Space, Input, Select, Row, Col, Typography, Badge, theme } from "antd";
 import { DownloadOutlined, SearchOutlined, EyeOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import type { ReportItem, ReportType, ReportStatus, ReportCategory } from "../../../data/mockReports";
+import type { ReportItem, ReportType, ReportStatus, ReportCategory } from "../../../data";
 
 const { Text } = Typography;
 const { useToken } = theme;

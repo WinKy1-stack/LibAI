@@ -1,6 +1,6 @@
 import { Card, Space, Typography, List, Tag, theme, Tabs, Badge, Progress } from "antd";
 import { BookOutlined, UserOutlined, PieChartOutlined, CrownOutlined } from "@ant-design/icons";
-import type { TopMetrics } from "../../../data/mockReports";
+import type { TopMetrics } from "../../../data";
 
 const { Title, Text } = Typography;
 const { useToken } = theme;

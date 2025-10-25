@@ -12,7 +12,7 @@ import {
   latestBookActivities,
   monthlyBorrowTrend,
   type BookStatus,
-} from "../../data/mockBooks";
+} from "../../data";
 
 const { useBreakpoint } = Grid;
 
@@ -96,10 +96,12 @@ export default function BooksManagementPage() {
         display: "flex", 
         justifyContent: "center", 
         alignItems: "center", 
-        minHeight: "60vh", 
+        minHeight: "60vh",
         width: "100%" 
       }}>
-        <Spin size="large" tip="Đang tải dữ liệu..." />
+        <Spin size="large" tip="">
+          <div />
+        </Spin>
       </div>
     );
   }

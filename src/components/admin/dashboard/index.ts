@@ -4,3 +4,5 @@ export { default as BooksTable } from './BooksTable';
 export { default as TopChoicesGrid } from './TopChoicesGrid';
 export { default as BooksIssuedTable } from './BooksIssuedTable';
 export { default as VisitorsBorrowersChart } from './VisitorsBorrowersChart';
+export { default as OverdueBookTable } from './OverdueBookTable';
+export { default as StatusTag } from './StatusTag';
