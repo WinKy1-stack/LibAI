@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { Button, Input, Badge, Row, Col, Switch, Space, Avatar, Typography, Dropdown, Grid } from 'antd';
 import type { MenuProps } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -10,7 +11,6 @@ import {
   SunOutlined,
   BellOutlined,
   UserOutlined,
-  SettingOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
 
@@ -24,34 +24,34 @@ interface TopBarProps {
   setMode: (mode: 'light' | 'dark') => void;
 }
 
-// userMenuItems là hằng số, để ngoài component để tránh render lại
-const userMenuItems: MenuProps['items'] = [
+// userMenuItems - sẽ được tạo động trong component để có thể navigate
+const createUserMenuItems = (navigate: (path: string) => void): MenuProps['items'] => [
   {
     key: 'profile',
     icon: <UserOutlined />,
-    label: 'Profile',
-  },
-  {
-    key: 'settings',
-    icon: <SettingOutlined />,
-    label: 'Settings',
+    label: 'Hồ sơ',
+    onClick: () => navigate('/admin/librarian'),
   },
   { type: 'divider' },
   {
     key: 'logout',
     icon: <LogoutOutlined />,
-    label: 'Logout',
+    label: 'Đăng xuất',
     danger: true,
   },
 ];
 
 export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarProps) {
   const screens = useBreakpoint();
+  const navigate = useNavigate();
 
   // Logic responsive cho các kích thước màn hình
   const isMobile = !screens.md; // < 768px
   const isSmallTablet = screens.md && !screens.lg; // 768px - 992px
   const showUserInfo = !!screens.lg; // >= 992px
+
+  // Tạo menu items với navigate function
+  const userMenuItems = useMemo(() => createUserMenuItems(navigate), [navigate]);
 
   // Dùng useMemo để cache style object, chỉ tính toán lại khi dependencies thay đổi
   const inputStyle = useMemo(() => ({
@@ -73,7 +73,10 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
     height: 64,
     display: 'flex',
     alignItems: 'center',
-  } as CSSProperties), [mode]);
+    width: screens.md ? 'calc(100% - 80px)' : '100%',
+    marginLeft: screens.md ? 80 : 0, // Space for minimized sidebar on desktop/tablet
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  } as CSSProperties), [mode, screens.md]);
 
   return (
     <header style={headerStyle}>
@@ -107,7 +110,7 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
         {/* Right Section: Notification, Switch, User Info */}
         <Col flex="none">
           {/* Tăng/giảm khoảng cách các icon tùy màn hình */}
-          <Space size={showUserInfo ? 16 : 8} align="center">
+          <Space size={showUserInfo ? 32 : 24} align="center">
             {/* Logic hiện Badge: màn lớn hiện số, màn nhỏ/tablet hiện dot */}
             <Badge count={showUserInfo ? 12 : 0} dot={!showUserInfo} size="small">
               <Button type="text" icon={<BellOutlined />} />

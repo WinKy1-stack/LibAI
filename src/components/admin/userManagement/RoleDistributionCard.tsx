@@ -1,6 +1,6 @@
 import { AppstoreOutlined } from "@ant-design/icons";
 import { Card, Progress, Space, Tag, Typography, theme } from "antd";
-import type { UserRole } from "../../../data/mockUsers";
+import type { UserRole } from "../../../data";
 import { roleLabels } from "./constants";
 
 const { Text } = Typography;
@@ -51,7 +51,7 @@ export function RoleDistributionCard({
             borderRadius: 14,
             background: token.colorFillSecondary,
           }}
-          bordered={false}
+          variant="borderless"
         >
           <Space direction="vertical" size={6}>
             <Text strong style={{ fontSize: 16 }}>

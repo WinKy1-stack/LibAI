@@ -9,46 +9,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { visitorsBorrowersData } from "../../../data";
 
 const { Text } = Typography;
-
-const chartData = [
-  {
-    day: "SAT",
-    visitors: 25,
-    borrowers: 48,
-  },
-  {
-    day: "SUN",
-    visitors: 75,
-    borrowers: 40,
-  },
-  {
-    day: "MON",
-    visitors: 12,
-    borrowers: 65,
-  },
-  {
-    day: "TUE",
-    visitors: 98,
-    borrowers: 75,
-  },
-  {
-    day: "WED",
-    visitors: 15,
-    borrowers: 12,
-  },
-  {
-    day: "THU",
-    visitors: 8,
-    borrowers: 28,
-  },
-  {
-    day: "FRI",
-    visitors: 35,
-    borrowers: 90,
-  },
-];
 
 export default function VisitorsBorrowersChart() {
   return (
@@ -66,7 +29,7 @@ export default function VisitorsBorrowersChart() {
     >
       <ResponsiveContainer width="100%" height={320}>
         <BarChart
-          data={chartData}
+          data={visitorsBorrowersData}
           margin={{
             top: 20,
             right: 30,

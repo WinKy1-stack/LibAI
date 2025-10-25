@@ -1,16 +1,8 @@
 import { Card, Row, Col, Space, Typography, theme } from "antd";
+import { topChoices } from "../../../data";
 
 const { Text } = Typography;
 const { useToken } = theme;
-
-const topChoices = [
-  { title: "The Critique of Pure Reason", author: "Immanuel Kant" , image: "https://m.media-amazon.com/images/I/91z55teNfbL._UF1000,1000_QL80_.jpg"},
-  { title: "Stroller", author: "Amanda Parrish Morgan" , image: "https://res.cloudinary.com/bloomsbury-atlas/image/upload/w_568,c_scale,dpr_1.5/jackets/9781501386664.jpg"},
-  { title: "The Design of Everyday Things", author: "Don Norman", image: "https://minh.la/wp-content/uploads/2020/06/Design-of-Everyday-Things.jpg.webp" },
-  { title: "LEAN UX", author: "Jeff Gothelf", image: "https://m.media-amazon.com/images/I/81qJb1LmkBL.jpg" },
-  { title: "The Republic", author: "Plato", image: "https://bookowlsbd.com/cdn/shop/files/TheRepublicBookbyPlato.jpg?v=1754895313" },
-  { title: "Ancestor Trouble", author: "Maud Newton", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5i7sOhjLwQz9ZT_t_cgjCS0t_zROqx2aa1g&s" },
-];
 
 export default function TopChoicesGrid() {
   const { token } = useToken();

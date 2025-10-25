@@ -35,8 +35,10 @@ export function CategoryDistributionCard({
         </Space>
       }
       style={{ borderRadius: 16 }}
-      headStyle={{ borderBottom: "none", padding: "16px 24px 0" }}
-      bodyStyle={{ padding: "8px 24px 24px" }}
+      styles={{ 
+        header: { borderBottom: "none", padding: "16px 24px 0" },
+        body: { padding: "8px 24px 24px" }
+      }}
     >
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         {itemsWithPercentage.length === 0 ? (
@@ -85,7 +87,7 @@ export function CategoryDistributionCard({
         <Divider style={{ margin: "8px 0" }} />
 
         <Card
-          bordered={false}
+          variant="borderless"
           style={{
             borderRadius: 12,
             background: token.colorFillSecondary,

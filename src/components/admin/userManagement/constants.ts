@@ -1,4 +1,4 @@
-import type { UserRole, UserStatus } from "../../../data/mockUsers";
+import type { UserRole, UserStatus } from "../../../data";
 
 export const statusLabels: Record<UserStatus, string> = {
   active: "Đang hoạt động",

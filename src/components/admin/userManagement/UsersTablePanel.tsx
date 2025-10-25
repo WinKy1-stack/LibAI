@@ -22,7 +22,7 @@ import {
   PhoneOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import type { AdminUser, UserRole, UserStatus } from "../../../data/mockUsers";
+import type { AdminUser, UserRole, UserStatus } from "../../../data";
 import { roleLabels, statusLabels } from "./constants";
 import { getStatusBadge, formatDate } from "./utils";
 

@@ -1,65 +1,8 @@
 import type { ColumnsType } from "antd/es/table";
 import { Card, Table, Button, Space, Typography, Image } from "antd";
+import { bookIssuedData, type BookIssuedRecord } from "../../../data";
 
 const { Text, Link } = Typography;
-
-type BookIssuedRecord = {
-  key: number;
-  userId: string;
-  bookCover: string;
-  bookTitle: string;
-  author: string;
-  issueDate: string;
-  returnDate: string;
-};
-
-const bookIssuedData: BookIssuedRecord[] = [
-  {
-    key: 1,
-    userId: "10021",
-    bookCover: "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1627096766i/58558175.jpg",
-    bookTitle: "Ancestor Trouble",
-    author: "Maud Newton",
-    issueDate: "20 Dec, 2022",
-    returnDate: "21 Dec, 2022",
-  },
-  {
-    key: 2,
-    userId: "12034",
-    bookCover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUPLsGYHER1uwmPfcCejQBE-fOQ9rHe_chXA&s",
-    bookTitle: "Life is Everywhere",
-    author: "Lucy Ives",
-    issueDate: "23 Dec, 2022",
-    returnDate: "26 Dec, 2022",
-  },
-  {
-    key: 3,
-    userId: "22987",
-    bookCover: "https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1443812562i/6402775.jpg",
-    bookTitle: "Stroller",
-    author: "Amanda Parrish",
-    issueDate: "23 Dec, 2022",
-    returnDate: "28 Dec, 2022",
-  },
-  {
-    key: 4,
-    userId: "53272",
-    bookCover: "https://images.booksense.com/images/404/224/9780691224404.jpg",
-    bookTitle: "The Secret Syllabus",
-    author: "Terence C. Burnham",
-    issueDate: "31 Dec, 2022",
-    returnDate: "3 Jan, 2023",
-  },
-  {
-    key: 5,
-    userId: "06787",
-    bookCover: "https://assets.isu.pub/document-structure/240321203246-57949da22f7fc411000b78023af3891a/v1/47ba45a04af1aa43b238949805004625.jpeg",
-    bookTitle: "A Brief History of Time",
-    author: "Stephen Hawking",
-    issueDate: "1 Jan, 2023",
-    returnDate: "6 Jan, 2023",
-  },
-];
 
 export default function BooksIssuedTable() {
   const columns: ColumnsType<BookIssuedRecord> = [
