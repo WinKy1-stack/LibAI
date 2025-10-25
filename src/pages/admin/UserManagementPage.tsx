@@ -13,7 +13,7 @@ import {
   userRoleDistribution,
   type UserRole,
   type UserStatus,
-} from "../../data/mockUsers";
+} from "../../data";
 
 const { useBreakpoint } = Grid;
 

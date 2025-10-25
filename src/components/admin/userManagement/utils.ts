@@ -1,7 +1,7 @@
 import { CheckCircleFilled, ClockCircleFilled, StopFilled } from "@ant-design/icons";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import type { UserStatus } from "../../../data/mockUsers";
+import type { UserStatus } from "../../../data";
 
 export function getStatusBadge(status: UserStatus): { color: string; icon: ReactNode } {
   switch (status) {

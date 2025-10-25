@@ -1,24 +1,10 @@
 import type { ColumnsType } from "antd/es/table";
 import { Card, Table, Button, Space, Avatar, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
+import { dashboardUsers, type UserRecord } from "../../../data";
 
 const { Text } = Typography;
 const { useToken } = theme;
-
-type UserRecord = {
-  key: number;
-  id: string;
-  name: string;
-  issued: number;
-  dept: string;
-};
-
-const users: UserRecord[] = [
-  { key: 1, id: "10021", name: "Toàn asdads asdada đá ", issued: 12, dept: "Psychology asd asd ad ada sd" },
-  { key: 2, id: "12034", name: "Bảo", issued: 7, dept: "Business" },
-  { key: 3, id: "29387", name: "Sơn", issued: 17, dept: "Computer Science" },
-  { key: 4, id: "53272", name: "Long", issued: 25, dept: "Pharmacy" },
-];
 
 export default function UsersTable() {
   const { token } = useToken();
@@ -88,7 +74,7 @@ export default function UsersTable() {
       <Table
         size="middle"
         rowKey="key"
-        dataSource={users}
+        dataSource={dashboardUsers}
         columns={columns}
         pagination={false}
         scroll={{ x: 480 }}

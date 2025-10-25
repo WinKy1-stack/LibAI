@@ -12,7 +12,7 @@ import {
   latestBookActivities,
   monthlyBorrowTrend,
   type BookStatus,
-} from "../../data/mockBooks";
+} from "../../data";
 
 const { useBreakpoint } = Grid;
 

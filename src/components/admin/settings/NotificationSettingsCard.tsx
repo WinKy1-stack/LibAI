@@ -19,7 +19,7 @@ export default function NotificationSettingsCard({ mode }: NotificationSettingsC
       console.log("Notification Config values:", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setSaving(false);
-    } catch (error) {
+    } catch {
       setSaving(false);
     }
   };

@@ -1,5 +1,5 @@
-import { Card, Form, Input, Select, Switch, Button, Space, Typography, Divider, InputNumber, Alert } from "antd";
-import { SafetyOutlined, SaveOutlined, LockOutlined, KeyOutlined } from "@ant-design/icons";
+import { Card, Form, Input, Switch, Button, Space, Typography, Divider, InputNumber, Alert } from "antd";
+import { SafetyOutlined, SaveOutlined, } from "@ant-design/icons";
 import { useState } from "react";
 
 const { Title, Text } = Typography;
@@ -19,7 +19,7 @@ export default function SecurityCard({ mode }: SecurityCardProps) {
       console.log("Security Config values:", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setSaving(false);
-    } catch (error) {
+    } catch {
       setSaving(false);
     }
   };

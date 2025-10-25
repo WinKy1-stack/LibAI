@@ -1,4 +1,4 @@
-import type { BookFormat, BookStatus } from "../../../data/mockBooks";
+import type { BookFormat, BookStatus } from "../../../data";
 
 export const statusLabels: Record<BookStatus, string> = {
   available: "Có sẵn",

@@ -1,7 +1,7 @@
 import { ClockCircleFilled, PauseCircleFilled, ReadOutlined, CheckCircleFilled } from "@ant-design/icons";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import type { BookStatus } from "../../../data/mockBooks";
+import type { BookStatus } from "../../../data";
 
 export function getStatusMeta(status: BookStatus): { color: string; icon: ReactNode } {
   switch (status) {

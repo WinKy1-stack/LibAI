@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import type { ActivityMetrics } from "../../../data/mockReports";
+import type { ActivityMetrics } from "../../../data";
 
 const { Title, Text } = Typography;
 const { useToken } = theme;

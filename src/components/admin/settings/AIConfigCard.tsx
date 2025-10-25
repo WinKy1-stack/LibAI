@@ -1,5 +1,5 @@
 import { Card, Form, Input, Select, Slider, Switch, Button, Space, Typography, Divider, Tag } from "antd";
-import { ApiOutlined, RobotOutlined, ThunderboltOutlined, SaveOutlined } from "@ant-design/icons";
+import { ApiOutlined, RobotOutlined, SaveOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
 const { Title, Text } = Typography;
@@ -22,7 +22,7 @@ export default function AIConfigCard({ mode }: AIConfigCardProps) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       // Show success message
       setSaving(false);
-    } catch (error) {
+    } catch{
       setSaving(false);
     }
   };

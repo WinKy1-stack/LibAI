@@ -9,7 +9,7 @@ import {
   CategoryPerformanceCard,
   TopMetricsCard,
 } from "../../components/admin/reportManagement";
-import type { ReportType, ReportStatus, ReportCategory } from "../../data/mockReports";
+import type { ReportType, ReportStatus, ReportCategory } from "../../data";
 import {
   adminReports,
   overviewMetrics,
@@ -17,7 +17,7 @@ import {
   weeklyActivity,
   categoryPerformance,
   topMetrics,
-} from "../../data/mockReports";
+} from "../../data";
 
 const { useBreakpoint } = Grid;
 

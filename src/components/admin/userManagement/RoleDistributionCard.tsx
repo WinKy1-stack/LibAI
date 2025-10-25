@@ -1,6 +1,6 @@
 import { AppstoreOutlined } from "@ant-design/icons";
 import { Card, Progress, Space, Tag, Typography, theme } from "antd";
-import type { UserRole } from "../../../data/mockUsers";
+import type { UserRole } from "../../../data";
 import { roleLabels } from "./constants";
 
 const { Text } = Typography;

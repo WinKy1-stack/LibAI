@@ -1,5 +1,5 @@
 import { Card, Form, Input, Select, Switch, Button, Space, Typography, Divider, InputNumber, Row, Col } from "antd";
-import { SettingOutlined, SaveOutlined, GlobalOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { SettingOutlined, SaveOutlined, GlobalOutlined } from "@ant-design/icons";
 import { useState } from "react";
 
 const { Title, Text } = Typography;
@@ -19,7 +19,7 @@ export default function SystemConfigCard({ mode }: SystemConfigCardProps) {
       console.log("System Config values:", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setSaving(false);
-    } catch (error) {
+    } catch {
       setSaving(false);
     }
   };
