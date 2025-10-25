@@ -5,7 +5,6 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { useMemo, useState } from "react";
-import AdminLayout from "../../components/admin/layout/AdminLayout";
 import StatCard from "../../components/admin/dashboard/StatCard";
 import UsersTable from "../../components/admin/dashboard/UsersTable";
 import BooksTable from "../../components/admin/dashboard/BooksTable";
@@ -43,11 +42,10 @@ export default function DashboardPage() {
   };
 
   return (
-    <AdminLayout>
-      <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
-        <Space direction="vertical" size={24} style={{ display: "block", width: "100%" }}>
-          
-          {/* --- Welcome Card --- */}
+    <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
+      <Space direction="vertical" size={24} style={{ display: "block", width: "100%" }}>
+        
+        {/* --- Welcome Card --- */}
           <Card
             variant="borderless"
             hoverable={false}
@@ -157,6 +155,5 @@ export default function DashboardPage() {
           </Row>
         </Space>
       </div>
-    </AdminLayout>
   );
 }

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Col, Grid, Row, Space } from "antd";
-import AdminLayout from "../../components/admin/layout/AdminLayout";
 import { HeaderCard } from "../../components/admin/bookManagement/HeaderCard";
 import { StatsOverview, type BookTotals } from "../../components/admin/bookManagement/StatsOverview";
 import { BooksTablePanel } from "../../components/admin/bookManagement/BooksTablePanel";
@@ -82,10 +81,9 @@ export default function BooksManagementPage() {
   }, []);
 
   return (
-    <AdminLayout>
-      <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
-          <HeaderCard isMobile={isMobile} />
+    <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
+      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+        <HeaderCard isMobile={isMobile} />
 
           <StatsOverview totals={overviewTotals} />
 
@@ -120,6 +118,5 @@ export default function BooksManagementPage() {
           <ActivityCard activities={latestBookActivities} />
         </Space>
       </div>
-    </AdminLayout>
   );
 }

@@ -4,6 +4,7 @@ import {
   DashboardOutlined,
   TeamOutlined,
   BookOutlined,
+  BarChartOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -37,6 +38,11 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
       key: "/admin/books", 
       icon: <BookOutlined />, 
       label: "Books" 
+    },
+    { 
+      key: "/admin/reports", 
+      icon: <BarChartOutlined />, 
+      label: "Reports" 
     },
   ];
 

@@ -1,9 +1,11 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, Outlet } from 'react-router-dom';
 import { memo, useMemo } from 'react';
 import UserLayoutTailwind from './components/user/UserLayoutTailwind';
+import AdminLayout from './components/admin/layout/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import BooksManagementPage from './pages/admin/BooksManagementPage';
+import ReportPage from './pages/admin/ReportPage';
 import './App.css';
 
 // Memoize navigation buttons to prevent re-render
@@ -30,6 +32,15 @@ const NavigationButtons = memo(({ pathname }: { pathname: string }) => (
 
 NavigationButtons.displayName = 'NavigationButtons';
 
+// Wrapper component cho admin routes
+function AdminLayoutWrapper() {
+  return (
+    <AdminLayout>
+      <Outlet />
+    </AdminLayout>
+  );
+}
+
 function App() {
   const location = useLocation();
   const isAdminRoute = useMemo(() => location.pathname.startsWith('/admin'), [location.pathname]);
@@ -42,9 +53,14 @@ function App() {
       {/* Routes */}
       <Routes>
         <Route path="/" element={<UserLayoutTailwind />} />
-        <Route path="/admin" element={<DashboardPage />} />
-        <Route path="/admin/user" element={<UserManagementPage />} />
-        <Route path="/admin/books" element={<BooksManagementPage />} />
+        
+        {/* Admin routes with shared layout */}
+        <Route path="/admin" element={<AdminLayoutWrapper />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="user" element={<UserManagementPage />} />
+          <Route path="books" element={<BooksManagementPage />} />
+          <Route path="reports" element={<ReportPage />} />
+        </Route>
       </Routes>
     </>
   );
