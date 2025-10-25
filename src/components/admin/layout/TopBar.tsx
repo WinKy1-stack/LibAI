@@ -73,7 +73,9 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
     height: 64,
     display: 'flex',
     alignItems: 'center',
-  } as CSSProperties), [mode]);
+    marginLeft: screens.md ? 80 : 0, // Space for minimized sidebar on desktop/tablet
+    transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  } as CSSProperties), [mode, screens.md]);
 
   return (
     <header style={headerStyle}>
@@ -107,7 +109,7 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
         {/* Right Section: Notification, Switch, User Info */}
         <Col flex="none">
           {/* Tăng/giảm khoảng cách các icon tùy màn hình */}
-          <Space size={showUserInfo ? 16 : 8} align="center">
+          <Space size={showUserInfo ? 32 : 24} align="center">
             {/* Logic hiện Badge: màn lớn hiện số, màn nhỏ/tablet hiện dot */}
             <Badge count={showUserInfo ? 12 : 0} dot={!showUserInfo} size="small">
               <Button type="text" icon={<BellOutlined />} />

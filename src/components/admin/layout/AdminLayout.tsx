@@ -58,7 +58,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   );
 
   const innerLayoutStyle = useMemo(
-    () => ({ height: "100vh", display: "flex", flexDirection: "column" as const }),
+    () => ({ 
+      height: "100vh", 
+      display: "flex", 
+      flexDirection: "column" as const,
+      width: "100%",
+    }),
     []
   );
 
@@ -69,6 +74,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       overflowY: "auto" as const,
       width: "100%",
       background: mode === "dark" ? "#141414" : "#f5f5f5",
+      marginLeft: screens.md ? 80 : 0, // Space for minimized sidebar on desktop/tablet
+      transition: "margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     }),
     [screens.md, mode]
   );
@@ -77,12 +84,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     setCollapsed((c) => !c);
   }, []);
 
+  const isMobile = !screens.md;
+
   return (
     <ConfigProvider theme={themeConfig}>
+      {/* Sidebar overlay - outside layout */}
+      <Sidebar collapsed={collapsed} onCollapse={setCollapsed} mode={mode} />
+      
       <Layout style={layoutStyle}>
-        {/* Sidebar */}
-        <Sidebar collapsed={collapsed} onCollapse={setCollapsed} mode={mode} />
-        
         {/* Main Content Area */}
         <Layout style={innerLayoutStyle}>
           <TopBar 
