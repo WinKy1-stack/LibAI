@@ -141,11 +141,11 @@ export default function SystemConfigCard({ mode }: SystemConfigCardProps) {
         >
           <Select
             options={[
-              { label: "🇻🇳 Tiếng Việt", value: "vi" },
-              { label: "🇺🇸 English", value: "en" },
-              { label: "🇯🇵 日本語", value: "ja" },
-              { label: "🇰🇷 한국어", value: "ko" },
-              { label: "🇨🇳 中文", value: "zh" },
+              { label: "Tiếng Việt", value: "vi" },
+              { label: "English", value: "en" },
+              { label: "日本語", value: "ja" },
+              { label: "한국어", value: "ko" },
+              { label: "中文", value: "zh" },
             ]}
           />
         </Form.Item>

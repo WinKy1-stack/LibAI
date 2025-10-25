@@ -6,6 +6,7 @@ import {
   BookOutlined,
   BarChartOutlined,
   SettingOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '/logo.png';
@@ -40,6 +41,11 @@ const menuItems = [
     key: "/admin/reports", 
     icon: <BarChartOutlined />, 
     label: "Reports"
+  },
+  { 
+    key: "/admin/faq", 
+    icon: <QuestionCircleOutlined />, 
+    label: "FAQ"
   },
   { 
     key: "/admin/settings", 

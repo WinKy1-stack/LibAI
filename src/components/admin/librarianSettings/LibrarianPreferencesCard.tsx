@@ -1,5 +1,5 @@
 import { Card, Form, Select, Switch, Button, Space, Typography, Divider, Radio, Slider, message } from "antd";
-import { SaveOutlined } from "@ant-design/icons";
+import { SaveOutlined, SunOutlined, MoonOutlined, SyncOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { defaultLibrarianPreferences, languageOptions } from "../../../data";
 
@@ -49,19 +49,19 @@ export default function LibrarianPreferencesCard({ mode }: LibrarianPreferencesC
           <Radio.Group>
             <Radio.Button value="light">
               <Space>
-                <span>☀️</span>
+                <SunOutlined />
                 Sáng
               </Space>
             </Radio.Button>
             <Radio.Button value="dark">
               <Space>
-                <span>🌙</span>
+                <MoonOutlined />
                 Tối
               </Space>
             </Radio.Button>
             <Radio.Button value="auto">
               <Space>
-                <span>🔄</span>
+                <SyncOutlined />
                 Tự động
               </Space>
             </Radio.Button>
