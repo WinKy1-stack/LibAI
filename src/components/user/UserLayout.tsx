@@ -1,5 +1,8 @@
-import { HomeIcon, UserIcon, CogIcon, BellIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UserIcon, CogIcon, BellIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { HeartIcon } from '@heroicons/react/24/solid';
+import { useNavigate } from 'react-router-dom';
+import { authService } from '../../services/authService';
+import { message } from 'antd';
 import './UserLayout.css';
 
 interface UserLayoutProps {
@@ -7,6 +10,23 @@ interface UserLayoutProps {
 }
 
 export default function UserLayout({ children }: UserLayoutProps) {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      message.success('Đăng xuất thành công!');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Clear localStorage anyway
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    }
+  };
+
   return (
     <div className="user-layout">
       {/* Header */}
@@ -34,6 +54,10 @@ export default function UserLayout({ children }: UserLayoutProps) {
               <CogIcon className="nav-icon" />
               Cài đặt
             </a>
+            <button onClick={handleLogout} className="nav-item logout-btn">
+              <ArrowRightOnRectangleIcon className="nav-icon" />
+              Đăng xuất
+            </button>
           </nav>
         </div>
       </header>

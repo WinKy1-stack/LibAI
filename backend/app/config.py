@@ -11,9 +11,37 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
 
-    # Database
+    # SQLAlchemy Database (cho User authentication)
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # MongoDB Configuration
+    # Mặc định: localhost (cho development)
+    # Cloud: MongoDB Atlas (cho production/sharing)
+    USE_CLOUD_MONGODB = os.getenv('USE_CLOUD_MONGODB', 'false').lower() == 'true'
+    
+    MONGO_URI_LOCAL = 'mongodb://localhost:27017/library_chatbox'
+    MONGO_URI_CLOUD = 'mongodb+srv://nptb137:thaibao10112004@cluster0.e5wsuwa.mongodb.net/library_chatbox?retryWrites=true&w=majority&appName=Cluster0'
+    
+    MONGO_URI = os.getenv('MONGO_URI', MONGO_URI_CLOUD if USE_CLOUD_MONGODB else MONGO_URI_LOCAL)
+    MONGO_DBNAME = os.getenv('MONGO_DBNAME', 'library_chatbox')
+    
+    # MongoDB Collections
+    COLLECTION_USERS = 'users'
+    COLLECTION_MARC_RECORDS = 'marc_records'
+    COLLECTION_ITEMS = 'items'
+    COLLECTION_LOANS = 'loans'
+    COLLECTION_CONVERSATIONS = 'conversations'
+    COLLECTION_MESSAGES = 'messages'
+    COLLECTION_FAQ = 'faq'
+    COLLECTION_DOCUMENTS = 'documents'
+    COLLECTION_RECOMMEND_EVENTS = 'recommend_events'
+    COLLECTION_METRICS = 'metrics'
+    COLLECTION_ADMIN_CONFIGS = 'admin_configs'
+    COLLECTION_Z3950_CACHE = 'z3950_cache'
+    COLLECTION_OAI_RECORDS = 'oai_records'
+    COLLECTION_SIP2_EVENTS = 'sip2_events'
+    COLLECTION_AUTH_SESSIONS = 'auth_sessions'
 
     # JWT
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)

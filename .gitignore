@@ -39,12 +39,16 @@ __pycache__/
 *.so
 .Python
 
-# Virtual environment
-env/
-venv/
-ENV/
-.venv
-backend/venv/
+# 🔒 Virtual environment (chặn tất cả venv ở mọi cấp)
+# Ví dụ: venv/, .venv/, backend/venv/, LibAI/backend/venv/, v.v.
+venv*/
+.venv*/
+env*/
+ENV*/
+*/venv/
+*/.venv/
+*/env/
+*/ENV/
 
 # Flask instance
 instance/
@@ -122,3 +126,6 @@ $RECYCLE.BIN/
 *.swp
 *.swo
 *~.nib
+
+# GitHub or CI auto-generated
+.github/instructions/*
