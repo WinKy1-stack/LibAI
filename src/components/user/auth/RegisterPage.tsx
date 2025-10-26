@@ -1,371 +1,398 @@
 import { useState } from 'react';
-import { Form, Input, Button, Typography, message, Checkbox, Row, Col } from 'antd';
-import {
-  UserOutlined,
-  LockOutlined,
-  MailOutlined,
-  PhoneOutlined,
-} from '@ant-design/icons';
-import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../../../services/authService';
-import type { RegisterData } from '../../../types/auth';
+import { Link } from 'react-router-dom';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
-const { Title, Text } = Typography;
-
-export function RegisterPage() {
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const [form] = Form.useForm();
-
-  const onFinish = async (values: RegisterData) => {
-    setLoading(true);
-    try {
-      const response = await authService.register(values);
-      message.success(response.message || 'Đăng ký thành công!');
-      navigate('/login');
-    } catch (error: unknown) {
-      const fallback = 'Đăng ký thất bại';
-      let errMsg = fallback;
-      if (typeof error === 'object' && error !== null) {
-        const e = error as {
-          message?: string;
-          response?: { data?: { error?: string } };
-        };
-        errMsg = e.response?.data?.error || e.message || fallback;
-      } else if (typeof error === 'string') {
-        errMsg = error;
-      }
-      message.error(errMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function RegisterPage() {
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '100vh',
-        backgroundColor: '#1b133f',
-        color: '#ffffff',
-      }}
-    >
-      {/* Left panel with branding and tagline */}
-      <div
-        style={{
-          flex: 1,
-          position: 'relative',
-          padding: '40px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background:
-            'linear-gradient(180deg, rgba(57,39,95,1) 0%, rgba(27,19,63,1) 100%)',
-          borderTopLeftRadius: '16px',
-          borderBottomLeftRadius: '16px',
-        }}
-      >
-        <div style={{ fontSize: 28, fontWeight: 600 }}>LibAI</div>
-        <div style={{ marginTop: 'auto', marginBottom: '60px' }}>
-          <h2 style={{ fontSize: 28, lineHeight: 1.4, color: '#ffffff' }}>
-            Capturing Moments,
-            <br />
-            Creating Memories
-          </h2>
+    <div style={{
+      display: "flex",
+      minHeight: "100vh",
+      background: "#0a0a0a",
+      position: "relative",
+    }}>
+      {/* Logo in top left corner */}
+      <Link to="/" style={{
+        position: "absolute",
+        top: 24,
+        left: 24,
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        textDecoration: "none",
+        zIndex: 100,
+        transition: "all 0.2s ease",
+      }}>
+        <div style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          background: "linear-gradient(135deg, #ec4899 0%, #9333ea 100%)",
+          boxShadow: "0 4px 12px rgba(236, 72, 153, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <svg style={{ width: 24, height: 24 }} fill="white" viewBox="0 0 20 20">
+            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
+          </svg>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <span
-            style={{
-              width: 30,
-              height: 4,
-              backgroundColor: '#4a3b82',
-              borderRadius: 4,
-            }}
-          ></span>
-          <span
-            style={{
-              width: 30,
-              height: 4,
-              backgroundColor: '#4a3b82',
-              borderRadius: 4,
-            }}
-          ></span>
-          <span
-            style={{
-              width: 30,
-              height: 4,
-              backgroundColor: '#764ba2',
-              borderRadius: 4,
-            }}
-          ></span>
+        <span style={{
+          fontSize: 24,
+          fontWeight: 700,
+          color: "#fff",
+        }}>
+          LibAI
+        </span>
+      </Link>
+
+      {/* Left Panel - Visual */}
+      <div style={{
+        flex: 1,
+        background: "linear-gradient(135deg, #a78bfa 0%, #f9a8d4 40%, #93c5fd 100%)",
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: 48,
+      }}>
+        {/* Decorative Pattern */}
+        <svg style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          opacity: 0.15,
+        }} viewBox="0 0 100 100">
+          <path d="M0,50 Q25,30 50,50 T100,50 L100,100 L0,100 Z" fill="rgba(255,255,255,0.1)"/>
+          <path d="M0,70 Q30,50 60,70 T100,70 L100,100 L0,100 Z" fill="rgba(255,255,255,0.05)"/>
+        </svg>
+
+        <div style={{ height: 48 }}></div>
+
+        <div style={{
+          textAlign: "center",
+          zIndex: 10,
+        }}>
+          <div style={{
+            width: 80,
+            height: 80,
+            margin: "0 auto 32px",
+            borderRadius: 20,
+            background: "linear-gradient(135deg, #ec4899 0%, #9333ea 100%)",
+            boxShadow: "0 8px 32px rgba(236, 72, 153, 0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <svg style={{ width: 48, height: 48 }} fill="white" viewBox="0 0 20 20">
+              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
+            </svg>
+          </div>
+          <h2 style={{
+            fontSize: 40,
+            fontWeight: 700,
+            color: "#fff",
+            marginBottom: 16,
+            lineHeight: 1.2,
+          }}>
+            Khám phá tri thức<br />cùng LibAI
+          </h2>
+          <p style={{
+            fontSize: 18,
+            color: "rgba(255, 255, 255, 0.8)",
+            maxWidth: 400,
+            margin: "0 auto 32px",
+          }}>
+            Trợ lý ảo thông minh giúp bạn tìm kiếm và quản lý tài liệu thư viện một cách dễ dàng
+          </p>
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 8,
+          }}>
+            <div style={{ width: 48, height: 6, background: "#fff", borderRadius: 999 }}></div>
+            <div style={{ width: 48, height: 6, background: "rgba(255, 255, 255, 0.3)", borderRadius: 999 }}></div>
+            <div style={{ width: 48, height: 6, background: "rgba(255, 255, 255, 0.3)", borderRadius: 999 }}></div>
+          </div>
         </div>
       </div>
 
-      {/* Right panel with registration form */}
-      <div
-        style={{
-          flex: 1,
-          padding: '60px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          backgroundColor: '#241a47',
-          borderTopRightRadius: '16px',
-          borderBottomRightRadius: '16px',
-        }}
-      >
-        <div style={{ maxWidth: 700, margin: '0 auto', width: '100%' }}>
-          <div style={{ marginBottom: 32 }}>
-            <Title level={2} style={{ color: '#ffffff', marginBottom: 8 }}>
-              Đăng ký tài khoản
-            </Title>
-            <Text style={{ color: '#b5b3cd' }}>
-              Tạo tài khoản mới để sử dụng thư viện
-            </Text>
-          </div>
-
-          <Form
-            form={form}
-            name="register"
-            onFinish={onFinish}
-            layout="vertical"
-            size="large"
-            autoComplete="off"
-          >
-            {/* Row 1: Tên đăng nhập và Email */}
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name="username"
-                  label={<span style={{ color: '#ffffff' }}>Tên đăng nhập</span>}
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập tên đăng nhập!' },
-                    { min: 3, message: 'Tên đăng nhập phải có ít nhất 3 ký tự' },
-                    { max: 20, message: 'Tên đăng nhập không được vượt quá 20 ký tự' },
-                    {
-                      pattern: /^[a-zA-Z0-9_]+$/,
-                      message: 'Chỉ được chứa chữ, số và dấu gạch dưới',
-                    },
-                  ]}
-                >
-                  <Input
-                    prefix={<UserOutlined style={{ color: '#b5b3cd' }} />}
-                    placeholder="Tên đăng nhập"
-                    style={{
-                      backgroundColor: '#32275e',
-                      borderColor: '#43356c',
-                      color: '#ffffff',
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name="email"
-                  label={<span style={{ color: '#ffffff' }}>Email</span>}
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập email!' },
-                    { type: 'email', message: 'Email không hợp lệ!' },
-                  ]}
-                >
-                  <Input
-                    prefix={<MailOutlined style={{ color: '#b5b3cd' }} />}
-                    placeholder="Email của bạn"
-                    style={{
-                      backgroundColor: '#32275e',
-                      borderColor: '#43356c',
-                      color: '#ffffff',
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            {/* Row 2: Họ tên và Số điện thoại */}
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name="fullName"
-                  label={<span style={{ color: '#ffffff' }}>Họ và tên</span>}
-                  rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}
-                >
-                  <Input
-                    prefix={<UserOutlined style={{ color: '#b5b3cd' }} />}
-                    placeholder="Họ và tên đầy đủ"
-                    style={{
-                      backgroundColor: '#32275e',
-                      borderColor: '#43356c',
-                      color: '#ffffff',
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="phone" label={<span style={{ color: '#ffffff' }}>Số điện thoại</span>}>
-                  <Input
-                    prefix={<PhoneOutlined style={{ color: '#b5b3cd' }} />}
-                    placeholder="Số điện thoại (tùy chọn)"
-                    style={{
-                      backgroundColor: '#32275e',
-                      borderColor: '#43356c',
-                      color: '#ffffff',
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            {/* Row 3: Mật khẩu và Xác nhận mật khẩu */}
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name="password"
-                  label={<span style={{ color: '#ffffff' }}>Mật khẩu</span>}
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập mật khẩu!' },
-                    { min: 8, message: 'Mật khẩu phải có ít nhất 8 ký tự' },
-                    {
-                      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                      message: 'Mật khẩu phải có chữ hoa, chữ thường và số',
-                    },
-                  ]}
-                  hasFeedback
-                >
-                  <Input.Password
-                    prefix={<LockOutlined style={{ color: '#b5b3cd' }} />}
-                    placeholder="Mật khẩu"
-                    style={{
-                      backgroundColor: '#32275e',
-                      borderColor: '#43356c',
-                      color: '#ffffff',
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name="confirm_password"
-                  label={<span style={{ color: '#ffffff' }}>Xác nhận mật khẩu</span>}
-                  dependencies={['password']}
-                  hasFeedback
-                  rules={[
-                    { required: true, message: 'Vui lòng xác nhận mật khẩu!' },
-                    ({ getFieldValue }) => ({
-                      validator(_, value) {
-                        if (!value || getFieldValue('password') === value) {
-                          return Promise.resolve();
-                        }
-                        return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
-                      },
-                    }),
-                  ]}
-                >
-                  <Input.Password
-                    prefix={<LockOutlined style={{ color: '#b5b3cd' }} />}
-                    placeholder="Nhập lại mật khẩu"
-                    style={{
-                      backgroundColor: '#32275e',
-                      borderColor: '#43356c',
-                      color: '#ffffff',
-                    }}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            {/* Agreement checkbox */}
-            <Form.Item
-              name="agreement"
-              valuePropName="checked"
-              rules={[
-                {
-                  validator: (_, value) =>
-                    value
-                      ? Promise.resolve()
-                      : Promise.reject(new Error('Bạn phải chấp nhận điều khoản & điều kiện')), 
-                },
-              ]}
+      {/* Right Panel - Form */}
+      <div style={{
+        flex: 1,
+        background: "linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 48,
+      }}>
+        <div style={{ width: "100%", maxWidth: 440 }}>
+          <h1 style={{
+            fontSize: 36,
+            fontWeight: 700,
+            color: "#fff",
+            marginBottom: 12,
+          }}>
+            Tạo tài khoản
+          </h1>
+          
+          <p style={{
+            fontSize: 16,
+            color: "#9ca3af",
+            marginBottom: 32,
+          }}>
+            Đã có tài khoản?{' '}
+            <Link 
+              to="/login"
+              style={{
+                color: "#a855f7",
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
             >
-              <Checkbox style={{ color: '#ffffff' }}>
-                Tôi đồng ý với{' '}
-                <a href="#" style={{ color: '#9d7bd4' }}>
-                  Điều khoản & Điều kiện
-                </a>
-              </Checkbox>
-            </Form.Item>
+              Đăng nhập
+            </Link>
+          </p>
 
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                block
-                size="large"
+          <form style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Full Name */}
+            <input
+              type="text"
+              placeholder="Họ và tên"
+              style={{
+                padding: "14px 16px",
+                fontSize: 15,
+                borderRadius: 12,
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                background: "rgba(255, 255, 255, 0.05)",
+                color: "#fff",
+                outline: "none",
+                transition: "all 0.2s ease",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "#9333ea";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(147, 51, 234, 0.1)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+
+            {/* Email */}
+            <input
+              type="email"
+              placeholder="Email"
+              style={{
+                padding: "14px 16px",
+                fontSize: 15,
+                borderRadius: 12,
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                background: "rgba(255, 255, 255, 0.05)",
+                color: "#fff",
+                outline: "none",
+                transition: "all 0.2s ease",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "#9333ea";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(147, 51, 234, 0.1)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+
+            {/* Password */}
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Mật khẩu"
                 style={{
-                  height: 48,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  backgroundColor: '#764ba2',
-                  borderColor: '#764ba2',
+                  width: "100%",
+                  padding: "14px 48px 14px 16px",
+                  fontSize: 15,
+                  borderRadius: 12,
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  color: "#fff",
+                  outline: "none",
+                  transition: "all 0.2s ease",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#9333ea";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(147, 51, 234, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: 16,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "#9ca3af",
+                  cursor: "pointer",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
                 }}
               >
-                Đăng ký
-              </Button>
-            </Form.Item>
+                {showPassword ? (
+                  <EyeSlashIcon style={{ width: 20, height: 20 }} />
+                ) : (
+                  <EyeIcon style={{ width: 20, height: 20 }} />
+                )}
+              </button>
+            </div>
+
+            {/* Terms Checkbox */}
+            <label style={{
+              display: "flex",
+              alignItems: "start",
+              gap: 8,
+              cursor: "pointer",
+              color: "#9ca3af",
+              fontSize: 14,
+            }}>
+              <input
+                type="checkbox"
+                defaultChecked
+                style={{
+                  width: 16,
+                  height: 16,
+                  marginTop: 2,
+                  cursor: "pointer",
+                }}
+              />
+              <span>
+                Tôi đồng ý với{' '}
+                <a href="#" style={{ color: "#a855f7", textDecoration: "none" }}>
+                  Điều khoản & Điều kiện
+                </a>
+              </span>
+            </label>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              style={{
+                padding: "14px 24px",
+                fontSize: 16,
+                fontWeight: 600,
+                borderRadius: 12,
+                border: "none",
+                background: "linear-gradient(135deg, #9333ea 0%, #ec4899 100%)",
+                color: "#fff",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(147, 51, 234, 0.4)",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(147, 51, 234, 0.5)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(147, 51, 234, 0.4)";
+              }}
+            >
+              Tạo tài khoản
+            </button>
 
             {/* Divider */}
-            <div style={{ 
-              textAlign: 'center', 
-              margin: '20px 0',
-              position: 'relative'
+            <div style={{
+              position: "relative",
+              textAlign: "center",
+              margin: "16px 0",
             }}>
               <div style={{
-                position: 'absolute',
-                top: '50%',
+                position: "absolute",
                 left: 0,
                 right: 0,
-                height: '1px',
-                backgroundColor: '#43356c'
+                top: "50%",
+                height: 1,
+                background: "rgba(255, 255, 255, 0.1)",
               }}></div>
               <span style={{
-                position: 'relative',
-                padding: '0 16px',
-                backgroundColor: '#241a47',
-                color: '#b5b3cd',
-                fontSize: 13
+                position: "relative",
+                background: "#1a1a1a",
+                padding: "0 16px",
+                color: "#9ca3af",
+                fontSize: 14,
               }}>
-                hoặc
+                Hoặc đăng ký với
               </span>
             </div>
 
-            {/* Button chuyển đăng nhập */}
-            <Form.Item style={{ marginBottom: 0 }}>
-              <Link to="/login" style={{ textDecoration: 'none' }}>
-                <Button
-                  block
-                  size="large"
-                  style={{
-                    height: 48,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    backgroundColor: 'transparent',
-                    borderColor: '#764ba2',
-                    color: '#ffffff',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(118, 75, 162, 0.1)';
-                    e.currentTarget.style.color = '#9d7bd4';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#ffffff';
-                  }}
-                >
-                  Đã có tài khoản? Đăng nhập ngay
-                </Button>
-              </Link>
-            </Form.Item>
-          </Form>
+            {/* Social Login */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <button
+                type="button"
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                }}
+              >
+                <span>G</span>
+                <span>Google</span>
+              </button>
+              <button
+                type="button"
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                }}
+              >
+                <span>🍎</span>
+                <span>Apple</span>
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
