@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import type { CSSProperties } from 'react';
-import { Button, Input, Badge, Row, Col, Switch, Space, Avatar, Typography, Dropdown, Grid } from 'antd';
+import { Button, Input, Badge, Row, Col, Switch, Space, Avatar, Typography, Dropdown, Grid, message } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -13,6 +13,7 @@ import {
   UserOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
+import { authService } from '../../../services/authService';
 
 const { useBreakpoint } = Grid;
 const { Text } = Typography;
@@ -25,7 +26,7 @@ interface TopBarProps {
 }
 
 // userMenuItems - sẽ được tạo động trong component để có thể navigate
-const createUserMenuItems = (navigate: (path: string) => void): MenuProps['items'] => [
+const createUserMenuItems = (navigate: (path: string) => void, handleLogout: () => void): MenuProps['items'] => [
   {
     key: 'profile',
     icon: <UserOutlined />,
@@ -38,6 +39,7 @@ const createUserMenuItems = (navigate: (path: string) => void): MenuProps['items
     icon: <LogoutOutlined />,
     label: 'Đăng xuất',
     danger: true,
+    onClick: handleLogout,
   },
 ];
 
@@ -45,13 +47,29 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
   const screens = useBreakpoint();
   const navigate = useNavigate();
 
+  // Logout handler - wrapped in useCallback
+  const handleLogout = useCallback(async () => {
+    try {
+      await authService.logout();
+      message.success('Đăng xuất thành công!');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Clear localStorage anyway
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    }
+  }, [navigate]);
+
   // Logic responsive cho các kích thước màn hình
   const isMobile = !screens.md; // < 768px
   const isSmallTablet = screens.md && !screens.lg; // 768px - 992px
   const showUserInfo = !!screens.lg; // >= 992px
 
   // Tạo menu items với navigate function
-  const userMenuItems = useMemo(() => createUserMenuItems(navigate), [navigate]);
+  const userMenuItems = useMemo(() => createUserMenuItems(navigate, handleLogout), [navigate, handleLogout]);
 
   // Dùng useMemo để cache style object, chỉ tính toán lại khi dependencies thay đổi
   const inputStyle = useMemo(() => ({

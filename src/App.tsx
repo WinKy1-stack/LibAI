@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation, Outlet } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, Outlet, Navigate } from 'react-router-dom';
 import { memo, useMemo } from 'react';
 import UserLayoutTailwind from './components/user/UserLayoutTailwind';
 import AdminLayout from './components/admin/layout/AdminLayout';
@@ -9,6 +9,8 @@ import ReportPage from './pages/admin/ReportPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import LibrarianSettingsPage from './pages/admin/LibrarianSettingsPage';
 import FaqPage from './pages/admin/FaqPage';
+import UserHomePage from './pages/user/UserHomePage';
+import { LoginPage, RegisterPage, ProtectedRoute } from './components/user/auth';
 import './App.css';
 
 // Memoize navigation buttons to prevent re-render
@@ -47,19 +49,46 @@ function AdminLayoutWrapper() {
 function App() {
   const location = useLocation();
   const isAdminRoute = useMemo(() => location.pathname.startsWith('/admin'), [location.pathname]);
+  const isAuthRoute = useMemo(() => 
+    location.pathname === '/login' || location.pathname === '/register',
+    [location.pathname]
+  );
 
   return (
     <>
-      {/* Navigation buttons - show on non-admin routes */}
-      {!isAdminRoute && <NavigationButtons pathname={location.pathname} />}
+      {/* Navigation buttons - hide on admin and auth routes */}
+      {!isAdminRoute && !isAuthRoute && <NavigationButtons pathname={location.pathname} />}
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<UserLayoutTailwind />} />
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         
-        {/* Admin routes with shared layout */}
-        <Route path="/admin" element={<AdminLayoutWrapper />}>
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        
+        {/* User routes - Protected */}
+        <Route path="/user/home" element={
+          <ProtectedRoute allowedRoles={['user', 'librarian', 'admin']}>
+            <UserHomePage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/user/*" element={
+          <ProtectedRoute allowedRoles={['user', 'librarian', 'admin']}>
+            <UserLayoutTailwind />
+          </ProtectedRoute>
+        } />
+        
+        {/* Admin routes with shared layout - Protected */}
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={['admin', 'librarian']}>
+            <AdminLayoutWrapper />
+          </ProtectedRoute>
+        }>
           <Route index element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="users" element={<UserManagementPage />} />
           <Route path="books" element={<BooksManagementPage />} />
           <Route path="reports" element={<ReportPage />} />
@@ -67,6 +96,9 @@ function App() {
           <Route path="librarian" element={<LibrarianSettingsPage />} />
           <Route path="faq" element={<FaqPage />} />
         </Route>
+
+        {/* Redirect to login if no match */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
   );
