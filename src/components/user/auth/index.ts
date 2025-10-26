@@ -1,3 +1,3 @@
-export * from './LoginPage';
-export * from './RegisterPage';
-export * from './ProtectedRoute';
+export { default as LoginPage } from './LoginPage';
+export { default as RegisterPage } from './RegisterPage';
+

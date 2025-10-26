@@ -1,296 +1,376 @@
 import { useState } from 'react';
-import { Form, Input, Button, Typography, message, Checkbox, Alert } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../../../services/authService';
-import type { LoginData } from '../../../types/auth';
+import { Link } from 'react-router-dom';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
-const { Title, Text } = Typography;
-
-export function LoginPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
-  const navigate = useNavigate();
-  const [form] = Form.useForm();
-
-  // Handle login submission
-  const onFinish = async (values: LoginData) => {
-    setLoading(true);
-    setError(''); // Clear previous error
-    try {
-      const response = await authService.login(values);
-      message.success('Đăng nhập thành công!');
-
-      // Lưu thông tin user và token
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-
-      // Điều hướng theo role
-      if (response.user.role === 'admin' || response.user.role === 'librarian') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/user/home');
-      }
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { error?: string }; status?: number } };
-      let errorMessage = 'Đã xảy ra lỗi, vui lòng thử lại';
-      
-      // Xử lý lỗi chi tiết
-      if (err.response?.status === 401) {
-        errorMessage = 'Tên đăng nhập hoặc mật khẩu không đúng';
-      } else if (err.response?.status === 403) {
-        errorMessage = 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên';
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      }
-      
-      setError(errorMessage);
-      message.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '100vh',
-        backgroundColor: '#1b133f',
-        color: '#ffffff',
-      }}
-    >
-      {/* Left visual panel */}
-      <div
-        style={{
-          flex: 1,
-          position: 'relative',
-          padding: '40px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background:
-            'linear-gradient(180deg, rgba(57,39,95,1) 0%, rgba(27,19,63,1) 100%)',
-          borderTopLeftRadius: '16px',
-          borderBottomLeftRadius: '16px',
-        }}
-      >
-        <div style={{ fontSize: 28, fontWeight: 600 }}>LibAI</div>
-        <div style={{ marginTop: 'auto', marginBottom: '60px' }}>
-          <h2 style={{ fontSize: 28, lineHeight: 1.4, color: '#ffffff' }}>
-            Capturing Moments,
-            <br />
-            Creating Memories
-          </h2>
+    <div style={{
+      display: "flex",
+      minHeight: "100vh",
+      background: "#0a0a0a",
+      position: "relative",
+    }}>
+      {/* Logo in top left corner - absolute positioning */}
+      <Link to="/" style={{
+        position: "absolute",
+        top: 24,
+        left: 24,
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        textDecoration: "none",
+        zIndex: 100,
+        transition: "all 0.2s ease",
+      }}>
+        <div style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          background: "linear-gradient(135deg, #ec4899 0%, #9333ea 100%)",
+          boxShadow: "0 4px 12px rgba(236, 72, 153, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <svg style={{ width: 24, height: 24 }} fill="white" viewBox="0 0 20 20">
+            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
+          </svg>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <span
-            style={{
-              width: 30,
-              height: 4,
-              backgroundColor: '#4a3b82',
-              borderRadius: 4,
-            }}
-          ></span>
-          <span
-            style={{
-              width: 30,
-              height: 4,
-              backgroundColor: '#4a3b82',
-              borderRadius: 4,
-            }}
-          ></span>
-          <span
-            style={{
-              width: 30,
-              height: 4,
-              backgroundColor: '#764ba2',
-              borderRadius: 4,
-            }}
-          ></span>
+        <span style={{
+          fontSize: 24,
+          fontWeight: 700,
+          color: "#fff",
+        }}>
+          LibAI
+        </span>
+      </Link>
+
+      {/* Left Panel - Visual */}
+      <div style={{
+        flex: 1,
+        background: "linear-gradient(135deg, #a78bfa 0%, #f9a8d4 40%, #93c5fd 100%)",
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: 48,
+      }}>
+        {/* Decorative Pattern */}
+        <svg style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          opacity: 0.15,
+        }} viewBox="0 0 100 100">
+          <path d="M0,50 Q25,30 50,50 T100,50 L100,100 L0,100 Z" fill="rgba(255,255,255,0.1)"/>
+          <path d="M0,70 Q30,50 60,70 T100,70 L100,100 L0,100 Z" fill="rgba(255,255,255,0.05)"/>
+        </svg>
+
+        <div style={{ height: 48 }}></div>
+
+        <div style={{
+          textAlign: "center",
+          zIndex: 10,
+        }}>
+          <div style={{
+            width: 80,
+            height: 80,
+            margin: "0 auto 32px",
+            borderRadius: 20,
+            background: "linear-gradient(135deg, #ec4899 0%, #9333ea 100%)",
+            boxShadow: "0 8px 32px rgba(236, 72, 153, 0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <svg style={{ width: 48, height: 48 }} fill="white" viewBox="0 0 20 20">
+              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
+            </svg>
+          </div>
+          <h2 style={{
+            fontSize: 40,
+            fontWeight: 700,
+            color: "#fff",
+            marginBottom: 16,
+            lineHeight: 1.2,
+          }}>
+            Khám phá tri thức<br />cùng LibAI
+          </h2>
+          <p style={{
+            fontSize: 18,
+            color: "rgba(255, 255, 255, 0.8)",
+            maxWidth: 400,
+            margin: "0 auto 32px",
+          }}>
+            Trợ lý ảo thông minh giúp bạn tìm kiếm và quản lý tài liệu thư viện một cách dễ dàng
+          </p>
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 8,
+          }}>
+            <div style={{ width: 48, height: 6, background: "#fff", borderRadius: 999 }}></div>
+            <div style={{ width: 48, height: 6, background: "rgba(255, 255, 255, 0.3)", borderRadius: 999 }}></div>
+            <div style={{ width: 48, height: 6, background: "rgba(255, 255, 255, 0.3)", borderRadius: 999 }}></div>
+          </div>
         </div>
       </div>
 
-      {/* Right form panel */}
-      <div
-        style={{
-          flex: 1,
-          padding: '60px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          backgroundColor: '#241a47',
-          borderTopRightRadius: '16px',
-          borderBottomRightRadius: '16px',
-        }}
-      >
-        <div style={{ maxWidth: 450, margin: '0 auto' }}>
-          <div style={{ marginBottom: 32 }}>
-            <Title level={2} style={{ color: '#ffffff', marginBottom: 8 }}>
-              Đăng nhập
-            </Title>
-            <Text style={{ color: '#b5b3cd' }}>
-              Chào mừng bạn quay trở lại!
-            </Text>
-          </div>
-
-          {/* Error Alert */}
-          {error && (
-            <Alert
-              message="Đăng nhập thất bại"
-              description={error}
-              type="error"
-              showIcon
-              closable
-              onClose={() => setError('')}
+      {/* Right Panel - Form */}
+      <div style={{
+        flex: 1,
+        background: "linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 48,
+      }}>
+        <div style={{ width: "100%", maxWidth: 440 }}>
+          <h1 style={{
+            fontSize: 36,
+            fontWeight: 700,
+            color: "#fff",
+            marginBottom: 12,
+          }}>
+            Đăng nhập
+          </h1>
+          
+          <p style={{
+            fontSize: 16,
+            color: "#9ca3af",
+            marginBottom: 32,
+          }}>
+            Chưa có tài khoản?{' '}
+            <Link 
+              to="/signup"
               style={{
-                marginBottom: 24,
-                backgroundColor: 'rgba(244, 67, 54, 0.1)',
-                borderColor: 'rgba(244, 67, 54, 0.3)',
+                color: "#a855f7",
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              Đăng ký ngay
+            </Link>
+          </p>
+
+          <form style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Email */}
+            <input
+              type="email"
+              placeholder="Email"
+              style={{
+                padding: "14px 16px",
+                fontSize: 15,
+                borderRadius: 12,
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                background: "rgba(255, 255, 255, 0.05)",
+                color: "#fff",
+                outline: "none",
+                transition: "all 0.2s ease",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "#9333ea";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(147, 51, 234, 0.1)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                e.currentTarget.style.boxShadow = "none";
               }}
             />
-          )}
 
-          <Form
-            form={form}
-            name="login"
-            onFinish={onFinish}
-            layout="vertical"
-            size="large"
-            autoComplete="off"
-            initialValues={{ remember: true }}
-          >
-            <Form.Item
-              name="username"
-              label={<span style={{ color: '#ffffff' }}>Tên đăng nhập hoặc Email</span>}
-              rules={[
-                {
-                  required: true,
-                  message: 'Vui lòng nhập tên đăng nhập hoặc email!',
-                },
-              ]}
-            >
-              <Input
-                prefix={<UserOutlined style={{ color: '#b5b3cd' }} />}
-                placeholder="Tên đăng nhập hoặc email"
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
                 style={{
-                  backgroundColor: '#32275e',
-                  borderColor: '#43356c',
-                  color: '#ffffff',
+                  width: "100%",
+                  padding: "14px 48px 14px 16px",
+                  fontSize: 15,
+                  borderRadius: 12,
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  color: "#fff",
+                  outline: "none",
+                  transition: "all 0.2s ease",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#9333ea";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(147, 51, 234, 0.1)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                  e.currentTarget.style.boxShadow = "none";
                 }}
               />
-            </Form.Item>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: 16,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "#9ca3af",
+                  cursor: "pointer",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                {showPassword ? (
+                  <EyeSlashIcon style={{ width: 20, height: 20 }} />
+                ) : (
+                  <EyeIcon style={{ width: 20, height: 20 }} />
+                )}
+              </button>
+            </div>
 
-            <Form.Item
-              name="password"
-              label={<span style={{ color: '#ffffff' }}>Mật khẩu</span>}
-              rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
+            {/* Remember me & Forgot password */}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}>
+              <label style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                cursor: "pointer",
+                color: "#9ca3af",
+                fontSize: 14,
+              }}>
+                <input
+                  type="checkbox"
+                  style={{
+                    width: 16,
+                    height: 16,
+                    cursor: "pointer",
+                  }}
+                />
+                <span>Ghi nhớ đăng nhập</span>
+              </label>
+              <a href="#" style={{
+                color: "#a855f7",
+                fontSize: 14,
+                textDecoration: "none",
+              }}>
+                Quên mật khẩu?
+              </a>
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                padding: "14px 24px",
+                fontSize: 16,
+                fontWeight: 600,
+                borderRadius: 12,
+                border: "none",
+                background: "linear-gradient(135deg, #9333ea 0%, #ec4899 100%)",
+                color: "#fff",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(147, 51, 234, 0.4)",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(147, 51, 234, 0.5)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(147, 51, 234, 0.4)";
+              }}
             >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: '#b5b3cd' }} />}
-                placeholder="Mật khẩu"
-                style={{
-                  backgroundColor: '#32275e',
-                  borderColor: '#43356c',
-                  color: '#ffffff',
-                }}
-              />
-            </Form.Item>
+              Đăng nhập
+            </button>
 
-            <Form.Item>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 16,
-                }}
-              >
-                <Form.Item name="remember" valuePropName="checked" noStyle>
-                  <Checkbox style={{ color: '#ffffff' }}>Ghi nhớ đăng nhập</Checkbox>
-                </Form.Item>
-                <Link
-                  to="/forgot-password"
-                  style={{ color: '#b5b3cd', textDecoration: 'underline' }}
-                >
-                  Quên mật khẩu?
-                </Link>
-              </div>
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                block
-                size="large"
-                style={{
-                  height: 48,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  backgroundColor: '#764ba2',
-                  borderColor: '#764ba2',
-                }}
-              >
-                Đăng nhập
-              </Button>
-            </Form.Item>
-
-            {/* Divider */}
-            <div style={{ 
-              textAlign: 'center', 
-              margin: '20px 0',
-              position: 'relative'
+            <div style={{
+              position: "relative",
+              textAlign: "center",
+              margin: "16px 0",
             }}>
               <div style={{
-                position: 'absolute',
-                top: '50%',
+                position: "absolute",
                 left: 0,
                 right: 0,
-                height: '1px',
-                backgroundColor: '#43356c'
+                top: "50%",
+                height: 1,
+                background: "rgba(255, 255, 255, 0.1)",
               }}></div>
               <span style={{
-                position: 'relative',
-                padding: '0 16px',
-                backgroundColor: '#241a47',
-                color: '#b5b3cd',
-                fontSize: 13
+                position: "relative",
+                background: "#1a1a1a",
+                padding: "0 16px",
+                color: "#9ca3af",
+                fontSize: 14,
               }}>
-                hoặc
+                Hoặc đăng nhập với
               </span>
             </div>
 
-            {/* Button chuyển đăng ký */}
-            <Form.Item style={{ marginBottom: 0 }}>
-              <Link to="/register" style={{ textDecoration: 'none' }}>
-                <Button
-                  block
-                  size="large"
-                  style={{
-                    height: 48,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    backgroundColor: 'transparent',
-                    borderColor: '#764ba2',
-                    color: '#ffffff',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(118, 75, 162, 0.1)';
-                    e.currentTarget.style.color = '#9d7bd4';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#ffffff';
-                  }}
-                >
-                  Chưa có tài khoản? Đăng ký ngay
-                </Button>
-              </Link>
-            </Form.Item>
-          </Form>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <button
+                type="button"
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                }}
+              >
+                <span>G</span>
+                <span>Google</span>
+              </button>
+              <button
+                type="button"
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  background: "rgba(255, 255, 255, 0.05)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 15,
+                  fontWeight: 500,
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                }}
+              >
+                <span>🍎</span>
+                <span>Apple</span>
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
