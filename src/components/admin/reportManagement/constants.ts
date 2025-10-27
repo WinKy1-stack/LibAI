@@ -1,4 +1,5 @@
 import type { ReportType, ReportStatus, ReportCategory } from "../../../data";
+import type { GlobalToken } from "antd";
 
 export const REPORT_TYPE_OPTIONS: Array<{ label: string; value: "all" | ReportType }> = [
   { label: "Tất cả chu kỳ", value: "all" },
@@ -25,7 +26,7 @@ export const REPORT_CATEGORY_OPTIONS: Array<{ label: string; value: "all" | Repo
 ];
 
 // Chart colors using theme tokens
-export const getChartColors = (token: any) => ({
+export const getChartColors = (token: GlobalToken) => ({
   // Activity chart colors
   checkouts: token.colorInfo,
   returns: token.colorSuccess,

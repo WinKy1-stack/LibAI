@@ -1,5 +1,6 @@
-import { Avatar, Button, Card, List, Space, Tag, Typography } from "antd";
+import { Avatar, Button, Card, List, Space, Tag, Typography, theme } from "antd";
 import { QuestionCircleOutlined } from "@ant-design/icons";
+import { getFaqColors } from "./constants";
 
 const { Text } = Typography;
 
@@ -16,6 +17,9 @@ interface FaqActivityCardProps {
 }
 
 export function FaqActivityCard({ activities }: FaqActivityCardProps) {
+  const { token } = theme.useToken();
+  const faqColors = getFaqColors(token);
+
   return (
     <Card
       title="Hoạt động mới nhất"
@@ -28,11 +32,11 @@ export function FaqActivityCard({ activities }: FaqActivityCardProps) {
         renderItem={(item) => (
           <List.Item key={item.id}>
             <List.Item.Meta
-              avatar={<Avatar icon={<QuestionCircleOutlined />} />}
+              avatar={<Avatar icon={<QuestionCircleOutlined />} style={{ backgroundColor: faqColors.categories[item.category] || token.colorPrimary }} />}
               title={
                 <Space direction="vertical" size={4}>
                   <Text strong>{item.question}</Text>
-                  <Tag>{item.category}</Tag>
+                  <Tag color={faqColors.tagColors[item.category] || 'default'}>{item.category}</Tag>
                 </Space>
               }
               description={

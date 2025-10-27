@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { GlobalToken } from "antd";
 import {
   BookOutlined,
   RollbackOutlined,
@@ -34,4 +35,43 @@ export const statusLabels: Record<string, string> = {
   draft: "Nháp",
   archived: "Lưu trữ",
 };
+
+// FAQ colors using theme tokens
+export const getFaqColors = (token: GlobalToken) => ({
+  // Category colors
+  categories: {
+    borrowing: token.colorInfo,
+    returning: token.colorSuccess,
+    membership: token.colorPrimary,
+    fines: token.colorError,
+    services: token.colorWarning,
+    technical: '#722ed1', // Purple for technical
+  } as Record<string, string>,
+  
+  // Status colors
+  status: {
+    published: token.colorSuccess,
+    draft: token.colorWarning,
+    archived: token.colorTextSecondary,
+  },
+  
+  // Action colors
+  actions: {
+    like: token.colorSuccess,
+    dislike: token.colorError,
+    view: token.colorTextSecondary,
+    edit: token.colorPrimary,
+    delete: token.colorError,
+  },
+  
+  // Tag colors for categories
+  tagColors: {
+    borrowing: 'blue',
+    returning: 'green', 
+    membership: 'purple',
+    fines: 'red',
+    services: 'cyan',
+    technical: 'orange',
+  } as Record<string, string>,
+});
 

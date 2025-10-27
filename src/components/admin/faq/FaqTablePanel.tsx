@@ -12,6 +12,7 @@ import {
   Grid,
   Tooltip,
   Popconfirm,
+  theme,
 } from "antd";
 import { 
   EditOutlined,
@@ -21,6 +22,7 @@ import {
   DislikeOutlined,
 } from "@ant-design/icons";
 import type { FaqItem } from "../../../data";
+import { getFaqColors } from "./constants";
 
 const { Text } = Typography;
 const { Search } = Input;
@@ -53,15 +55,17 @@ export function FaqTablePanel({
   onDelete,
 }: FaqTablePanelProps) {
   const screens = Grid.useBreakpoint();
+  const { token } = theme.useToken();
+  const faqColors = getFaqColors(token);
 
   const categoryMap: Record<string, { label: string; color: string }> = useMemo(() => ({
-    borrowing: { label: "Mượn sách", color: "blue" },
-    returning: { label: "Trả sách", color: "green" },
-    membership: { label: "Thẻ TV", color: "purple" },
-    fines: { label: "Phí & Phạt", color: "red" },
-    services: { label: "Dịch vụ", color: "cyan" },
-    technical: { label: "Kỹ thuật", color: "orange" },
-  }), []);
+    borrowing: { label: "Mượn sách", color: faqColors.tagColors.borrowing },
+    returning: { label: "Trả sách", color: faqColors.tagColors.returning },
+    membership: { label: "Thẻ TV", color: faqColors.tagColors.membership },
+    fines: { label: "Phí & Phạt", color: faqColors.tagColors.fines },
+    services: { label: "Dịch vụ", color: faqColors.tagColors.services },
+    technical: { label: "Kỹ thuật", color: faqColors.tagColors.technical },
+  }), [faqColors.tagColors]);
 
   const statusMap: Record<string, { label: string; color: string }> = useMemo(() => ({
     published: { label: "Xuất bản", color: "success" },
@@ -149,13 +153,13 @@ export function FaqTablePanel({
               </Tooltip>
               <Tooltip title="Hữu ích">
                 <Space size={4}>
-                  <LikeOutlined style={{ fontSize: 12, color: "#52c41a" }} />
+                  <LikeOutlined style={{ fontSize: 12, color: faqColors.actions.like }} />
                   <Text style={{ fontSize: 12 }}>{record.helpful}</Text>
                 </Space>
               </Tooltip>
               <Tooltip title="Không hữu ích">
                 <Space size={4}>
-                  <DislikeOutlined style={{ fontSize: 12, color: "#ff4d4f" }} />
+                  <DislikeOutlined style={{ fontSize: 12, color: faqColors.actions.dislike }} />
                   <Text style={{ fontSize: 12 }}>{record.notHelpful}</Text>
                 </Space>
               </Tooltip>
@@ -203,7 +207,7 @@ export function FaqTablePanel({
         width: screens.md ? 100 : 60,
       },
     ],
-    [categoryMap, statusMap, screens.md, onEdit, onDelete],
+    [categoryMap, statusMap, screens.md, onEdit, onDelete, faqColors.actions.like, faqColors.actions.dislike],
   );
 
   return (
