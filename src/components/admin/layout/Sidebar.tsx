@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Layout, Menu, Button, Grid, theme } from 'antd';
 import {
   DashboardOutlined,
@@ -11,6 +11,8 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '/logo.png';
 import logoDarkImg from '/logo_darkmode.png';
+import { authService } from '../../../services/authService';
+import type { User } from '../../../types/auth';
 
 const { Sider } = Layout;
 const { useBreakpoint } = Grid;
@@ -22,37 +24,43 @@ interface SidebarProps {
   mode: string;
 }
 
-// Menu items outside component to prevent re-renders
-const menuItems = [
-  { 
-    key: "/admin", 
-    icon: <DashboardOutlined />, 
-    label: "Dashboard" 
+// All menu items
+const allMenuItems = [
+  {
+    key: "/admin",
+    icon: <DashboardOutlined />,
+    label: "Dashboard",
+    roles: ['admin', 'librarian'] // Available for both
   },
-  { 
-    key: "/admin/users", 
-    icon: <TeamOutlined />, 
-    label: "Users" 
+  {
+    key: "/admin/users",
+    icon: <TeamOutlined />,
+    label: "Users",
+    roles: ['admin'] // Only admin
   },
-  { 
-    key: "/admin/books", 
-    icon: <BookOutlined />, 
-    label: "Books" 
+  {
+    key: "/admin/books",
+    icon: <BookOutlined />,
+    label: "Books",
+    roles: ['admin', 'librarian'] // Available for both
   },
-  { 
-    key: "/admin/reports", 
-    icon: <BarChartOutlined />, 
-    label: "Reports"
+  {
+    key: "/admin/reports",
+    icon: <BarChartOutlined />,
+    label: "Reports",
+    roles: ['admin', 'librarian'] // Available for both
   },
-  { 
-    key: "/admin/faq", 
-    icon: <QuestionCircleOutlined />, 
-    label: "FAQ"
+  {
+    key: "/admin/faq",
+    icon: <QuestionCircleOutlined />,
+    label: "FAQ",
+    roles: ['admin', 'librarian'] // Available for both
   },
-  { 
-    key: "/admin/settings", 
-    icon: <SettingOutlined />, 
-    label: "Settings"
+  {
+    key: "/admin/settings",
+    icon: <SettingOutlined />,
+    label: "Settings",
+    roles: ['admin'] // Only admin
   },
 ];
 
@@ -61,6 +69,25 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = useToken();
+  const [user, setUser] = useState<User | null>(null);
+
+  // Fetch user info
+  useEffect(() => {
+    const storedUser = authService.getStoredUser();
+    if (storedUser) {
+      setUser(storedUser);
+    } else {
+      authService.getCurrentUser()
+        .then(currentUser => setUser(currentUser))
+        .catch(error => console.error('Failed to fetch user:', error));
+    }
+  }, []);
+
+  // Filter menu items based on user role
+  const menuItems = useMemo(() => {
+    if (!user) return [];
+    return allMenuItems.filter(item => item.roles.includes(user.role));
+  }, [user]);
 
   const selectedKey = useMemo(() => {
     const stringKeys = menuItems
@@ -75,7 +102,7 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
       .sort((a, b) => b.length - a.length)[0];
 
     return partialMatch ?? "/admin";
-  }, [location.pathname]);
+  }, [location.pathname, menuItems]);
 
   const isMobile = !screens.md;
 
@@ -110,12 +137,9 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
       )}
       
       <Sider
-        breakpoint="md"
         collapsedWidth={isMobile ? 0 : 80}
         width={isMobile ? 280 : collapsed ? 80 : 280}
-        collapsible
         collapsed={collapsed}
-        onCollapse={onCollapse}
         trigger={null}
         style={{
           position: "fixed",
