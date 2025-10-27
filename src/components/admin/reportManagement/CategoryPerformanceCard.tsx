@@ -1,5 +1,6 @@
 import { Card, Space, Typography, Table, Progress, theme } from "antd";
 import { TrophyOutlined } from "@ant-design/icons";
+import { getChartColors } from "./constants";
 
 const { Title, Text } = Typography;
 const { useToken } = theme;
@@ -10,6 +11,7 @@ interface CategoryPerformanceProps {
 
 export function CategoryPerformanceCard({ data }: CategoryPerformanceProps) {
   const { token } = useToken();
+  const chartColors = getChartColors(token);
 
   const maxBorrowed = Math.max(...data.map((item) => item.borrowed));
   const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
@@ -19,9 +21,19 @@ export function CategoryPerformanceCard({ data }: CategoryPerformanceProps) {
       title: "Thể loại",
       dataIndex: "category",
       key: "category",
-      render: (text: string, _: any, index: number) => (
+      render: (text: string, _: { category: string; borrowed: number; revenue: number }, index: number) => (
         <Space>
-          {index < 3 && <TrophyOutlined style={{ color: ["#ffd700", "#c0c0c0", "#cd7f32"][index] }} />}
+          {index < 3 && (
+            <TrophyOutlined 
+              style={{ 
+                color: [
+                  chartColors.trophy.gold, 
+                  chartColors.trophy.silver, 
+                  chartColors.trophy.bronze
+                ][index] 
+              }} 
+            />
+          )}
           <Text strong={index < 3}>{text}</Text>
         </Space>
       ),

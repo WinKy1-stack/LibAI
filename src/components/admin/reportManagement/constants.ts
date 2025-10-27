@@ -24,3 +24,33 @@ export const REPORT_CATEGORY_OPTIONS: Array<{ label: string; value: "all" | Repo
   { label: "Quá hạn", value: "overdue" },
 ];
 
+// Chart colors using theme tokens
+export const getChartColors = (token: any) => ({
+  // Activity chart colors
+  checkouts: token.colorInfo,
+  returns: token.colorSuccess,
+  visitors: token.colorPrimary,
+  
+  // Revenue chart colors
+  fines: token.colorError,
+  subscriptions: token.colorSuccess,
+  lateReturns: token.colorWarning,
+  
+  // Trophy colors for rankings
+  trophy: {
+    gold: '#ffd700',
+    silver: '#c0c0c0',
+    bronze: '#cd7f32',
+  },
+  
+  // Stats overview colors
+  stats: {
+    primary: token.colorPrimary,
+    success: token.colorSuccess,
+    info: token.colorInfo,
+    warning: token.colorWarning,
+    purple: '#722ed1',
+    pink: '#eb2f96',
+  },
+});
+

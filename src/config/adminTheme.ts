@@ -13,6 +13,7 @@ export const adminTheme: ThemeConfig = {
     // Background colors
     colorBgContainer: '#ffffff',
     colorBgLayout: '#f5f5f5',
+    colorWhite: '#ffffff',
 
     // Border
     borderRadius: 12,
@@ -62,6 +63,7 @@ export const adminDarkTheme: ThemeConfig = {
     colorBgElevated: '#262626',
     colorText: '#e8e8e8',
     colorTextSecondary: '#a8a8a8',
+    colorWhite: '#ffffff',
 
     borderRadius: 12,
 

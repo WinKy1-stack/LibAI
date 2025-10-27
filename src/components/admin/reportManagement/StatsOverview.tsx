@@ -7,6 +7,7 @@ import {
   RiseOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
+import { getChartColors } from "./constants";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -63,7 +64,7 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#fff",
+              color: token.colorWhite || "#fff",
               fontSize: 20,
             }}
           >
@@ -86,6 +87,7 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
 
 export function StatsOverview({ totals }: StatsOverviewProps) {
   const { token } = useToken();
+  const chartColors = getChartColors(token);
 
   return (
     <Row gutter={[16, 16]}>
@@ -94,7 +96,7 @@ export function StatsOverview({ totals }: StatsOverviewProps) {
           title="Tổng báo cáo"
           value={totals.totalReports}
           icon={<FileTextOutlined />}
-          color={token.colorPrimary}
+          color={chartColors.stats.primary}
         />
       </Col>
       <Col xs={12} sm={12} md={8} lg={4}>
@@ -102,7 +104,7 @@ export function StatsOverview({ totals }: StatsOverviewProps) {
           title="Tạo tháng này"
           value={totals.generatedThisMonth}
           icon={<RiseOutlined />}
-          color="#52c41a"
+          color={chartColors.stats.success}
         />
       </Col>
       <Col xs={12} sm={12} md={8} lg={4}>
@@ -110,7 +112,7 @@ export function StatsOverview({ totals }: StatsOverviewProps) {
           title="Lượt tải"
           value={totals.totalDownloads}
           icon={<DownloadOutlined />}
-          color="#1890ff"
+          color={chartColors.stats.info}
         />
       </Col>
       <Col xs={12} sm={12} md={8} lg={4}>
@@ -118,7 +120,7 @@ export function StatsOverview({ totals }: StatsOverviewProps) {
           title="Đã lên lịch"
           value={totals.scheduledReports}
           icon={<CalendarOutlined />}
-          color="#faad14"
+          color={chartColors.stats.warning}
         />
       </Col>
       <Col xs={12} sm={12} md={8} lg={4}>
@@ -126,7 +128,7 @@ export function StatsOverview({ totals }: StatsOverviewProps) {
           title="Thời gian TB"
           value={totals.avgGenerationTime}
           icon={<ClockCircleOutlined />}
-          color="#722ed1"
+          color={chartColors.stats.purple}
         />
       </Col>
       <Col xs={12} sm={12} md={8} lg={4}>
@@ -134,7 +136,7 @@ export function StatsOverview({ totals }: StatsOverviewProps) {
           title="Dung lượng"
           value={totals.storageUsed}
           icon={<DatabaseOutlined />}
-          color="#eb2f96"
+          color={chartColors.stats.pink}
         />
       </Col>
     </Row>
