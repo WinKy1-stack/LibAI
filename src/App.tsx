@@ -10,6 +10,7 @@ import SettingsPage from './pages/admin/SettingsPage';
 import LibrarianSettingsPage from './pages/admin/LibrarianSettingsPage';
 import FaqPage from './pages/admin/FaqPage';
 import UserHomePage from './pages/user/UserHomePage';
+import ForbiddenPage from './pages/ForbiddenPage';
 import { LoginPage, RegisterPage, ProtectedRoute, PublicRoute } from './components/user/auth';
 import './App.css';
 
@@ -58,21 +59,37 @@ function App() {
           <UserLayout><RegisterPage /></UserLayout>
         </PublicRoute>
       } />
-      
+
+      {/* 403 Forbidden page */}
+      <Route path="/403" element={<ForbiddenPage />} />
+
       {/* Admin routes - PROTECTED - Chỉ admin & librarian */}
       <Route path="/admin" element={
         <ProtectedRoute allowedRoles={['admin', 'librarian']}>
           <AdminLayoutWrapper />
         </ProtectedRoute>
       }>
+        {/* Routes cho cả admin và librarian */}
         <Route index element={<DashboardPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="users" element={<UserManagementPage />} />
         <Route path="books" element={<BooksManagementPage />} />
         <Route path="reports" element={<ReportPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="librarian" element={<LibrarianSettingsPage />} />
         <Route path="faq" element={<FaqPage />} />
+
+        {/* Routes CHỈ ADMIN - Nested Protection */}
+        <Route path="users" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <UserManagementPage />
+          </ProtectedRoute>
+        } />
+        <Route path="settings" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <SettingsPage />
+          </ProtectedRoute>
+        } />
+
+        {/* Librarian settings - có thể cả hai hoặc chỉ librarian */}
+        <Route path="librarian" element={<LibrarianSettingsPage />} />
       </Route>
     </Routes>
     </ChatProvider>
