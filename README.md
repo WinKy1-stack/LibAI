@@ -69,8 +69,12 @@ LibAI là hệ thống quản lý thư viện hiện đại full-stack, cung c�
 ### 1️⃣ Clone Repository
 
 ```bash
+# Clone repository
 git clone https://github.com/LockMan04/LibAI.git
 cd LibAI
+
+# Checkout branch với authentication đầy đủ
+git checkout feature/auth-implementation
 ```
 
 ### 2️⃣ Cài đặt Frontend
