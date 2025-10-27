@@ -1,5 +1,5 @@
 """
-Script to initialize MongoDB indexes for Library Chatbot System
+Script to initialize MongoDB indexes for Library Chatbox System
 Run: python scripts/init_mongodb_indexes.py
 """
 
