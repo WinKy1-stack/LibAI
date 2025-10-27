@@ -16,10 +16,16 @@ colorama==0.4.6
 Flask-CORS==6.0.1
 Flask-JWT-Extended==4.7.1
 Flask-PyMongo==3.0.1
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
 
 # ============================================
-# MongoDB Driver & DNS
+# Database Drivers
 # ============================================
+# SQLAlchemy for SQLite/PostgreSQL support
+SQLAlchemy==2.0.36
+
+# MongoDB Driver & DNS
 pymongo==4.15.3
 dnspython==2.8.0
 
@@ -33,6 +39,12 @@ PyJWT==2.10.1
 # Environment Configuration
 # ============================================
 python-dotenv==1.1.1
+
+# ============================================
+# Utilities
+# ============================================
+# For migrations
+alembic==1.14.0
 
 # ============================================
 # Optional: Testing (uncomment if needed)

@@ -4,7 +4,7 @@ import type { User } from '../../../types/auth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: Array<'admin' | 'librarian' | 'user'>;
+  allowedRoles?: Array<'admin' | 'librarian' | 'reader'>;
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {

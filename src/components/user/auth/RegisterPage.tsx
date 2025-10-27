@@ -1,9 +1,61 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { authService } from '../../../services/authService';
+import type { RegisterData } from '../../../types/auth';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState<RegisterData>({
+    username: '',
+    email: '',
+    password: '',
+    full_name: '',
+  });
+  const [agreedToTerms, setAgreedToTerms] = useState(true);
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!agreedToTerms) {
+      setError('Vui lòng đồng ý với Điều khoản & Điều kiện');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await authService.register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.full_name,
+      });
+
+      // Đăng ký thành công, chuyển đến trang đăng nhập
+      navigate('/login', { 
+        state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' } 
+      });
+    } catch (err: unknown) {
+      console.error('Register error:', err);
+      let errorMessage = 'Đăng ký thất bại. Vui lòng thử lại.';
+      
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { data?: { error?: string } } };
+        errorMessage = axiosError.response?.data?.error || errorMessage;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div style={{
@@ -157,11 +209,57 @@ export default function RegisterPage() {
             </Link>
           </p>
 
-          <form style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Error Message */}
+            {error && (
+              <div style={{
+                padding: "12px 16px",
+                borderRadius: 12,
+                background: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                color: "#ef4444",
+                fontSize: 14,
+              }}>
+                {error}
+              </div>
+            )}
+
             {/* Full Name */}
             <input
               type="text"
               placeholder="Họ và tên"
+              value={formData.full_name}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              required
+              disabled={isLoading}
+              style={{
+                padding: "14px 16px",
+                fontSize: 15,
+                borderRadius: 12,
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                background: "rgba(255, 255, 255, 0.05)",
+                color: "#fff",
+                outline: "none",
+                transition: "all 0.2s ease",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "#9333ea";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(147, 51, 234, 0.1)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+
+            {/* Username */}
+            <input
+              type="text"
+              placeholder="Mã sinh viên"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              required
+              disabled={isLoading}
               style={{
                 padding: "14px 16px",
                 fontSize: 15,
@@ -186,6 +284,10 @@ export default function RegisterPage() {
             <input
               type="email"
               placeholder="Email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              disabled={isLoading}
               style={{
                 padding: "14px 16px",
                 fontSize: 15,
@@ -211,6 +313,10 @@ export default function RegisterPage() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Mật khẩu"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+                disabled={isLoading}
                 style={{
                   width: "100%",
                   padding: "14px 48px 14px 16px",
@@ -267,7 +373,8 @@ export default function RegisterPage() {
             }}>
               <input
                 type="checkbox"
-                defaultChecked
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
                 style={{
                   width: 16,
                   height: 16,
@@ -286,28 +393,35 @@ export default function RegisterPage() {
             {/* Submit Button */}
             <button
               type="submit"
+              disabled={isLoading}
               style={{
                 padding: "14px 24px",
                 fontSize: 16,
                 fontWeight: 600,
                 borderRadius: 12,
                 border: "none",
-                background: "linear-gradient(135deg, #9333ea 0%, #ec4899 100%)",
+                background: isLoading 
+                  ? "rgba(147, 51, 234, 0.5)" 
+                  : "linear-gradient(135deg, #9333ea 0%, #ec4899 100%)",
                 color: "#fff",
-                cursor: "pointer",
+                cursor: isLoading ? "not-allowed" : "pointer",
                 boxShadow: "0 4px 12px rgba(147, 51, 234, 0.4)",
                 transition: "all 0.3s ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 6px 20px rgba(147, 51, 234, 0.5)";
+                if (!isLoading) {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(147, 51, 234, 0.5)";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(147, 51, 234, 0.4)";
+                if (!isLoading) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(147, 51, 234, 0.4)";
+                }
               }}
             >
-              Tạo tài khoản
+              {isLoading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
             </button>
 
             {/* Divider */}

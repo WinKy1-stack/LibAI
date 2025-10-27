@@ -10,7 +10,7 @@ import SettingsPage from './pages/admin/SettingsPage';
 import LibrarianSettingsPage from './pages/admin/LibrarianSettingsPage';
 import FaqPage from './pages/admin/FaqPage';
 import UserHomePage from './pages/user/UserHomePage';
-import { LoginPage, RegisterPage } from './components/user/auth';
+import { LoginPage, RegisterPage, ProtectedRoute, PublicRoute } from './components/user/auth';
 import './App.css';
 
 // Wrapper component cho admin routes
@@ -35,19 +35,36 @@ function App() {
   return (
     <ChatProvider>
       <Routes>
-      {/* User routes with UserLayout */}
+      {/* Root route - PUBLIC - Ai cũng vào được (mặc định UserHomePage) */}
       <Route path="/" element={<UserLayoutWrapper />}>
         <Route index element={<UserHomePage />} />
       </Route>
       
-      {/* Login page */}
-      <Route path="/login" element={<UserLayout><LoginPage /></UserLayout>} />
+      {/* User home route - PUBLIC - Ai cũng vào được */}
+      <Route path="/user/home" element={<UserLayoutWrapper />}>
+        <Route index element={<UserHomePage />} />
+      </Route>
       
-      {/* Register page */}
-      <Route path="/signup" element={<UserLayout><RegisterPage /></UserLayout>} />
+      {/* Login page - PUBLIC - Tự động redirect nếu đã đăng nhập */}
+      <Route path="/login" element={
+        <PublicRoute>
+          <UserLayout><LoginPage /></UserLayout>
+        </PublicRoute>
+      } />
       
-      {/* Admin routes with AdminLayout */}
-      <Route path="/admin" element={<AdminLayoutWrapper />}>
+      {/* Register page - PUBLIC - Tự động redirect nếu đã đăng nhập */}
+      <Route path="/signup" element={
+        <PublicRoute>
+          <UserLayout><RegisterPage /></UserLayout>
+        </PublicRoute>
+      } />
+      
+      {/* Admin routes - PROTECTED - Chỉ admin & librarian */}
+      <Route path="/admin" element={
+        <ProtectedRoute allowedRoles={['admin', 'librarian']}>
+          <AdminLayoutWrapper />
+        </ProtectedRoute>
+      }>
         <Route index element={<DashboardPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="users" element={<UserManagementPage />} />

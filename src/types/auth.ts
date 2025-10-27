@@ -14,19 +14,15 @@ export interface LoginData {
 }
 
 export interface User {
-  id: number;
-  username: string;
+  id: string;
   email: string;
-  full_name: string;
-  role: 'admin' | 'librarian' | 'user';
-  phone?: string;
-  address?: string;
-  avatar?: string;
-  created_at: string;
-  updated_at: string;
+  name: string;
+  role: 'admin' | 'librarian' | 'reader';
+  student_id?: string;
+  major?: string;
+  status?: string;
+  created_at?: string;
   last_login?: string;
-  is_active: boolean;
-  is_verified: boolean;
 }
 
 export interface AuthResponse {
