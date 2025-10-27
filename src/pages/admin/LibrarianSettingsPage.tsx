@@ -1,4 +1,4 @@
-import { Space, Tabs, Grid, theme, Typography } from "antd";
+import { Space, Tabs, Grid, Typography } from "antd";
 import { UserOutlined, BellOutlined, PictureOutlined, LockOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import LibrarianProfileCard from "../../components/admin/librarianSettings/LibrarianProfileCard";
@@ -11,8 +11,6 @@ const { useBreakpoint } = Grid;
 
 export default function LibrarianSettingsPage() {
   const screens = useBreakpoint();
-  const { token } = theme.useToken();
-  const mode = token.colorBgContainer === "#141414" ? "dark" : "light";
   const [activeTab, setActiveTab] = useState("profile");
 
   const tabItems = [
@@ -24,7 +22,7 @@ export default function LibrarianSettingsPage() {
           {screens.md && " Hồ sơ cá nhân"}
         </span>
       ),
-      children: <LibrarianProfileCard mode={mode} />,
+      children: <LibrarianProfileCard />,
     },
     {
       key: "preferences",
@@ -34,7 +32,7 @@ export default function LibrarianSettingsPage() {
           {screens.md && " Giao diện"}
         </span>
       ),
-      children: <LibrarianPreferencesCard mode={mode} />,
+      children: <LibrarianPreferencesCard />,
     },
     {
       key: "notifications",
@@ -44,7 +42,7 @@ export default function LibrarianSettingsPage() {
           {screens.md && " Thông báo"}
         </span>
       ),
-      children: <LibrarianNotificationCard mode={mode} />,
+      children: <LibrarianNotificationCard />,
     },
     {
       key: "password",
@@ -54,17 +52,24 @@ export default function LibrarianSettingsPage() {
           {screens.md && " Bảo mật"}
         </span>
       ),
-      children: <LibrarianPasswordCard mode={mode} />,
+      children: <LibrarianPasswordCard />,
     },
   ];
 
   return (
     <div style={{ maxWidth: 1000, marginInline: "auto", width: "100%", padding: screens.md ? 24 : 16 }}>
       <Space direction="vertical" size={24} style={{ display: "block", width: "100%" }}>
-        <Title level={2} style={{ margin: 0 }}>
-          Cài đặt thủ thư
-        </Title>
+        {/* Header */}
+        <div style={{ marginBottom: 16 }}>
+          <Title level={2} style={{ margin: 0, fontWeight: 700 }}>
+            Cài đặt thủ thư
+          </Title>
+          <Typography.Text type="secondary">
+            Quản lý thông tin cá nhân, giao diện, thông báo và bảo mật
+          </Typography.Text>
+        </div>
         
+        {/* Librarian Settings Tabs */}
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
@@ -73,6 +78,7 @@ export default function LibrarianSettingsPage() {
           type="card"
           style={{
             width: "100%",
+            background: "transparent",
           }}
         />
       </Space>

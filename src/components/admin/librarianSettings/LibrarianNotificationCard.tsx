@@ -1,17 +1,16 @@
-import { Card, Form, Switch, Button, Space, Typography, Divider, Select, message } from "antd";
+import { Card, Form, Switch, Button, Space, Typography, Divider, Select, message, theme } from "antd";
 import { SaveOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { defaultLibrarianNotifications, notificationFrequencyOptions } from "../../../data";
+import { getLibrarianSettingsColors } from "./constants";
 
 const { Text } = Typography;
 
-interface LibrarianNotificationCardProps {
-  mode: "light" | "dark";
-}
-
-export default function LibrarianNotificationCard({ mode }: LibrarianNotificationCardProps) {
+export default function LibrarianNotificationCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const { token } = theme.useToken();
+  const librarianColors = getLibrarianSettingsColors(token);
 
   const handleSave = async () => {
     try {
@@ -30,7 +29,7 @@ export default function LibrarianNotificationCard({ mode }: LibrarianNotificatio
     <Card
       variant="borderless"
       style={{
-        background: mode === "dark" ? "#141414" : "#fff",
+        background: librarianColors.backgrounds.card,
       }}
     >
       <Form
