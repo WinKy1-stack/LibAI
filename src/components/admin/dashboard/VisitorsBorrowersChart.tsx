@@ -1,4 +1,4 @@
-import { Card, Typography } from "antd";
+import { Card, Typography, theme } from "antd";
 import {
   BarChart,
   Bar,
@@ -14,6 +14,8 @@ import { visitorsBorrowersData } from "../../../data";
 const { Text } = Typography;
 
 export default function VisitorsBorrowersChart() {
+  const { token } = theme.useToken();
+
   return (
     <Card
       title={
@@ -22,9 +24,11 @@ export default function VisitorsBorrowersChart() {
         </Text>
       }
       variant="borderless"
-      style={{ 
+      style={{
         borderRadius: 16,
-        boxShadow: "0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.02)"
+        border: `1px solid ${token.colorBorderSecondary}`,
+        boxShadow: token.boxShadowTertiary,
+        transition: "box-shadow 0.3s ease",
       }}
     >
       <ResponsiveContainer width="100%" height={320}>
@@ -37,25 +41,26 @@ export default function VisitorsBorrowersChart() {
             bottom: 5,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={token.colorBorder} />
           <XAxis
             dataKey="day"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#8c8c8c", fontSize: 13 }}
+            tick={{ fill: token.colorTextSecondary, fontSize: 13 }}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#8c8c8c", fontSize: 13 }}
+            tick={{ fill: token.colorTextSecondary, fontSize: 13 }}
             ticks={[0, 25, 50, 75, 100]}
           />
           <Tooltip
             cursor={{ fill: "rgba(0,0,0,0.05)" }}
             contentStyle={{
               borderRadius: 8,
-              border: "1px solid #f0f0f0",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              border: `1px solid ${token.colorBorder}`,
+              boxShadow: token.boxShadowSecondary,
+              backgroundColor: token.colorBgContainer,
             }}
           />
           <Legend
@@ -67,14 +72,14 @@ export default function VisitorsBorrowersChart() {
           <Bar
             dataKey="visitors"
             name="Visitors"
-            fill="#ff4757"
+            fill={token.colorPrimary}
             radius={[4, 4, 0, 0]}
             barSize={25}
           />
           <Bar
             dataKey="borrowers"
             name="Borrowers"
-            fill="#a0a0a0"
+            fill={token.colorTextSecondary}
             radius={[4, 4, 0, 0]}
             barSize={25}
           />

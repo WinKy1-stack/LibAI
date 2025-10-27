@@ -1,10 +1,11 @@
 import type { ColumnsType } from "antd/es/table";
-import { Card, Table, Button, Space, Typography, Image } from "antd";
+import { Card, Table, Button, Space, Typography, Image, theme } from "antd";
 import { bookIssuedData, type BookIssuedRecord } from "../../../data";
 
 const { Text, Link } = Typography;
 
 export default function BooksIssuedTable() {
+  const { token } = theme.useToken();
   const columns: ColumnsType<BookIssuedRecord> = [
     {
       title: "User ID",
@@ -22,10 +23,10 @@ export default function BooksIssuedTable() {
             alt={record.bookTitle}
             width={50}
             height={70}
-            style={{ 
-              borderRadius: 8, 
+            style={{
+              borderRadius: 8,
               objectFit: "cover",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+              boxShadow: token.boxShadowTertiary,
             }}
             preview={false}
           />
@@ -62,7 +63,7 @@ export default function BooksIssuedTable() {
       width: 120,
       align: "center",
       render: () => (
-        <Link style={{ color: "#ff4757", fontWeight: 500 }}>
+        <Link style={{ color: token.colorPrimary, fontWeight: 500 }}>
           View Details
         </Link>
       ),
@@ -81,7 +82,7 @@ export default function BooksIssuedTable() {
           size="middle"
           style={{
             borderRadius: 8,
-            border: "1px solid #d9d9d9",
+            border: `1px solid ${token.colorBorder}`,
             fontWeight: 500,
           }}
         >
@@ -89,9 +90,11 @@ export default function BooksIssuedTable() {
         </Button>
       }
       variant="borderless"
-      style={{ 
+      style={{
         borderRadius: 16,
-        boxShadow: "0 1px 2px rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.02)"
+        border: `1px solid ${token.colorBorderSecondary}`,
+        boxShadow: token.boxShadowTertiary,
+        transition: "box-shadow 0.3s ease",
       }}
     >
       <Table

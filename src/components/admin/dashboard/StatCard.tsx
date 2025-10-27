@@ -21,8 +21,9 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
         borderRadius: 16,
         background: token.colorBgContainer,
         boxShadow: token.boxShadowSecondary,
-        transition: "all 0.3s ease",
         height: "100%",
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
       styles={{
         body: {
@@ -60,8 +61,9 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#fff",
+            color: token.colorWhite,
             fontSize: 16,
+            transition: "transform 0.3s ease",
           }}
         >
           {icon}

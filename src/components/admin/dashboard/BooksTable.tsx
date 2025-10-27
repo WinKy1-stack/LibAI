@@ -46,18 +46,22 @@ export default function BooksTable() {
   ];
 
   return (
-    <Card 
+    <Card
       title={<Text strong style={{ fontSize: 24, fontWeight: 700 }}>Danh sách sách</Text>}
       extra={
-        <Button 
+        <Button
           size="middle"
           style={{ borderRadius: 8 }}
         >
           Thêm sách
         </Button>
-      } 
+      }
       variant="borderless"
-      style={{ borderRadius: 16 }}
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "box-shadow 0.3s ease",
+      }}
     >
       <Table
         size="middle"

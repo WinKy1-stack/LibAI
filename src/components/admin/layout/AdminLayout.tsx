@@ -1,22 +1,13 @@
 import { useState, useEffect, useMemo, useCallback, type ReactNode } from "react";
-import { ConfigProvider, theme as antdTheme, Layout, Grid } from "antd";
+import { ConfigProvider, Layout, Grid, theme } from "antd";
 import { useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
-import "../color.css";
+import { useAdminTheme } from "../../../hooks/useAdminTheme";
+import "../style.css";
 
 const { Content } = Layout;
 const { useBreakpoint } = Grid;
-
-// Design tokens - pure Ant Design, no CSS variables
-const designTokens = {
-  colorPrimary: "#ff4757",
-  colorSuccess: "#52c41a",
-  colorWarning: "#faad14",
-  colorError: "#ff4d4f",
-  borderRadius: 12,
-  fontFamily: "'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-}
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -26,12 +17,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const screens = useBreakpoint();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(!screens.md); // Auto collapse on mobile
-  
-  // Load theme from localStorage or default to light
-  const [mode, setMode] = useState<"light" | "dark">(() => {
-    const savedTheme = localStorage.getItem("admin-theme");
-    return (savedTheme === "dark" || savedTheme === "light") ? savedTheme : "light";
-  });
+  const { token } = theme.useToken();
+
+  // Sử dụng custom hook để quản lý theme
+  const { mode, setMode, themeConfig } = useAdminTheme();
 
   // Update document title based on current route
   useEffect(() => {
@@ -49,26 +38,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     document.title = title;
   }, [location.pathname]);
 
-  // Save theme to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("admin-theme", mode);
-    document.documentElement.setAttribute("data-theme", mode);
-  }, [mode]);
-
   // Auto-collapse sidebar on mobile
   useEffect(() => {
     if (!screens.md) {
       setCollapsed(true);
     }
   }, [screens.md]);
-
-  const themeConfig = useMemo(
-    () => ({
-      algorithm: mode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-      token: designTokens,
-    }),
-    [mode]
-  );
 
   const layoutStyle = useMemo(
     () => ({ minHeight: "100vh", height: "100vh" }),
@@ -91,11 +66,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       flex: 1,
       overflowY: "auto" as const,
       width: screens.md ? "calc(100% - 80px)" : "100%",
-      background: mode === "dark" ? "#141414" : "#f5f5f5",
+      background: token.colorBgLayout,
       marginLeft: screens.md ? 80 : 0, // Space for minimized sidebar on desktop/tablet
       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     }),
-    [screens.md, mode]
+    [screens.md, token.colorBgLayout]
   );
 
   const handleToggle = useCallback(() => {
