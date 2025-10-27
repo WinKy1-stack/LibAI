@@ -64,7 +64,7 @@ export function BooksTablePanel({
               shape="square"
               size={48}
               src={record.cover}
-              style={{ backgroundColor: token.colorPrimary, color: token.colorWhite }}
+              style={{ backgroundColor: token.colorPrimary, color: "#fff" }}
               icon={!record.cover ? <BookOutlined /> : undefined}
             >
               {!record.cover ? record.title.charAt(0) : null}
@@ -162,13 +162,17 @@ export function BooksTablePanel({
         width: screens.md ? 120 : 60,
       },
     ],
-    [token.colorPrimary, token.colorWhite, screens.md],
+    [token.colorPrimary, screens.md],
   );
 
   return (
     <Card
       variant="borderless"
-      style={{ borderRadius: 16 }}
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "box-shadow 0.3s ease",
+      }}
       styles={{ body: { padding: 0 } }}
     >
       <div style={{ 
@@ -186,7 +190,10 @@ export function BooksTablePanel({
           <Text type="secondary">Kết quả phù hợp: {data.length}</Text>
         </Space>
         
-        <Space wrap style={{ width: screens.lg ? 'auto' : '100%' }}>
+        <Space wrap 
+          style={{ 
+            width: screens.lg ? 'auto' : '100%', 
+            }}>
           <Select
             value={statusFilter}
             onChange={onStatusChange}
@@ -218,6 +225,7 @@ export function BooksTablePanel({
           />
         </Space>
       </div>
+      <div style={{ minHeight: 780, overflow: "auto", margin: "0 auto"}}>
       <Table
         columns={columns}
         dataSource={data}
@@ -226,6 +234,7 @@ export function BooksTablePanel({
         scroll={{ x: 1200 }}
         style={{ borderRadius: 16 }}
       />
+      </div>
     </Card>
   );
 }

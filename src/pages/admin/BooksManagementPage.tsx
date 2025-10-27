@@ -113,34 +113,34 @@ export default function BooksManagementPage() {
 
           <StatsOverview totals={overviewTotals} />
 
+          {/* Books Table - Full Width */}
+          <BooksTablePanel
+            data={filteredBooks}
+            statusFilter={statusFilter}
+            categoryFilter={categoryFilter}
+            searchValue={searchValue}
+            categories={categories}
+            onStatusChange={(value) => setStatusFilter(value)}
+            onCategoryChange={(value) => setCategoryFilter(value)}
+            onSearchChange={(value) => setSearchValue(value)}
+            onSearchSubmit={(value) => setSearchValue(value)}
+          />
+
+          {/* Metrics Cards Row - 50/50 */}
           <Row gutter={[16, 16]}>
-            <Col xs={24} lg={16}>
-              <BooksTablePanel
-                data={filteredBooks}
-                statusFilter={statusFilter}
-                categoryFilter={categoryFilter}
-                searchValue={searchValue}
-                categories={categories}
-                onStatusChange={(value) => setStatusFilter(value)}
-                onCategoryChange={(value) => setCategoryFilter(value)}
-                onSearchChange={(value) => setSearchValue(value)}
-                onSearchSubmit={(value) => setSearchValue(value)}
+            <Col xs={24} lg={12}>
+              <CategoryDistributionCard
+                distribution={categoryDistribution}
+                totalBooks={totals.totalBooks}
+                totalAvailable={totals.totalAvailable}
               />
             </Col>
-
-            <Col xs={24} lg={8}>
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                <CategoryDistributionCard
-                  distribution={categoryDistribution}
-                  totalBooks={totals.totalBooks}
-                  totalAvailable={totals.totalAvailable}
-                />
-
-                <BorrowTrendCard trend={monthlyBorrowTrend} change={borrowChange} />
-              </Space>
+            <Col xs={24} lg={12}>
+              <BorrowTrendCard trend={monthlyBorrowTrend} change={borrowChange} />
             </Col>
           </Row>
 
+          {/* Activity Card - Full Width */}
           <ActivityCard activities={latestBookActivities} />
         </Space>
     </div>

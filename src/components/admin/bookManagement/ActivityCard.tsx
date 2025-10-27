@@ -1,7 +1,8 @@
-import { Avatar, Button, Card, List, Space, Tag, Typography } from "antd";
+import { Avatar, Button, Card, List, Space, Tag, Typography, theme } from "antd";
 import { BookOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
+const { useToken } = theme;
 
 interface Activity {
   id: string;
@@ -15,11 +16,17 @@ interface ActivityCardProps {
 }
 
 export function ActivityCard({ activities }: ActivityCardProps) {
+  const { token } = useToken();
+
   return (
     <Card
       title="Hoạt động mới nhất"
       variant="borderless"
-      style={{ borderRadius: 16 }}
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "box-shadow 0.3s ease",
+      }}
       extra={<Button type="link">Xem toàn bộ nhật ký</Button>}
     >
       <List
