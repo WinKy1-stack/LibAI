@@ -19,7 +19,15 @@ export function RoleDistributionCard({
   const { token } = theme.useToken();
 
   return (
-    <Card title="Cơ cấu vai trò" variant="borderless" style={{ borderRadius: 16 }}>
+    <Card
+      title="Cơ cấu vai trò"
+      variant="borderless"
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "box-shadow 0.3s ease",
+      }}
+    >
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         {distribution.map((item) => {
           const percent = totalCount === 0 ? 0 : Math.round((item.count / totalCount) * 100);

@@ -84,17 +84,17 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
 
   const headerStyle = useMemo(() => ({
     padding: '0 16px',
-    position: 'sticky',
+    position: 'fixed' as const,
     top: 0,
-    zIndex: 10,
+    left: screens.md ? 80 : 0,
+    right: 0,
+    zIndex: 100,
     background: token.colorBgContainer,
     backdropFilter: 'saturate(1.2) blur(6px)',
     borderBottom: `1px solid ${token.colorBorderSecondary}`,
     height: 64,
     display: 'flex',
     alignItems: 'center',
-    width: screens.md ? 'calc(100% - 80px)' : '100%',
-    marginLeft: screens.md ? 80 : 0, // Space for minimized sidebar on desktop/tablet
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     boxShadow: token.boxShadowTertiary,
   } as CSSProperties), [token, screens.md]);

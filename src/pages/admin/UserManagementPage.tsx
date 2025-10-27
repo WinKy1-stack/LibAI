@@ -117,32 +117,33 @@ export default function UserManagementPage() {
 
           <StatsOverview totals={overviewTotals} />
 
-          <Row gutter={[16, 16]}>
-            <Col xs={24} lg={16}>
-              <UsersTablePanel
-                data={filteredUsers}
-                statusFilter={statusFilter}
-                roleFilter={roleFilter}
-                searchValue={searchValue}
-                onStatusChange={(value) => setStatusFilter(value)}
-                onRoleChange={(value) => setRoleFilter(value)}
-                onSearchChange={(value) => setSearchValue(value)}
-                onSearchSubmit={(value) => setSearchValue(value)}
-              />
-            </Col>
-            <Col xs={24} lg={8}>
-              <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                <RetentionCard trend={userRetentionTrend} change={{ active: retentionChange.active, churn: retentionChange.churn }} />
+          {/* Users Table - Full Width */}
+          <UsersTablePanel
+            data={filteredUsers}
+            statusFilter={statusFilter}
+            roleFilter={roleFilter}
+            searchValue={searchValue}
+            onStatusChange={(value) => setStatusFilter(value)}
+            onRoleChange={(value) => setRoleFilter(value)}
+            onSearchChange={(value) => setSearchValue(value)}
+            onSearchSubmit={(value) => setSearchValue(value)}
+          />
 
-                <RoleDistributionCard
-                  distribution={userRoleDistribution}
-                  totalCount={totalRoleCount}
-                  averageCompletion={totals.completedAverage}
-                />
-              </Space>
+          {/* Metrics Cards Row */}
+          <Row gutter={[16, 16]}>
+            <Col xs={24} lg={12}>
+              <RetentionCard trend={userRetentionTrend} change={{ active: retentionChange.active, churn: retentionChange.churn }} />
+            </Col>
+            <Col xs={24} lg={12}>
+              <RoleDistributionCard
+                distribution={userRoleDistribution}
+                totalCount={totalRoleCount}
+                averageCompletion={totals.completedAverage}
+              />
             </Col>
           </Row>
 
+          {/* Activity Card - Full Width */}
           <ActivityCard activities={latestUserActivities} />
         </Space>
     </div>

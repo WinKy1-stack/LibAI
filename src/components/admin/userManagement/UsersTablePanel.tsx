@@ -67,7 +67,7 @@ export function UsersTablePanel({
             <Space direction="vertical" size={2}>
               <Text strong ellipsis={{ tooltip: record.name }}>{record.name}</Text>
               <Space size={8}>
-                <Tag color={token.colorPrimary} style={{ color: token.colorWhite, marginInlineEnd: 0 }}>
+                <Tag color={token.colorPrimary} style={{ color: "#fff", marginInlineEnd: 0 }}>
                   {roleLabels[record.role]}
                 </Tag>
                 <Text type="secondary">{record.id}</Text>
@@ -169,13 +169,17 @@ export function UsersTablePanel({
         width: screens.md ? 120 : 60,
       },
     ],
-    [token.colorPrimary, token.colorWhite, screens.md],
+    [token.colorPrimary, screens.md],
   );
 
   return (
     <Card
       variant="borderless"
-      style={{ borderRadius: 16 }}
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "box-shadow 0.3s ease",
+      }}
       styles={{ body: { padding: 0 } }}
     >
       <div style={{ 
@@ -229,7 +233,7 @@ export function UsersTablePanel({
         columns={columns}
         dataSource={data}
         pagination={{
-          pageSize: 6,
+          pageSize: 5,
           showSizeChanger: false,
           position: ["bottomRight"],
         }}

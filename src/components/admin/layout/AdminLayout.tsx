@@ -63,6 +63,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const contentStyle = useMemo(
     () => ({
       padding: screens.md ? 24 : 16,
+      paddingTop: 64 + (screens.md ? 24 : 16), // TopBar height + padding
       flex: 1,
       overflowY: "auto" as const,
       width: screens.md ? "calc(100% - 80px)" : "100%",
