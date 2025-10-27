@@ -1,16 +1,15 @@
-import { Card, Form, Switch, Button, Space, Typography, Divider, Select, InputNumber } from "antd";
+import { Card, Form, Switch, Button, Space, Typography, Divider, Select, InputNumber, theme } from "antd";
 import { BellOutlined, SaveOutlined, MailOutlined, MessageOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import { getSettingsColors } from "./constants";
 
 const { Title, Text } = Typography;
 
-interface NotificationSettingsCardProps {
-  mode: "light" | "dark";
-}
-
-export default function NotificationSettingsCard({ mode }: NotificationSettingsCardProps) {
+export default function NotificationSettingsCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const { token } = theme.useToken();
+  const settingsColors = getSettingsColors(token);
 
   const handleSave = async () => {
     try {
@@ -28,7 +27,7 @@ export default function NotificationSettingsCard({ mode }: NotificationSettingsC
     <Card
       title={
         <Space>
-          <BellOutlined style={{ fontSize: 20, color: "#faad14" }} />
+          <BellOutlined style={{ fontSize: 20, color: settingsColors.icons.notification }} />
           <Title level={4} style={{ margin: 0 }}>
             Cấu hình thông báo
           </Title>
@@ -36,7 +35,7 @@ export default function NotificationSettingsCard({ mode }: NotificationSettingsC
       }
       variant="borderless"
       style={{
-        background: mode === "dark" ? "#141414" : "#fff",
+        background: settingsColors.backgrounds.card,
       }}
     >
       <Form

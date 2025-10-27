@@ -165,35 +165,34 @@ export default function FaqPage() {
 
         <FaqStatsOverview totals={totals} />
 
+        {/* Danh sách câu hỏi - 100% width */}
+        <FaqTablePanel
+          data={filteredFaqs}
+          statusFilter={statusFilter}
+          categoryFilter={categoryFilter}
+          searchValue={searchValue}
+          categories={categoriesForFilter}
+          onStatusChange={(value) => setStatusFilter(value)}
+          onCategoryChange={(value) => setCategoryFilter(value)}
+          onSearchChange={(value) => setSearchValue(value)}
+          onSearchSubmit={(value) => setSearchValue(value)}
+          onEdit={handleEditFaq}
+          onDelete={handleDeleteFaq}
+        />
+
+        {/* Phân bổ theo danh mục và Hoạt động mới nhất - 50/50 */}
         <Row gutter={[16, 16]}>
-          <Col xs={24} lg={16}>
-            <FaqTablePanel
-              data={filteredFaqs}
-              statusFilter={statusFilter}
-              categoryFilter={categoryFilter}
-              searchValue={searchValue}
-              categories={categoriesForFilter}
-              onStatusChange={(value) => setStatusFilter(value)}
-              onCategoryChange={(value) => setCategoryFilter(value)}
-              onSearchChange={(value) => setSearchValue(value)}
-              onSearchSubmit={(value) => setSearchValue(value)}
-              onEdit={handleEditFaq}
-              onDelete={handleDeleteFaq}
+          <Col xs={24} lg={12}>
+            <FaqCategoriesCard
+              distribution={faqCategoryDistribution}
+              totalFaqs={totals.totalQuestions}
+              publishedFaqs={totals.publishedQuestions}
             />
           </Col>
-
-          <Col xs={24} lg={8}>
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
-              <FaqCategoriesCard
-                distribution={faqCategoryDistribution}
-                totalFaqs={totals.totalQuestions}
-                publishedFaqs={totals.publishedQuestions}
-              />
-            </Space>
+          <Col xs={24} lg={12}>
+            <FaqActivityCard activities={latestFaqActivities} />
           </Col>
         </Row>
-
-        <FaqActivityCard activities={latestFaqActivities} />
       </Space>
 
       {/* Edit Modal */}

@@ -24,9 +24,9 @@ export default function UsersTable() {
       ellipsis: true,
       render: (t: string) => (
         <Space>
-          <Avatar 
-            size={32} 
-            style={{ backgroundColor: "#ff4757" }}
+          <Avatar
+            size={32}
+            style={{ backgroundColor: token.colorPrimary }}
           >
             {t.charAt(0)}
           </Avatar>
@@ -59,19 +59,23 @@ export default function UsersTable() {
   ];
 
   return (
-    <Card 
+    <Card
       title={<Text strong style={{ fontSize: 24, fontWeight: 600 }}>Danh sách người dùng</Text>}
       extra={
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           size="middle"
           style={{ borderRadius: 8 }}
         >
           Thêm người dùng
         </Button>
-      } 
+      }
       variant="borderless"
-      style={{ borderRadius: 16 }}
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "box-shadow 0.3s ease",
+      }}
     >
       <Table
         size="middle"

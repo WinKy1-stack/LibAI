@@ -20,7 +20,15 @@ export function RetentionCard({ trend, change }: RetentionCardProps) {
   const { token } = theme.useToken();
 
   return (
-    <Card title="Tỷ lệ giữ chân người dùng" variant="borderless" style={{ borderRadius: 16 }}>
+    <Card
+      title="Tỷ lệ giữ chân người dùng"
+      variant="borderless"
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "box-shadow 0.3s ease",
+      }}
+    >
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         <Space size={16} wrap>
           <RetentionBadge
@@ -43,30 +51,45 @@ export function RetentionCard({ trend, change }: RetentionCardProps) {
           </Tag>
         </Space>
 
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
-          {trend.map((item) => (
-            <div
-              key={item.month}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-                background: token.colorFillTertiary,
-                borderRadius: 12,
-                padding: "12px 14px",
-              }}
-            >
-              <Space align="center" style={{ justifyContent: "space-between", width: "100%" }}>
-                <Text strong>{item.month}</Text>
-                <Text type="secondary">{item.active}% giữ chân</Text>
-              </Space>
-              <Progress percent={item.active} strokeColor={token.colorSuccess} size="small" style={{ marginBottom: 0 }} />
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                Rời hệ thống: {item.churned}%
-              </Text>
-            </div>
-          ))}
-        </Space>
+        {/* Scrollable container với thanh scroll ẩn */}
+        <div
+          style={{
+            maxHeight: "323px",
+            overflowY: "auto",
+            width: "100%",
+          }}
+          className="hide-scrollbar"
+        >
+          <style>{`
+            .hide-scrollbar::-webkit-scrollbar {
+              display: none; /* Chrome, Safari */
+            }
+          `}</style>
+          <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            {[...trend].reverse().map((item: RetentionTrendPoint) => (
+              <div
+                key={item.month}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  background: token.colorFillTertiary,
+                  borderRadius: 12,
+                  padding: "12px 14px",
+                }}
+              >
+                <Space align="center" style={{ justifyContent: "space-between", width: "100%" }}>
+                  <Text strong>{item.month}</Text>
+                  <Text type="secondary">{item.active}% giữ chân</Text>
+                </Space>
+                <Progress percent={item.active} strokeColor={token.colorSuccess} size="small" style={{ marginBottom: 0 }} />
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Rời hệ thống: {item.churned}%
+                </Text>
+              </div>
+            ))}
+          </Space>
+        </div>
       </Space>
     </Card>
   );

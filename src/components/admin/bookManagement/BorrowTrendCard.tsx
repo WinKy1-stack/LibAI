@@ -19,7 +19,15 @@ export function BorrowTrendCard({ trend, change }: BorrowTrendCardProps) {
   const { token } = theme.useToken();
 
   return (
-    <Card title="Xu hướng mượn sách" variant="borderless" style={{ borderRadius: 16 }}>
+    <Card
+      title="Xu hướng mượn sách"
+      variant="borderless"
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${token.colorBorderSecondary}`,
+        transition: "box-shadow 0.3s ease",
+      }}
+    >
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
         <Space wrap>
           <Badge
@@ -48,32 +56,46 @@ export function BorrowTrendCard({ trend, change }: BorrowTrendCardProps) {
           </Tag>
         </Space>
 
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
-          {trend.map((item) => (
-            <div
-              key={item.month}
-              style={{
-                padding: 12,
-                borderRadius: 12,
-                background: token.colorFillTertiary,
-              }}
-            >
-              <Space align="center" style={{ justifyContent: "space-between", width: "100%" }}>
-                <Text strong>{item.month}</Text>
-                <Text type="secondary">{item.borrowed} lượt mượn</Text>
-              </Space>
-              <Progress
-                percent={Math.min(Math.round((item.borrowed / 700) * 100), 100)}
-                strokeColor={token.colorPrimary}
-                size="small"
-                style={{ marginBottom: 0, marginTop: 8 }}
-              />
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                Đã trả: {item.returned} lượt
-              </Text>
-            </div>
-          ))}
-        </Space>
+        {/* Scrollable container với thanh scroll ẩn */}
+        <div
+          style={{
+            overflowY: "auto",
+            width: "100%",
+          }}
+          className="hide-scrollbar"
+        >
+          <style>{`
+            .hide-scrollbar::-webkit-scrollbar {
+              display: none; /* Chrome, Safari */
+            }
+          `}</style>
+          <Space direction="vertical" size={12} style={{ width: "100%" }}>
+            {[...trend].reverse().map((item: BorrowTrendPoint) => (
+              <div
+                key={item.month}
+                style={{
+                  padding: 12,
+                  borderRadius: 12,
+                  background: token.colorFillTertiary,
+                }}
+              >
+                <Space align="center" style={{ justifyContent: "space-between", width: "100%" }}>
+                  <Text strong>{item.month}</Text>
+                  <Text type="secondary">{item.borrowed} lượt mượn</Text>
+                </Space>
+                <Progress
+                  percent={Math.min(Math.round((item.borrowed / 700) * 100), 100)}
+                  strokeColor={token.colorPrimary}
+                  size="small"
+                  style={{ marginBottom: 0, marginTop: 8 }}
+                />
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  Đã trả: {item.returned} lượt
+                </Text>
+              </div>
+            ))}
+          </Space>
+        </div>
       </Space>
     </Card>
   );

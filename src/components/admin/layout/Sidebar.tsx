@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Layout, Menu, Button, Grid } from 'antd';
+import { Layout, Menu, Button, Grid, theme } from 'antd';
 import {
   DashboardOutlined,
   TeamOutlined,
@@ -14,6 +14,7 @@ import logoDarkImg from '/logo_darkmode.png';
 
 const { Sider } = Layout;
 const { useBreakpoint } = Grid;
+const { useToken } = theme;
 
 interface SidebarProps {
   collapsed: boolean;
@@ -59,6 +60,7 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
   const screens = useBreakpoint();
   const navigate = useNavigate();
   const location = useLocation();
+  const { token } = useToken();
 
   const selectedKey = useMemo(() => {
     const stringKeys = menuItems
@@ -97,8 +99,10 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
             left: isMobile ? 0 : 80, // Start from sidebar minimized width on desktop
             right: 0,
             bottom: 0,
-            background: isMobile ? "rgba(0, 0, 0, 0.45)" : "rgba(0, 0, 0, 0.25)",
-            backdropFilter: isMobile ? "none" : "blur(4px)",
+            background: mode === "dark"
+              ? "rgba(0, 0, 0, 0.65)"
+              : isMobile ? "rgba(0, 0, 0, 0.45)" : "rgba(0, 0, 0, 0.25)",
+            backdropFilter: "blur(4px)",
             zIndex: 999,
             animation: "fadeIn 0.3s ease",
           }}
@@ -113,14 +117,14 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
         collapsed={collapsed}
         onCollapse={onCollapse}
         trigger={null}
-        style={{ 
+        style={{
           position: "fixed",
-          top: 0, 
+          top: 0,
           left: 0,
           height: "100vh",
-          background: mode === "dark" ? "#001529" : "#fff",
-          boxShadow: "2px 0 8px rgba(0,0,0,0.05)",
-          borderRight: mode === "dark" ? "none" : "1px solid #f0f0f0",
+          background: token.colorBgContainer,
+          boxShadow: token.boxShadowSecondary,
+          borderRight: `1px solid ${token.colorBorderSecondary}`,
           zIndex: 1000,
           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           ...(isMobile && {
@@ -129,15 +133,15 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
         }}
       >
       {/* Logo */}
-      <div style={{ 
-        height: 64, 
+      <div style={{
+        height: 64,
         display: "flex",
         alignItems: "center",
         justifyContent: collapsed && !isMobile ? "center" : "space-between",
         fontWeight: 700,
         fontSize: collapsed && !isMobile ? 24 : 20,
-        color: mode === "dark" ? "#fff" : "#000",
-        borderBottom: mode === "dark" ? "1px solid rgba(255,255,255,0.1)" : "1px solid #f0f0f0",
+        color: token.colorText,
+        borderBottom: `1px solid ${token.colorBorderSecondary}`,
         padding: collapsed && !isMobile ? "0" : "0 20px",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: collapsed && !isMobile ? 0 : 12 }}>
@@ -153,11 +157,11 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
           {!collapsed && <span>LibAI</span>}
         </div>
         {!collapsed && (
-          <Button 
-            type="text" 
+          <Button
+            type="text"
             onClick={() => onCollapse(true)}
-            style={{ 
-              color: mode === "dark" ? "#fff" : "#000",
+            style={{
+              color: token.colorText,
               fontSize: 20,
               padding: "4px 8px",
             }}

@@ -1,20 +1,19 @@
-import { Card, Form, Input, Button, Space, Typography, Avatar, Upload, Row, Col, message } from "antd";
+import { Card, Form, Input, Button, Space, Typography, Avatar, Upload, Row, Col, message, theme } from "antd";
 import { UserOutlined, SaveOutlined, CameraOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import type { UploadFile } from "antd";
 import { defaultLibrarianProfile } from "../../../data";
+import { getLibrarianSettingsColors } from "./constants";
 
 const { Title, Text } = Typography;
 
-interface LibrarianProfileCardProps {
-  mode: "light" | "dark";
-}
-
-export default function LibrarianProfileCard({ mode }: LibrarianProfileCardProps) {
+export default function LibrarianProfileCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [avatarUrl, setAvatarUrl] = useState(defaultLibrarianProfile.avatar);
+  const { token } = theme.useToken();
+  const librarianColors = getLibrarianSettingsColors(token);
 
   const handleSave = async () => {
     try {
@@ -42,7 +41,7 @@ export default function LibrarianProfileCard({ mode }: LibrarianProfileCardProps
     <Card
       variant="borderless"
       style={{
-        background: mode === "dark" ? "#141414" : "#fff",
+        background: librarianColors.backgrounds.card,
       }}
     >
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
@@ -55,7 +54,7 @@ export default function LibrarianProfileCard({ mode }: LibrarianProfileCardProps
                   size={120}
                   src={avatarUrl}
                   icon={<UserOutlined />}
-                  style={{ border: `4px solid ${mode === "dark" ? "#434343" : "#f0f0f0"}` }}
+                  style={{ border: `4px solid ${librarianColors.borders.secondary}` }}
                 />
                 <Upload
                   showUploadList={false}
@@ -131,7 +130,7 @@ export default function LibrarianProfileCard({ mode }: LibrarianProfileCardProps
                 label="Phòng ban"
                 name="department"
               >
-                <Input placeholder="Phòng ban" />
+                <Input disabled placeholder="Phòng ban" />
               </Form.Item>
             </Col>
           </Row>
@@ -140,7 +139,7 @@ export default function LibrarianProfileCard({ mode }: LibrarianProfileCardProps
             label="Vị trí"
             name="position"
           >
-            <Input placeholder="Vị trí công việc" />
+            <Input disabled placeholder="Vị trí công việc" />
           </Form.Item>
 
           <Form.Item

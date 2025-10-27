@@ -1,14 +1,11 @@
-import { Card, Form, Input, Button, Space, Typography, Divider, Alert, Progress, message } from "antd";
+import { Card, Form, Input, Button, Space, Typography, Divider, Alert, Progress, message, theme } from "antd";
 import { LockOutlined, SaveOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import { getLibrarianSettingsColors, getPasswordStrengthColor, getPasswordStrengthText } from "./constants";
 
 const { Text } = Typography;
 
-interface LibrarianPasswordCardProps {
-  mode: "light" | "dark";
-}
-
-export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardProps) {
+export default function LibrarianPasswordCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -19,6 +16,8 @@ export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardPro
     hasNumber: false,
     hasSpecial: false,
   });
+  const { token } = theme.useToken();
+  const librarianColors = getLibrarianSettingsColors(token);
 
   const checkPasswordStrength = (password: string) => {
     if (!password) {
@@ -48,17 +47,11 @@ export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardPro
   };
 
   const getStrengthColor = () => {
-    if (passwordStrength < 40) return "#ff4d4f";
-    if (passwordStrength < 60) return "#faad14";
-    if (passwordStrength < 80) return "#1890ff";
-    return "#52c41a";
+    return getPasswordStrengthColor(passwordStrength, librarianColors);
   };
 
   const getStrengthText = () => {
-    if (passwordStrength < 40) return "Yếu";
-    if (passwordStrength < 60) return "Trung bình";
-    if (passwordStrength < 80) return "Khá";
-    return "Mạnh";
+    return getPasswordStrengthText(passwordStrength);
   };
 
   const handleSave = async () => {
@@ -80,7 +73,7 @@ export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardPro
     <Card
       variant="borderless"
       style={{
-        background: mode === "dark" ? "#141414" : "#fff",
+        background: librarianColors.backgrounds.card,
       }}
     >
       <Alert
@@ -145,9 +138,9 @@ export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardPro
             <Space direction="vertical" size={4} style={{ marginTop: 8 }}>
               <Space>
                 {passwordChecks.minLength ? (
-                  <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                  <CheckCircleOutlined style={{ color: librarianColors.status.success }} />
                 ) : (
-                  <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+                  <CloseCircleOutlined style={{ color: librarianColors.status.error }} />
                 )}
                 <Text type={passwordChecks.minLength ? "success" : "secondary"}>
                   Ít nhất 8 ký tự
@@ -155,9 +148,9 @@ export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardPro
               </Space>
               <Space>
                 {passwordChecks.hasUpperCase ? (
-                  <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                  <CheckCircleOutlined style={{ color: "librarianColors.status.success" }} />
                 ) : (
-                  <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+                  <CloseCircleOutlined style={{ color: "librarianColors.status.error" }} />
                 )}
                 <Text type={passwordChecks.hasUpperCase ? "success" : "secondary"}>
                   Có chữ in hoa (A-Z)
@@ -165,9 +158,9 @@ export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardPro
               </Space>
               <Space>
                 {passwordChecks.hasLowerCase ? (
-                  <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                  <CheckCircleOutlined style={{ color: "librarianColors.status.success" }} />
                 ) : (
-                  <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+                  <CloseCircleOutlined style={{ color: "librarianColors.status.error" }} />
                 )}
                 <Text type={passwordChecks.hasLowerCase ? "success" : "secondary"}>
                   Có chữ thường (a-z)
@@ -175,9 +168,9 @@ export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardPro
               </Space>
               <Space>
                 {passwordChecks.hasNumber ? (
-                  <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                  <CheckCircleOutlined style={{ color: "librarianColors.status.success" }} />
                 ) : (
-                  <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+                  <CloseCircleOutlined style={{ color: "librarianColors.status.error" }} />
                 )}
                 <Text type={passwordChecks.hasNumber ? "success" : "secondary"}>
                   Có chữ số (0-9)
@@ -185,9 +178,9 @@ export default function LibrarianPasswordCard({ mode }: LibrarianPasswordCardPro
               </Space>
               <Space>
                 {passwordChecks.hasSpecial ? (
-                  <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                  <CheckCircleOutlined style={{ color: "librarianColors.status.success" }} />
                 ) : (
-                  <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+                  <CloseCircleOutlined style={{ color: "librarianColors.status.error" }} />
                 )}
                 <Text type={passwordChecks.hasSpecial ? "success" : "secondary"}>
                   Có ký tự đặc biệt (!@#$...)

@@ -1,5 +1,5 @@
 import { Card, Divider, Empty, Progress, Space, Typography, theme } from "antd";
-import { categoryIcons } from "./constants";
+import { categoryIcons, getFaqColors } from "./constants";
 
 const { Text, Title } = Typography;
 
@@ -15,6 +15,7 @@ export function FaqCategoriesCard({
   publishedFaqs,
 }: FaqCategoriesCardProps) {
   const { token } = theme.useToken();
+  const faqColors = getFaqColors(token);
 
   const publishedPercent = totalFaqs > 0 ? Math.round((publishedFaqs / totalFaqs) * 100) : 0;
   const itemsWithPercentage = distribution
@@ -63,7 +64,7 @@ export function FaqCategoriesCard({
                 }}
               >
                 <Space size={10}>
-                  <span style={{ fontSize: 18, color: token.colorPrimary }}>
+                  <span style={{ fontSize: 18, color: faqColors.categories[item.category] || token.colorPrimary }}>
                     {categoryIcons[item.category]}
                   </span>
                   <Title level={5} style={{ margin: 0 }}>
@@ -77,7 +78,7 @@ export function FaqCategoriesCard({
               </Space>
               <Progress
                 percent={item.percent}
-                strokeColor={index === 0 ? token.colorPrimary : token.colorPrimaryBorder}
+                strokeColor={index === 0 ? faqColors.categories[item.category] || token.colorPrimary : token.colorPrimaryBorder}
                 trailColor={token.colorBgContainerDisabled}
                 size="small"
                 style={{ marginBottom: 0 }}
@@ -103,7 +104,7 @@ export function FaqCategoriesCard({
             <Text type="secondary">
               Số lượng câu hỏi đã được xuất bản so với tổng số câu hỏi.
             </Text>
-            <Progress percent={publishedPercent} strokeColor={token.colorSuccess} status="active" size="small" />
+            <Progress percent={publishedPercent} strokeColor={faqColors.status.published} status="active" size="small" />
           </Space>
         </Card>
       </Space>

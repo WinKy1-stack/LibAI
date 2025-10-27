@@ -1,4 +1,4 @@
-import { Tag } from "antd";
+import { Tag, theme} from "antd";
 import type { OverdueStatus } from "../../../types";
 
 interface StatusTagProps {
@@ -6,16 +6,17 @@ interface StatusTagProps {
 }
 
 export default function StatusTag({ status }: StatusTagProps) {
+  const { token } = theme.useToken();
   const getStatusConfig = (status: OverdueStatus) => {
     switch (status) {
       case "returned":
-        return { color: "success", text: "Đã trả" };
+        return { color: token.colorSuccess, text: "Đã trả" };
       case "returned-late":
-        return { color: "success", text: "Đã trả (trễ)" };
+        return { color: token.colorSuccess, text: "Đã trả (trễ)" };
       case "delaying":
-        return { color: "error", text: "Đang trễ hạn" };
+        return { color: token.colorError, text: "Đang trễ hạn" };
       default:
-        return { color: "default", text: "Unknown" };
+        return { color: token.colorInfo, text: "Unknown" };
     }
   };
 

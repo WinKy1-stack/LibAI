@@ -1,5 +1,5 @@
 import { Button, Card, Col, Row, Space, Typography } from "antd";
-import { DownloadOutlined, FileExcelOutlined, FilePdfOutlined, ScheduleOutlined } from "@ant-design/icons";
+import { FileExcelOutlined, FilePdfOutlined, ScheduleOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 

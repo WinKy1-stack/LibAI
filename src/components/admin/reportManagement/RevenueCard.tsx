@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { RevenueData } from "../../../data";
+import { getChartColors } from "./constants";
 
 const { Title, Text } = Typography;
 const { useToken } = theme;
@@ -20,6 +21,7 @@ interface RevenueCardProps {
 
 export function RevenueCard({ data }: RevenueCardProps) {
   const { token } = useToken();
+  const chartColors = getChartColors(token);
 
   const totalRevenue = data.reduce(
     (sum, item) => sum + item.fines + item.subscriptions + item.lateReturns,
@@ -58,7 +60,7 @@ export function RevenueCard({ data }: RevenueCardProps) {
 
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorder} />
+            <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorder}/>
             <XAxis
               dataKey="month"
               stroke={token.colorTextSecondary}
@@ -92,9 +94,9 @@ export function RevenueCard({ data }: RevenueCardProps) {
                 }
               }}
             />
-            <Bar dataKey="fines" fill="#ff4d4f" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="subscriptions" fill="#52c41a" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="lateReturns" fill="#faad14" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="fines" fill={chartColors.fines} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="subscriptions" fill={chartColors.subscriptions} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="lateReturns" fill={chartColors.lateReturns} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </Space>

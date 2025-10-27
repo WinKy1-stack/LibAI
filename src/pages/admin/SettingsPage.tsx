@@ -1,15 +1,13 @@
-import { Space, Tabs, Spin, Grid, theme } from "antd";
+import { Space, Tabs, Spin, Grid, Typography } from "antd";
 import { RobotOutlined, SettingOutlined, SafetyOutlined, BellOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { AIConfigCard, SystemConfigCard, SecurityCard, NotificationSettingsCard } from "../../components/admin/settings";
 
 const { useBreakpoint } = Grid;
+const { Title } = Typography;
 
 export default function SettingsPage() {
   const screens = useBreakpoint();
-  const { token } = theme.useToken();
-  // Detect dark mode from theme
-  const mode = token.colorBgContainer === "#141414" ? "dark" : "light";
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ai");
 
@@ -43,58 +41,54 @@ export default function SettingsPage() {
   const tabItems = [
     {
       key: "ai",
-      label: (
-        <span>
-          <RobotOutlined />
-          {screens.md && " AI Configuration"}
-        </span>
-      ),
-      children: <AIConfigCard mode={mode} />,
+      label: screens.md && "AI Configuration",
+      icon: <RobotOutlined />,
+      children: <AIConfigCard />,
     },
     {
       key: "system",
-      label: (
-        <span>
-          <SettingOutlined />
-          {screens.md && " System"}
-        </span>
-      ),
-      children: <SystemConfigCard mode={mode} />,
+      label: screens.md && "System Config",
+      icon: <SettingOutlined />,
+      children: <SystemConfigCard />,
     },
     {
       key: "security",
-      label: (
-        <span>
-          <SafetyOutlined />
-          {screens.md && " Security"}
-        </span>
-      ),
-      children: <SecurityCard mode={mode} />,
+      label: screens.md && "Security & Access",
+      icon: <SafetyOutlined />,
+      children: <SecurityCard />,
     },
     {
       key: "notifications",
-      label: (
-        <span>
-          <BellOutlined />
-          {screens.md && " Notifications"}
-        </span>
-      ),
-      children: <NotificationSettingsCard mode={mode} />,
+      label: screens.md && "Notifications",
+      icon: <BellOutlined />,
+      children: <NotificationSettingsCard />,
     },
   ];
 
   return (
     <div style={{ maxWidth: 1200, marginInline: "auto", width: "100%" }}>
       <Space direction="vertical" size={24} style={{ display: "block", width: "100%" }}>
+        {/* Header */}
+        <div style={{ marginBottom: 16 }}>
+          <Title level={2} style={{ margin: 0, fontWeight: 700 }}>
+            Cài đặt hệ thống
+          </Title>
+          <Typography.Text type="secondary">
+            Quản lý cấu hình AI, hệ thống, bảo mật và thông báo
+          </Typography.Text>
+        </div>
+
+        {/* Settings Tabs */}
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabItems}
           size={screens.md ? "large" : "middle"}
-          tabPosition={screens.md ? "top" : "top"}
+          tabPosition="top"
           type="card"
           style={{
             width: "100%",
+            background: "transparent",
           }}
         />
       </Space>

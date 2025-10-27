@@ -1,17 +1,16 @@
-import { Card, Form, Input, Select, Slider, Switch, Button, Space, Typography, Divider, Tag } from "antd";
+import { Card, Form, Input, Select, Slider, Switch, Button, Space, Typography, Divider, Tag, theme } from "antd";
 import { ApiOutlined, RobotOutlined, SaveOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import { getSettingsColors } from "./constants";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-interface AIConfigCardProps {
-  mode: "light" | "dark";
-}
-
-export default function AIConfigCard({ mode }: AIConfigCardProps) {
+export default function AIConfigCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const { token } = theme.useToken();
+  const settingsColors = getSettingsColors(token);
 
   const handleSave = async () => {
     try {
@@ -31,7 +30,7 @@ export default function AIConfigCard({ mode }: AIConfigCardProps) {
     <Card
       title={
         <Space>
-          <RobotOutlined style={{ fontSize: 20, color: "#1890ff" }} />
+          <RobotOutlined style={{ fontSize: 20, color: settingsColors.icons.ai }} />
           <Title level={4} style={{ margin: 0 }}>
             Cấu hình AI
           </Title>
@@ -44,7 +43,7 @@ export default function AIConfigCard({ mode }: AIConfigCardProps) {
       }
       variant="borderless"
       style={{
-        background: mode === "dark" ? "#141414" : "#fff",
+        background: settingsColors.backgrounds.card,
       }}
     >
       <Form

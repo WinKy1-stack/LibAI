@@ -1,6 +1,7 @@
 import { Card, Space, Typography, List, Tag, theme, Tabs, Badge, Progress } from "antd";
 import { BookOutlined, UserOutlined, PieChartOutlined, CrownOutlined } from "@ant-design/icons";
 import type { TopMetrics } from "../../../data";
+import { getChartColors } from "./constants";
 
 const { Title, Text } = Typography;
 const { useToken } = theme;
@@ -11,6 +12,7 @@ interface TopMetricsCardProps {
 
 export function TopMetricsCard({ data }: TopMetricsCardProps) {
   const { token } = useToken();
+  const chartColors = getChartColors(token);
 
   const items = [
     {
@@ -31,7 +33,7 @@ export function TopMetricsCard({ data }: TopMetricsCardProps) {
                   <Badge
                     count={index + 1}
                     style={{
-                      backgroundColor: index < 3 ? token.colorPrimary : token.colorBgTextHover,
+                      backgroundColor: index < 3 ? chartColors.stats.primary : token.colorBgTextHover,
                     }}
                   />
                   <Space direction="vertical" size={0}>
@@ -67,7 +69,7 @@ export function TopMetricsCard({ data }: TopMetricsCardProps) {
                   <Badge
                     count={index + 1}
                     style={{
-                      backgroundColor: index < 3 ? token.colorPrimary : token.colorBgTextHover,
+                      backgroundColor: index < 3 ? chartColors.stats.primary : token.colorBgTextHover,
                     }}
                   />
                   <Space direction="vertical" size={0}>
@@ -107,7 +109,7 @@ export function TopMetricsCard({ data }: TopMetricsCardProps) {
                     <Badge
                       count={index + 1}
                       style={{
-                        backgroundColor: index < 3 ? token.colorPrimary : token.colorBgTextHover,
+                        backgroundColor: index < 3 ? chartColors.stats.primary : token.colorBgTextHover,
                       }}
                     />
                     <Text strong>{item.category}</Text>
@@ -117,7 +119,7 @@ export function TopMetricsCard({ data }: TopMetricsCardProps) {
                 <Progress
                   percent={item.percentage}
                   showInfo={false}
-                  strokeColor={token.colorPrimary}
+                  strokeColor={chartColors.stats.primary}
                   size="small"
                 />
               </Space>

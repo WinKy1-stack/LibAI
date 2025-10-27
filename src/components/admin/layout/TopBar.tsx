@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import type { CSSProperties } from 'react';
-import { Button, Input, Badge, Row, Col, Switch, Space, Avatar, Typography, Dropdown, Grid, message } from 'antd';
+import { Button, Input, Badge, Row, Col, Switch, Space, Avatar, Typography, Dropdown, Grid, message, theme } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,6 +17,7 @@ import { authService } from '../../../services/authService';
 
 const { useBreakpoint } = Grid;
 const { Text } = Typography;
+const { useToken } = theme;
 
 interface TopBarProps {
   collapsed: boolean;
@@ -46,6 +47,7 @@ const createUserMenuItems = (navigate: (path: string) => void, handleLogout: () 
 export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarProps) {
   const screens = useBreakpoint();
   const navigate = useNavigate();
+  const { token } = useToken();
 
   // Logout handler - wrapped in useCallback
   const handleLogout = useCallback(async () => {
@@ -71,30 +73,31 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
   // Tạo menu items với navigate function
   const userMenuItems = useMemo(() => createUserMenuItems(navigate, handleLogout), [navigate, handleLogout]);
 
-  // Dùng useMemo để cache style object, chỉ tính toán lại khi dependencies thay đổi
+  // Dùng useMemo để cache style object, sử dụng Ant Design tokens
   const inputStyle = useMemo(() => ({
     borderRadius: 999,
     maxWidth: isMobile ? 200 : isSmallTablet ? 250 : 400,
-    background: mode === 'dark' ? '#1f1f1f' : '#f7f7f7',
-    color: mode === 'dark' ? '#fff' : '#000',
-    border: mode === 'dark' ? '1px solid #434343' : '1px solid #d9d9d9',
-  } as CSSProperties), [mode, isMobile, isSmallTablet]);
+    background: token.colorBgContainer,
+    color: token.colorText,
+    border: `1px solid ${token.colorBorder}`,
+  } as CSSProperties), [token, isMobile, isSmallTablet]);
 
   const headerStyle = useMemo(() => ({
     padding: '0 16px',
-    position: 'sticky',
+    position: 'fixed' as const,
     top: 0,
-    zIndex: 10,
-    background: mode === 'dark' ? 'rgba(0, 21, 41, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+    left: screens.md ? 80 : 0,
+    right: 0,
+    zIndex: 100,
+    background: token.colorBgContainer,
     backdropFilter: 'saturate(1.2) blur(6px)',
-    borderBottom: mode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid #f0f0f0',
+    borderBottom: `1px solid ${token.colorBorderSecondary}`,
     height: 64,
     display: 'flex',
     alignItems: 'center',
-    width: screens.md ? 'calc(100% - 80px)' : '100%',
-    marginLeft: screens.md ? 80 : 0, // Space for minimized sidebar on desktop/tablet
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  } as CSSProperties), [mode, screens.md]);
+    boxShadow: token.boxShadowTertiary,
+  } as CSSProperties), [token, screens.md]);
 
   return (
     <header style={headerStyle}>
@@ -118,7 +121,7 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
           <Col flex="auto" style={{ display: 'flex', justifyContent: 'center' }}>
             <Input
               allowClear
-              prefix={<SearchOutlined style={{ color: mode === 'dark' ? '#aaa' : undefined }} />}
+              prefix={<SearchOutlined style={{ color: token.colorTextSecondary }} />}
               placeholder={isSmallTablet ? "Tìm..." : "Tìm kiếm..."}
               style={inputStyle}
             />
@@ -149,7 +152,7 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
                 {/* User info text - Chỉ hiện từ 992px trở lên */}
                 {showUserInfo && (
                   <div style={{ textAlign: 'right', marginRight: 8 }}>
-                    <Text strong style={{ color: mode === 'dark' ? '#fff' : '#000', fontSize: 14 }}>
+                    <Text strong style={{ color: token.colorText, fontSize: 14 }}>
                       La Thanh Toàn
                     </Text>
                     <br />

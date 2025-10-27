@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { ActivityMetrics } from "../../../data";
+import { getChartColors } from "./constants";
 
 const { Title, Text } = Typography;
 const { useToken } = theme;
@@ -20,6 +21,7 @@ interface ActivityCardProps {
 
 export function ActivityCard({ data }: ActivityCardProps) {
   const { token } = useToken();
+  const chartColors = getChartColors(token);
 
   const totalActivity = data.reduce(
     (sum, item) => sum + item.checkouts + item.returns + item.visitors,
@@ -86,7 +88,7 @@ export function ActivityCard({ data }: ActivityCardProps) {
             <Line
               type="monotone"
               dataKey="checkouts"
-              stroke="#1890ff"
+              stroke={chartColors.checkouts}
               strokeWidth={2}
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
@@ -94,7 +96,7 @@ export function ActivityCard({ data }: ActivityCardProps) {
             <Line
               type="monotone"
               dataKey="returns"
-              stroke="#52c41a"
+              stroke={chartColors.returns}
               strokeWidth={2}
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
@@ -102,7 +104,7 @@ export function ActivityCard({ data }: ActivityCardProps) {
             <Line
               type="monotone"
               dataKey="visitors"
-              stroke="#722ed1"
+              stroke={chartColors.visitors}
               strokeWidth={2}
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}

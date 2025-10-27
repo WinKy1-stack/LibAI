@@ -1,5 +1,5 @@
 import type { ColumnsType } from "antd/es/table";
-import { Table, Avatar, Space, Typography, Button } from "antd";
+import { Table, Avatar, Space, Typography, Button, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import type { OverdueBook } from "../../../types";
 import StatusTag from "./StatusTag";
@@ -23,11 +23,13 @@ export default function OverdueBookTable({
   total,
   onPageChange,
 }: OverdueBookTableProps) {
+  const { token } = theme.useToken();
   const columns: ColumnsType<OverdueBook> = [
     {
       title: "User ID",
       dataIndex: "userId",
       width: 100,
+
       responsive: ["md"],
     },
     {
@@ -37,7 +39,7 @@ export default function OverdueBookTable({
       ellipsis: true,
       render: (name: string) => (
         <Space>
-          <Avatar size={32} style={{ backgroundColor: "#ff4757" }}>
+          <Avatar size={32} style={{ backgroundColor: token.colorPrimary }}>
             {name.charAt(0)}
           </Avatar>
           <Text strong ellipsis={{ tooltip: name }}>
@@ -89,7 +91,7 @@ export default function OverdueBookTable({
       width: 120,
       align: "right",
       render: (fine: number) => (
-        <Text strong style={{ color: fine > 0 ? "#f5222d" : undefined }}>
+        <Text strong style={{ color: fine > 0 ? token.colorError : undefined }}>
           {fine > 0 ? `BDT. ${fine}` : "-"}
         </Text>
       ),
@@ -105,7 +107,8 @@ export default function OverdueBookTable({
   ];
 
   return (
-    <Table
+    <div style={{ minHeight: 365, overflow: "auto", margin: "0 auto"}}>
+      <Table
       size="middle"
       rowKey="key"
       dataSource={dataSource}
@@ -121,6 +124,7 @@ export default function OverdueBookTable({
         position: ["bottomCenter"],
       }}
     />
+    </div>
   );
 }
 

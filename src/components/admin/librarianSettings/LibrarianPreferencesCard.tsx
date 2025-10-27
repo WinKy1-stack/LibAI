@@ -1,17 +1,16 @@
-import { Card, Form, Select, Switch, Button, Space, Typography, Divider, Radio, Slider, message } from "antd";
+import { Card, Form, Select, Switch, Button, Space, Typography, Divider, Radio, Slider, message, theme } from "antd";
 import { SaveOutlined, SunOutlined, MoonOutlined, SyncOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { defaultLibrarianPreferences, languageOptions } from "../../../data";
+import { getLibrarianSettingsColors } from "./constants";
 
 const { Text } = Typography;
 
-interface LibrarianPreferencesCardProps {
-  mode: "light" | "dark";
-}
-
-export default function LibrarianPreferencesCard({ mode }: LibrarianPreferencesCardProps) {
+export default function LibrarianPreferencesCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const { token } = theme.useToken();
+  const librarianColors = getLibrarianSettingsColors(token);
 
   const handleSave = async () => {
     try {
@@ -30,7 +29,7 @@ export default function LibrarianPreferencesCard({ mode }: LibrarianPreferencesC
     <Card
       variant="borderless"
       style={{
-        background: mode === "dark" ? "#141414" : "#fff",
+        background: librarianColors.backgrounds.card,
       }}
     >
       <Form

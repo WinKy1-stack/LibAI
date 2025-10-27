@@ -3,6 +3,7 @@ import { createElement } from "react";
 import type { ReactNode } from "react";
 import type { BookStatus } from "../../../data";
 
+
 export function getStatusMeta(status: BookStatus): { color: string; icon: ReactNode } {
   switch (status) {
     case "available":
@@ -25,8 +26,6 @@ export function formatDate(value: string): string {
   }
 
   return new Intl.DateTimeFormat("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

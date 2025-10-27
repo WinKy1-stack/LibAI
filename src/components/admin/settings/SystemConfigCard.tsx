@@ -1,16 +1,15 @@
-import { Card, Form, Input, Select, Switch, Button, Space, Typography, Divider, InputNumber, Row, Col } from "antd";
+import { Card, Form, Input, Select, Switch, Button, Space, Typography, Divider, InputNumber, Row, Col, theme } from "antd";
 import { SettingOutlined, SaveOutlined, GlobalOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import { getSettingsColors } from "./constants";
 
 const { Title, Text } = Typography;
 
-interface SystemConfigCardProps {
-  mode: "light" | "dark";
-}
-
-export default function SystemConfigCard({ mode }: SystemConfigCardProps) {
+export default function SystemConfigCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const { token } = theme.useToken();
+  const settingsColors = getSettingsColors(token);
 
   const handleSave = async () => {
     try {
@@ -28,7 +27,7 @@ export default function SystemConfigCard({ mode }: SystemConfigCardProps) {
     <Card
       title={
         <Space>
-          <SettingOutlined style={{ fontSize: 20, color: "#52c41a" }} />
+          <SettingOutlined style={{ fontSize: 20, color: settingsColors.icons.system }} />
           <Title level={4} style={{ margin: 0 }}>
             Cấu hình hệ thống
           </Title>
@@ -36,7 +35,7 @@ export default function SystemConfigCard({ mode }: SystemConfigCardProps) {
       }
       variant="borderless"
       style={{
-        background: mode === "dark" ? "#141414" : "#fff",
+        background: settingsColors.backgrounds.card,
       }}
     >
       <Form

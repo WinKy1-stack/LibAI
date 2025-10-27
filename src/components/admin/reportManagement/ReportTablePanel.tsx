@@ -1,5 +1,5 @@
 import { Card, Table, Tag, Button, Space, Input, Select, Row, Col, Typography, Badge, theme } from "antd";
-import { DownloadOutlined, SearchOutlined, EyeOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { DownloadOutlined, SearchOutlined, EyeOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import type { ReportItem, ReportType, ReportStatus, ReportCategory } from "../../../data";
 
@@ -148,7 +148,7 @@ export function ReportTablePanel({
       key: "status",
       width: "12%",
       render: (status: ReportStatus) => (
-        <Badge status={getStatusColor(status) as any} text={getStatusText(status)} />
+        <Badge status={getStatusColor(status) as "success" | "processing" | "warning" | "default"} text={getStatusText(status)} />
       ),
     },
     {
@@ -169,7 +169,7 @@ export function ReportTablePanel({
       title: "Thao tác",
       key: "action",
       width: "12%",
-      render: (_: any, record: ReportItem) => (
+      render: (_: unknown, record: ReportItem) => (
         <Space size="small">
           <Button
             type="text"
