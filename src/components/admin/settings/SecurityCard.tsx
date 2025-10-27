@@ -1,16 +1,15 @@
-import { Card, Form, Input, Switch, Button, Space, Typography, Divider, InputNumber, Alert } from "antd";
+import { Card, Form, Input, Switch, Button, Space, Typography, Divider, InputNumber, Alert, theme } from "antd";
 import { SafetyOutlined, SaveOutlined, } from "@ant-design/icons";
 import { useState } from "react";
+import { getSettingsColors } from "./constants";
 
 const { Title, Text } = Typography;
 
-interface SecurityCardProps {
-  mode: "light" | "dark";
-}
-
-export default function SecurityCard({ mode }: SecurityCardProps) {
+export default function SecurityCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const { token } = theme.useToken();
+  const settingsColors = getSettingsColors(token);
 
   const handleSave = async () => {
     try {
@@ -28,7 +27,7 @@ export default function SecurityCard({ mode }: SecurityCardProps) {
     <Card
       title={
         <Space>
-          <SafetyOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />
+          <SafetyOutlined style={{ fontSize: 20, color: settingsColors.icons.security }} />
           <Title level={4} style={{ margin: 0 }}>
             Bảo mật & Quyền hạn
           </Title>
@@ -36,7 +35,7 @@ export default function SecurityCard({ mode }: SecurityCardProps) {
       }
       variant="borderless"
       style={{
-        background: mode === "dark" ? "#141414" : "#fff",
+        background: settingsColors.backgrounds.card,
       }}
     >
       <Alert
