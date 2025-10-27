@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MagnifyingGlassIcon, SparklesIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useChatContext } from '../../contexts/ChatContext';
+import { authService } from '../../services/authService';
 import '../../components/user/color.css';
 
 interface ChatMessage {
@@ -17,6 +19,10 @@ export default function UserHomePage() {
   const [isTyping, setIsTyping] = useState(false);
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   const { isChatting, setIsChatting } = useChatContext();
+  const navigate = useNavigate();
+  
+  // Check authentication
+  const isAuthenticated = authService.isAuthenticated();
 
   // Auto scroll to bottom khi có message mới
   const scrollToBottom = () => {
@@ -45,6 +51,13 @@ export default function UserHomePage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Kiểm tra đăng nhập trước khi search
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
     if (searchQuery.trim()) {
       setIsChatting(true);
       
@@ -63,6 +76,12 @@ export default function UserHomePage() {
   };
 
   const handleSuggestionClick = (query: string) => {
+    // Kiểm tra đăng nhập trước khi click suggestion
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
     setSearchQuery(query);
     setIsChatting(true);
     
