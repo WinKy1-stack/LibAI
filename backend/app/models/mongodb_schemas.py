@@ -1,5 +1,5 @@
 """
-MongoDB Schemas cho Library Chatbot System
+MongoDB Schemas cho Library Chatbox System
 Định nghĩa cấu trúc dữ liệu cho các collections
 """
 

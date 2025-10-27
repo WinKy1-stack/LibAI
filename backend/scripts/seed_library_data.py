@@ -302,7 +302,7 @@ def seed_faq():
         {
             "category": "howto",
             "question": "Làm thế nào để tìm sách?",
-            "answer": "Bạn có thể: 1) Tìm kiếm trên website, 2) Hỏi chatbot AI, 3) Liên hệ thủ thư.",
+            "answer": "Bạn có thể: 1) Tìm kiếm trên website, 2) Hỏi chatbox AI, 3) Liên hệ thủ thư.",
             "tags": ["tìm kiếm", "hướng dẫn", "tra cứu"],
             "status": FAQStatus.PUBLISHED.value,
             "updated_by": None,
@@ -334,7 +334,7 @@ def seed_faq():
     return faq_ids
 
 def seed_documents():
-    """Seed documents for chatbot"""
+    """Seed documents for chatbox"""
     print("\n📄 Seeding documents...")
     
     docs = [
@@ -398,7 +398,7 @@ def seed_admin_configs():
             "updated_by": None
         },
         {
-            "key": "chatbot.settings",
+            "key": "chatbox.settings",
             "value": {
                 "lang": "vi",
                 "temperature": 0.7,
