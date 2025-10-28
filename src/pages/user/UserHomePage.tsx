@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { MagnifyingGlassIcon, SparklesIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useChatContext } from '../../contexts/ChatContext';
 import { authService } from '../../services/authService';
@@ -19,10 +18,9 @@ export default function UserHomePage() {
   const [isTyping, setIsTyping] = useState(false);
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
   const { isChatting, setIsChatting } = useChatContext();
-  const navigate = useNavigate();
   
-  // Check authentication
-  const isAuthenticated = authService.isAuthenticated();
+  // Check authentication (reserved for future API usage)
+  authService.isAuthenticated();
 
   // Auto scroll to bottom khi có message mới
   const scrollToBottom = () => {
@@ -51,17 +49,11 @@ export default function UserHomePage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Kiểm tra đăng nhập trước khi search
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    
+
     if (searchQuery.trim()) {
+      // Cho phép vào màn hình chat mà không ép đăng nhập
       setIsChatting(true);
-      
-      // Add user message to chat
+
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'user',
@@ -69,23 +61,16 @@ export default function UserHomePage() {
         timestamp: new Date(),
       };
       setChatMessages([userMessage]);
-      
-      // Simulate bot response
+
       simulateBotResponse(searchQuery);
     }
   };
 
   const handleSuggestionClick = (query: string) => {
-    // Kiểm tra đăng nhập trước khi click suggestion
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    
+    // Cho phép vào chat khi chọn gợi ý mà không ép đăng nhập
     setSearchQuery(query);
     setIsChatting(true);
-    
-    // Add user message to chat
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
@@ -93,8 +78,7 @@ export default function UserHomePage() {
       timestamp: new Date(),
     };
     setChatMessages([userMessage]);
-    
-    // Simulate bot response
+
     simulateBotResponse(query);
   };
 
