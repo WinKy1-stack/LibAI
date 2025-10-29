@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { MagnifyingGlassIcon, SparklesIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useChatContext } from '../../contexts/ChatContext';
 import { authService } from '../../services/authService';
+import { userSuggestions, userChatBooks } from '../../data';
+import { formatTime } from '../../components/user/utils';
 import '../../components/user/color.css';
 
 interface ChatMessage {
@@ -101,65 +103,7 @@ export default function UserHomePage() {
     }
   };
 
-  // Format time
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const suggestions = [
-    {
-      icon: '📚',
-      text: 'Tôi đang cần tìm mấy cuốn sách về lập trình Python, nhưng mà ưu tiên sách nước ngoài, bạn giúp tôi được không?'
-    },
-    {
-      icon: '🎧',
-      text: 'Cuối tuần này tôi định lên thư viện học nhóm, không biết thư viện có mở cửa không, và nếu có thì giờ giấc cụ thể là từ mấy giờ đến mấy giờ vậy?'
-    },
-    {
-      icon: '⚙️',
-      text: 'Tôi có mượn một cuốn sách tên là "Deep Learning" tuần trước mà quên mất hạn trả rồi, bạn kiểm tra giúp tôi xem khi nào đến hạn và hướng dẫn tôi cách gia hạn online được không?'
-    },
-    {
-      icon: '📄',
-      text: 'Tôi đang làm luận văn về chủ đề "Xử lý ngôn ngữ tự nhiên". Bạn có thể gợi ý cho tôi một vài bài báo khoa học hoặc luận văn nổi bật trong 2 năm gần đây không?'
-    }
-  ];
-
-  const mockBooks = [
-    {
-      id: 1,
-      title: 'Python Crash Course',
-      author: 'Eric Matthes',
-      rating: 4.8,
-      reviews: 2341,
-      status: 'available',
-      bestMatch: true,
-    },
-    {
-      id: 2,
-      title: 'Automate the Boring Stuff',
-      author: 'Al Sweigart',
-      rating: 4.6,
-      reviews: 1876,
-      status: 'available',
-    },
-    {
-      id: 3,
-      title: 'Learning Python',
-      author: 'Mark Lutz',
-      rating: 4.5,
-      reviews: 1543,
-      status: 'borrowed',
-    },
-    {
-      id: 4,
-      title: 'Python for Data Analysis',
-      author: 'Wes McKinney',
-      rating: 4.7,
-      reviews: 2154,
-      status: 'available',
-    },
-  ];
+  // constants and utils moved to components/user
 
   // Nếu đang chat thì hiển thị chat interface
   if (isChatting) {
@@ -214,7 +158,7 @@ export default function UserHomePage() {
           <h2 className="chat-books-title">Gợi ý sách</h2>
 
           <div className="chat-books-grid">
-            {mockBooks.map((book) => (
+            {userChatBooks.map((book) => (
               <div key={book.id} className="book-card">
                 {book.bestMatch && (
                   <div className="book-badge">
@@ -346,7 +290,7 @@ export default function UserHomePage() {
         </h3>
 
         <div className="suggestions-grid">
-          {suggestions.map((suggestion, index) => (
+          {userSuggestions.map((suggestion, index) => (
             <button
               key={index}
               onClick={() => handleSuggestionClick(suggestion.text)}

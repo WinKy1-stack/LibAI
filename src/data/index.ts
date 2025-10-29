@@ -20,3 +20,7 @@ export * from './mockLibrarian';
 
 // FAQ Data
 export * from './mockFaq';
+
+// User Home (chat) Data
+export * from './mockUserSuggestions';
+export * from './mockUserChatBooks';
