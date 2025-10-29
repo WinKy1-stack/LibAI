@@ -42,7 +42,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
         // Store in localStorage for future use
-        localStorage.setItem('user', JSON.stringify(currentUser));
+        authService.setStoredUser(currentUser);
       } catch (error) {
         console.error('Failed to fetch user:', error);
         // If fetch fails, try to use stored user anyway
