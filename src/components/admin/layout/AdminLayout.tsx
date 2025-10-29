@@ -64,6 +64,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       "/admin": "LibAI - Dashboard",
       "/admin/user": "LibAI - User Management",
       "/admin/books": "LibAI - Books Management",
+      "/admin/borrows": "LibAI - Borrow Records",
       "/admin/reports": "LibAI - Reports",
       "/admin/faq": "LibAI - FAQ Management",
       "/admin/settings": "LibAI - Settings",

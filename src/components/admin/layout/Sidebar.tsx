@@ -4,6 +4,7 @@ import {
   DashboardOutlined,
   TeamOutlined,
   BookOutlined,
+  ReadOutlined,
   BarChartOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
@@ -42,6 +43,12 @@ const allMenuItems = [
     key: "/admin/books",
     icon: <BookOutlined />,
     label: "Books",
+    roles: ['admin', 'librarian'] // Available for both
+  },
+  {
+    key: "/admin/borrows",
+    icon: <ReadOutlined />,
+    label: "Borrow Records",
     roles: ['admin', 'librarian'] // Available for both
   },
   {

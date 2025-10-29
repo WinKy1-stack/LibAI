@@ -5,6 +5,7 @@ import AdminLayout from './components/admin/layout/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import BooksManagementPage from './pages/admin/BooksManagementPage';
+import { BorrowManagementPage } from './pages/admin/BorrowManagementPage';
 import ReportPage from './pages/admin/ReportPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import LibrarianSettingsPage from './pages/admin/LibrarianSettingsPage';
@@ -73,6 +74,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="books" element={<BooksManagementPage />} />
+        <Route path="borrows" element={<BorrowManagementPage />} />
         <Route path="reports" element={<ReportPage />} />
         <Route path="faq" element={<FaqPage />} />
 
