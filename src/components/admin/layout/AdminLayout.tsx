@@ -99,7 +99,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       width: screens.md ? "calc(100% - 80px)" : "100%",
       background: token.colorBgLayout,
       marginLeft: screens.md ? 80 : 0, // Space for minimized sidebar on desktop/tablet
-      transition: "margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+      transition: "margin 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
     }),
     [screens.md, token.colorBgLayout]
   );
