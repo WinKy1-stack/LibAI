@@ -48,17 +48,6 @@ function App() {
         <Route index element={<UserHomePage />} />
       </Route>
 
-      {/* User protected routes */}
-      <Route
-        path="/user"
-        element={
-          <ProtectedRoute>
-            <UserLayoutWrapper />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="home" element={<UserHomePage />} />
-      </Route>
 
       {/* Auth pages - public only */}
       <Route
@@ -118,7 +107,7 @@ function FallbackRedirect() {
     if (user.role === 'admin' || user.role === 'librarian') {
       return <Navigate to="/admin/dashboard" replace />;
     }
-    return <Navigate to="/user/home" replace />;
+    return <Navigate to="/" replace />;
   }
   return <Navigate to="/" replace />;
 }

@@ -20,7 +20,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     if (user.role === 'admin' || user.role === 'librarian') {
       return <Navigate to="/admin/dashboard" replace />;
     }
-    return <Navigate to="/user/home" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -34,12 +34,9 @@ export function PublicRoute({ children }: PublicRouteProps) {
   const isAuthenticated = authService.isAuthenticated();
   const user: User | null = authService.getStoredUser();
 
-  if (isAuthenticated && user) {
-    // Redirect based on role
-    if (user.role === 'admin' || user.role === 'librarian') {
-      return <Navigate to="/admin/dashboard" replace />;
-    }
-    return <Navigate to="/user/home" replace />;
+  if (isAuthenticated && user && (user.role === 'admin' || user.role === 'librarian')) {
+    // Admin/librarian go to admin area; readers can stay on public pages (home)
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return <>{children}</>;

@@ -14,6 +14,11 @@
   
   /* Colors */
   --color-text-primary: #ffffff;
+  --color-text-dark: #111827;
+  --color-gray-700: #374151;
+  --color-gray-600: #4b5563;
+  --color-gray-500: #6b7280;
+  --color-gray-400: #9ca3af;
   --color-text-secondary: rgba(156, 163, 175, 1);
   --color-bg-card: rgba(45, 45, 45, 0.6);
   --color-bg-card-hover: rgba(45, 45, 45, 0.8);
@@ -181,6 +186,10 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Hero icon color by theme */
+.hero-icon { color: var(--color-text-primary); }
+[data-theme="light"] .hero-icon { color: var(--color-text-dark); }
 
 .hero-title-secondary {
   font-size: clamp(24px, 4vw, 36px);
@@ -552,6 +561,14 @@
   overflow: hidden;
 }
 
+/* Ensure book title color is stable in light mode */
+[data-theme="light"] .book-title { color: var(--color-text-dark); }
+
+/* Prevent hover from changing title color */
+.book-card:hover .book-title {
+  color: inherit;
+}
+
 .book-author {
   font-size: 12px;
   color: #9ca3af;
@@ -567,6 +584,14 @@
   margin-bottom: 10px;
   font-size: 12px;
   color: #e5e7eb;
+}
+
+/* Ensure rating text color is stable in light mode */
+[data-theme="light"] .book-rating { color: var(--color-gray-700); }
+
+/* Prevent hover from changing rating text color */
+.book-card:hover .book-rating {
+  color: inherit;
 }
 
 .book-rating-star {
@@ -662,6 +687,11 @@
   transform: scale(1.1);
 }
 
+/* Feedback icons color by theme */
+.feedback-buttons .feedback-btn svg { color: rgba(156, 163, 175, 0.9); }
+[data-theme="light"] .feedback-buttons .feedback-btn svg { color: var(--color-gray-500); }
+.feedback-buttons .feedback-btn:hover svg { color: #a855f7; }
+
 /* ============================================
    RESPONSIVE
    ============================================ */
@@ -669,6 +699,21 @@
   .chat-books-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .home-view { padding: 24px 16px !important; }
+  .hero-title { font-size: clamp(20px, 6vw, 28px); }
+  .hero-title-secondary, .hero-title-tertiary { font-size: clamp(20px, 6vw, 28px); }
+  .search-input { padding: 16px 56px 16px 50px; font-size: 15px; }
+  .suggestions-grid { grid-template-columns: 1fr 1fr; }
+  .chat-books-grid { grid-template-columns: 1fr 1fr; }
+  /* Hide left auth column on mobile/tablet */
+  .auth-left-gradient { display: none; }
+  .auth-right-panel { width: 100%; }
+  /* Hide home logo link on auth pages */
+  .auth-home-link { display: none; }
 }
 
 @media (max-width: 1024px) {
@@ -711,6 +756,20 @@
   .ai-response-content {
     padding: 20px;
   }
+  /* Ensure auth form has comfortable padding when left panel hidden */
+  .auth-right-panel { padding: 24px; }
+}
+
+/* Mobile narrow */
+@media (max-width: 480px) {
+  .home-view { padding: 20px 12px !important; }
+  .hero-subtitle { font-size: 14px; }
+  .suggestion-card { padding: 16px; }
+  .chat-message-content { max-width: 90%; }
+  .fixed-chat-input { padding: 12px 88px 12px 44px; font-size: 14px; }
+  .fixed-chat-actions { right: 8px; }
+  /* Hide the label text on send button to save space */
+  .fixed-chat-btn span:first-child { display: none; }
 }
 
 /* ============================================
@@ -980,6 +1039,13 @@
   background-clip: text;
 }
 
+/* TopBar icon color by theme */
+.topbar-icon { color: var(--color-text-primary); }
+[data-theme="light"] .topbar-icon { color: var(--color-text-dark); }
+
+/* TopBar login button text color in light mode */
+[data-theme="light"] .topbar-login-btn { color: var(--color-text-dark) !important; }
+
 .fade-in {
   animation: fadeIn 0.6s ease-out;
 }
@@ -1004,12 +1070,13 @@
 [data-theme="light"] .chat-message.bot .chat-message-bubble {
   background: #ffffff;
   border: 1px solid rgba(0,0,0,0.08);
-  color: #111827;
+  color: var(--color-text-dark);
 }
 
 [data-theme="light"] .chat-message.user .chat-message-bubble {
-  background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
-  color: #fff;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  color: var(--color-text-dark);
 }
 
 /* Light mode: typing indicator */
@@ -1024,11 +1091,10 @@
   border-top: 1px solid rgba(0,0,0,0.06);
 }
 
-[data-theme="light"] .fixed-chat-input {
-  border: 1px solid rgba(0,0,0,0.1);
-  background: rgba(255, 255, 255, 0.95);
-  color: #111827;
-}
+[data-theme="light"] .fixed-chat-input { border: 1px solid rgba(0,0,0,0.1); background: rgba(255, 255, 255, 0.95); color: var(--color-text-dark); }
+
+/* Light mode: send button text should be dark */
+[data-theme="light"] .fixed-chat-btn { color: var(--color-text-dark); }
 
 [data-theme="light"] .fixed-chat-input::placeholder {
   color: rgba(107, 114, 128, 0.7);
@@ -1051,7 +1117,7 @@
 [data-theme="light"] .search-input {
   background: #ffffff;
   border: 1px solid rgba(0,0,0,0.08);
-  color: #111827;
+  color: var(--color-text-dark);
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
 }
 
@@ -1071,23 +1137,16 @@
   border-color: rgba(147,51,234,0.3);
 }
 
-[data-theme="light"] .book-author {
-  color: #6b7280;
-}
+[data-theme="light"] .book-author { color: var(--color-gray-500); }
 
-[data-theme="light"] .book-btn-detail {
-  border-color: rgba(0,0,0,0.15);
-  color: #111827;
-}
+[data-theme="light"] .book-btn-detail { border-color: rgba(0,0,0,0.15); color: var(--color-text-dark); }
 
 [data-theme="light"] .book-btn-detail:hover {
   background: rgba(0,0,0,0.03);
   border-color: rgba(147,51,234,0.35);
 }
 
-[data-theme="light"] .book-btn-borrowed {
-  background: rgba(17,24,39,0.15);
-}
+[data-theme="light"] .book-btn-borrowed { background: rgba(17,24,39,0.15); color: var(--color-text-dark); }
 
 /* Light mode: main container */
 [data-theme="light"] .bg-black {
@@ -1199,16 +1258,10 @@
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  font-weight: 600;
-}
-
-.auth-social-btn svg {
-  width: 18px;
-  height: 18px;
+  gap: 8px;
 }
 
 /* Light mode: auth pages */
@@ -1216,36 +1269,24 @@
   background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
 }
 
-[data-theme="light"] .auth-title {
-  color: #111827;
-}
+[data-theme="light"] .auth-title { color: var(--color-text-dark); }
 
-[data-theme="light"] .auth-subtitle {
-  color: #6b7280;
-}
+/* Light mode: login/register primary button text should be dark for consistency */
+[data-theme="light"] .auth-button { color: var(--color-text-dark); }
 
-[data-theme="light"] .auth-input {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #ffffff;
-  color: #111827;
-}
+[data-theme="light"] .auth-subtitle { color: var(--color-gray-500); }
 
-[data-theme="light"] .auth-input::placeholder {
-  color: #9ca3af;
-}
+[data-theme="light"] .auth-input { border: 1px solid rgba(0, 0, 0, 0.1); background: #ffffff; color: var(--color-text-dark); }
 
-[data-theme="light"] .auth-password-toggle {
-  color: #6b7280;
-}
+[data-theme="light"] .auth-input::placeholder { color: var(--color-gray-400); }
+
+[data-theme="light"] .auth-password-toggle { color: var(--color-gray-500); }
 
 [data-theme="light"] .auth-divider::before {
   background: rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="light"] .auth-divider span {
-  background: #f9fafb;
-  color: #6b7280;
-}
+[data-theme="light"] .auth-divider span { background: #f9fafb; color: var(--color-gray-500); }
 
 [data-theme="light"] .auth-social-btn {
   border: 1px solid rgba(0, 0, 0, 0.1);

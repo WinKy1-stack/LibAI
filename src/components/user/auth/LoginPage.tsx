@@ -80,7 +80,7 @@ export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen max-h-screen overflow-hidden bg-black">
       {/* Home link (top-left) */}
-      <Link to="/" className="absolute top-6 left-10 z-50 inline-flex items-center gap-2 no-underline transition">
+      <Link to="/" className="absolute top-6 left-10 z-50 inline-flex items-center gap-2 no-underline transition auth-home-link">
         <div className="w-8 h-8 rounded-lg bg-linear-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/40 flex items-center justify-center">
           <svg className="w-5 h-5" fill="white" viewBox="0 0 20 20">
             <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
@@ -113,11 +113,13 @@ export default function LoginPage() {
           <p className="text-base text-white/80 max-w-[380px] mx-auto mb-6 text-center">
             Trợ lý ảo thông minh giúp bạn tìm kiếm và quản lý tài liệu thư viện một cách dễ dàng
           </p>
-          <div className="flex justify-center gap-2 mt-12">
-            <div className="w-12 h-1.5 bg-white rounded-full" />
-            <div className="w-12 h-1.5 bg-white/30 rounded-full" />
-            <div className="w-12 h-1.5 bg-white/30 rounded-full" />
-          </div>
+          {/* decorative bars moved to absolute container below */}
+        </div>
+        {/* Bars near bottom */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex justify-center gap-2 z-10">
+          <div className="w-12 h-1.5 bg-white rounded-full" />
+          <div className="w-12 h-1.5 bg-white/30 rounded-full" />
+          <div className="w-12 h-1.5 bg-white/30 rounded-full" />
         </div>
       </div>
 
