@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { ColumnsType } from "antd/es/table";
 import {
   Avatar,
@@ -52,6 +52,14 @@ export function UsersTablePanel({
 }: UsersTablePanelProps) {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const columns: ColumnsType<AdminUser> = useMemo(
     () => [
@@ -232,6 +240,10 @@ export function UsersTablePanel({
       <Table
         columns={columns}
         dataSource={data}
+        loading={{
+          spinning: loading,
+          indicator: <></>,
+        }}
         pagination={{
           pageSize: 5,
           showSizeChanger: false,

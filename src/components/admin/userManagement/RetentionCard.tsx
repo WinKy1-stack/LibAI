@@ -1,5 +1,6 @@
-import { Badge, Card, Progress, Space, Tag, Typography, theme } from "antd";
+import { Badge, Card, Progress, Space, Tag, Typography, theme, Skeleton } from "antd";
 import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { formatDelta } from "./utils";
 
@@ -18,6 +19,14 @@ interface RetentionCardProps {
 
 export function RetentionCard({ trend, change }: RetentionCardProps) {
   const { token } = theme.useToken();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Card
@@ -29,7 +38,14 @@ export function RetentionCard({ trend, change }: RetentionCardProps) {
         transition: "box-shadow 0.3s ease",
       }}
     >
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      {loading ? (
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Skeleton.Button active style={{ width: "100%", height: 32 }} />
+          <Skeleton.Button active style={{ width: "100%", height: 32 }} />
+          <Skeleton active paragraph={{ rows: 4 }} />
+        </Space>
+      ) : (
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
         <Space size={16} wrap>
           <RetentionBadge
             color={token.colorSuccess}
@@ -91,6 +107,7 @@ export function RetentionCard({ trend, change }: RetentionCardProps) {
           </Space>
         </div>
       </Space>
+      )}
     </Card>
   );
 }
