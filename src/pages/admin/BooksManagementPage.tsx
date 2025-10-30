@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
-import { Col, Grid, Row, Space, Spin } from "antd";
+import { useMemo, useState } from "react";
+import { Col, Grid, Row, Space } from "antd";
 import { HeaderCard } from "../../components/admin/bookManagement/HeaderCard";
 import { StatsOverview, type BookTotals } from "../../components/admin/bookManagement/StatsOverview";
 import { BooksTablePanel } from "../../components/admin/bookManagement/BooksTablePanel";
@@ -23,16 +23,6 @@ export default function BooksManagementPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | BookStatus>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [searchValue, setSearchValue] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  // Simulate loading data
-  useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, []);
 
   const totals = useMemo(() => {
     const totalBooks = adminBooks.reduce((accumulator, book) => accumulator + book.totalCopies, 0);
@@ -89,22 +79,6 @@ export default function BooksManagementPage() {
       returned: last.returned - prev.returned,
     };
   }, []);
-
-  if (loading) {
-    return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        minHeight: "60vh",
-        width: "100%" 
-      }}>
-        <Spin size="large" tip="">
-          <div />
-        </Spin>
-      </div>
-    );
-  }
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>

@@ -1,5 +1,6 @@
 import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
-import { Badge, Card, Progress, Space, Tag, Typography, theme } from "antd";
+import { Badge, Card, Progress, Space, Tag, Typography, theme, Skeleton } from "antd";
+import { useState, useEffect } from "react";
 import { formatDelta } from "./utils";
 
 const { Text } = Typography;
@@ -17,6 +18,14 @@ interface BorrowTrendCardProps {
 
 export function BorrowTrendCard({ trend, change }: BorrowTrendCardProps) {
   const { token } = theme.useToken();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Card
@@ -28,7 +37,14 @@ export function BorrowTrendCard({ trend, change }: BorrowTrendCardProps) {
         transition: "box-shadow 0.3s ease",
       }}
     >
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      {loading ? (
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Skeleton.Button active style={{ width: "100%", height: 32 }} />
+          <Skeleton.Button active style={{ width: "100%", height: 32 }} />
+          <Skeleton active paragraph={{ rows: 4 }} />
+        </Space>
+      ) : (
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
         <Space wrap>
           <Badge
             color={token.colorSuccess}
@@ -97,6 +113,7 @@ export function BorrowTrendCard({ trend, change }: BorrowTrendCardProps) {
           </Space>
         </div>
       </Space>
+      )}
     </Card>
   );
 }
