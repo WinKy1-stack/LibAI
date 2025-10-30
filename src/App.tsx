@@ -1,7 +1,8 @@
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { ChatProvider } from './contexts/ChatContext';
 import { UserLayout } from './components/user/layout';
 import AdminLayout from './components/admin/layout/AdminLayout';
+import UserHomePage from './pages/user/UserHomePage';
 import DashboardPage from './pages/admin/DashboardPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import BooksManagementPage from './pages/admin/BooksManagementPage';
@@ -10,9 +11,9 @@ import ReportPage from './pages/admin/ReportPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import LibrarianSettingsPage from './pages/admin/LibrarianSettingsPage';
 import FaqPage from './pages/admin/FaqPage';
-import UserHomePage from './pages/user/UserHomePage';
-import ForbiddenPage from './pages/ForbiddenPage';
 import { LoginPage, RegisterPage, ProtectedRoute, PublicRoute } from './components/user/auth';
+import { authService } from './services/authService';
+import ForbiddenPage from './pages/ForbiddenPage';
 import './App.css';
 
 // Wrapper component cho admin routes
@@ -37,8 +38,15 @@ function App() {
   return (
     <ChatProvider>
       <Routes>
-      {/* Root route - PUBLIC - Ai cũng vào được (mặc định UserHomePage) */}
-      <Route path="/" element={<UserLayoutWrapper />}>
+      {/* Public landing (can redirect if already logged in) */}
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <UserLayoutWrapper />
+          </PublicRoute>
+        }
+      >
         <Route index element={<UserHomePage />} />
       </Route>
       
@@ -93,9 +101,29 @@ function App() {
         {/* Librarian settings - có thể cả hai hoặc chỉ librarian */}
         <Route path="librarian" element={<LibrarianSettingsPage />} />
       </Route>
+
+      {/* Fallback for unknown routes */}
+      <Route
+        path="*"
+        element={<FallbackRedirect />}
+      />
     </Routes>
     </ChatProvider>
   );
 }
 
 export default App;
+
+// Redirect to appropriate default when route not found
+function FallbackRedirect() {
+  const isAuthenticated = authService.isAuthenticated();
+  const user = authService.getStoredUser();
+
+  if (isAuthenticated && user) {
+    if (user.role === 'admin' || user.role === 'librarian') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+    return <Navigate to="/" replace />;
+  }
+  return <Navigate to="/" replace />;
+}
