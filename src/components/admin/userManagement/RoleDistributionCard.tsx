@@ -1,5 +1,6 @@
 import { AppstoreOutlined } from "@ant-design/icons";
-import { Card, Progress, Space, Tag, Typography, theme } from "antd";
+import { Card, Progress, Space, Tag, Typography, theme, Skeleton } from "antd";
+import { useState, useEffect } from "react";
 import type { UserRole } from "../../../data";
 import { roleLabels } from "./constants";
 
@@ -17,6 +18,14 @@ export function RoleDistributionCard({
   averageCompletion,
 }: RoleDistributionCardProps) {
   const { token } = theme.useToken();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Card
@@ -28,7 +37,13 @@ export function RoleDistributionCard({
         transition: "box-shadow 0.3s ease",
       }}
     >
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      {loading ? (
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Skeleton active paragraph={{ rows: 3 }} />
+          <Skeleton.Button active style={{ width: "100%", height: 100 }} />
+        </Space>
+      ) : (
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
         {distribution.map((item) => {
           const percent = totalCount === 0 ? 0 : Math.round((item.count / totalCount) * 100);
           return (
@@ -67,12 +82,13 @@ export function RoleDistributionCard({
             </Text>
             <Text type="secondary">Điểm hoàn thành nhiệm vụ mượn trả trung bình của toàn bộ hệ thống.</Text>
             <Progress percent={averageCompletion} strokeColor={token.colorSuccess} status="active" size="small" />
-            <Tag color="processing" style={{ alignSelf: "flex-start", marginTop: 4 }}>
+            <Tag color="processing" style={{ alignSelf: "flex-start", marginTop: 4}}>
               {averageCompletion}% hoàn thành
             </Tag>
           </Space>
         </Card>
       </Space>
+      )}
     </Card>
   );
 }

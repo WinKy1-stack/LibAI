@@ -39,6 +39,7 @@ interface FaqTablePanelProps {
   onSearchSubmit: (value: string) => void;
   onEdit: (record: FaqItem) => void;
   onDelete: (id: string) => void;
+  loading?: boolean;
 }
 
 export function FaqTablePanel({
@@ -53,6 +54,7 @@ export function FaqTablePanel({
   onSearchSubmit,
   onEdit,
   onDelete,
+  loading = false,
 }: FaqTablePanelProps) {
   const screens = Grid.useBreakpoint();
   const { token } = theme.useToken();
@@ -268,6 +270,10 @@ export function FaqTablePanel({
       <Table
         columns={columns}
         dataSource={data}
+        loading={{
+          spinning: loading,
+          indicator: <></>,
+        }}
         pagination={{ pageSize: 5, showSizeChanger: false }}
         rowKey="id"
         scroll={{ x: 1200 }}

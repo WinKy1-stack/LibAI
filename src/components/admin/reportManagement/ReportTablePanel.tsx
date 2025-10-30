@@ -17,6 +17,7 @@ interface ReportTablePanelProps {
   onStatusChange: (value: "all" | ReportStatus) => void;
   onSearchChange: (value: string) => void;
   onSearchSubmit: (value: string) => void;
+  loading?: boolean;
 }
 
 export function ReportTablePanel({
@@ -30,6 +31,7 @@ export function ReportTablePanel({
   onStatusChange,
   onSearchChange,
   onSearchSubmit,
+  loading = false,
 }: ReportTablePanelProps) {
   const { token } = useToken();
   const [currentPage, setCurrentPage] = useState(1);
@@ -267,6 +269,10 @@ export function ReportTablePanel({
           columns={columns}
           dataSource={data}
           rowKey="id"
+          loading={{
+            spinning: loading,
+            indicator: <></>,
+          }}
           pagination={{
             current: currentPage,
             pageSize,

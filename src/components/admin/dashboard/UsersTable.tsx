@@ -3,6 +3,7 @@ import { Card, Table, Button, Space, Avatar, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { dashboardUsers, type UserRecord } from "../../../data";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -10,6 +11,14 @@ const { useToken } = theme;
 export default function UsersTable() {
   const { token } = useToken();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const columns: ColumnsType<UserRecord> = [
     { 
@@ -82,6 +91,10 @@ export default function UsersTable() {
         rowKey="key"
         dataSource={dashboardUsers}
         columns={columns}
+        loading={{
+          spinning: loading,
+          indicator: <></>,
+        }}
         pagination={false}
         scroll={{ x: 480 }}
       />
