@@ -5,7 +5,7 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { useMemo, useState, useEffect } from "react";
-import { 
+import {
   StatCard,
   UsersTable,
   BooksTable,
@@ -15,6 +15,8 @@ import {
   OverdueBookTable,
 } from "../../components/admin/dashboard";
 import { mockOverdueBooks } from "../../data";
+import { authService } from "../../services/authService";
+import type { User } from "../../types/auth";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -33,12 +35,32 @@ export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState("this-week");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const pageSize = 4;
 
   const currentDateString = useMemo(
     () => new Date().toLocaleDateString("vi-VN", dateOptions),
     []
   );
+
+  // Fetch user info
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const storedUser = authService.getStoredUser();
+        if (storedUser) {
+          setUser(storedUser);
+        } else {
+          const currentUser = await authService.getCurrentUser();
+          setUser(currentUser);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   // Simulate loading data
   useEffect(() => {
@@ -98,7 +120,9 @@ export default function DashboardPage() {
                     }}
                   >
                     Xin chào,{" "}
-                    <span style={{ color: token.colorPrimary }}>Thanh Toàn!</span>
+                    <span style={{ color: token.colorPrimary }}>
+                      {user?.name || "User"}!
+                    </span>
                   </Title>
                   <Text style={{ fontSize: screens.xs ? 14 : 16 }}>
                     {currentDateString}

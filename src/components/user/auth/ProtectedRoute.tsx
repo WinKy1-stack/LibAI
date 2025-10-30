@@ -21,6 +21,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       return <Navigate to="/admin/dashboard" replace />;
     }
     return <Navigate to="/" replace />;
+    // Redirect to 403 Forbidden page
+    return <Navigate to="/403" replace />;
   }
 
   return <>{children}</>;
