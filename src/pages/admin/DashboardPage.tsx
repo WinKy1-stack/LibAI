@@ -1,4 +1,4 @@
-import { Card, Space, Typography, Row, Col, Grid, Select, theme, Spin } from "antd";
+import { Card, Space, Typography, Row, Col, Grid, Select, theme } from "antd";
 import {
   UserOutlined,
   BookOutlined,
@@ -34,8 +34,8 @@ export default function DashboardPage() {
   const { token } = useToken();
   const [timeRange, setTimeRange] = useState("this-week");
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [overdueLoading, setOverdueLoading] = useState(true);
   const pageSize = 4;
 
   const currentDateString = useMemo(
@@ -62,34 +62,17 @@ export default function DashboardPage() {
     fetchUser();
   }, []);
 
-  // Simulate loading data
+  // Simulate loading overdue books data
   useEffect(() => {
-    setLoading(true);
     const timer = setTimeout(() => {
-      setLoading(false);
-    }, 800);
+      setOverdueLoading(false);
+    }, 10000);
     return () => clearTimeout(timer);
   }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-
-  if (loading) {
-    return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        minHeight: "60vh",
-        width: "100%" 
-      }}>
-        <Spin size="large" tip="">
-          <div />
-        </Spin>
-      </div>
-    );
-  }
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
@@ -189,6 +172,7 @@ export default function DashboardPage() {
             </div>
             <OverdueBookTable
               dataSource={mockOverdueBooks}
+              loading={overdueLoading}
               currentPage={currentPage}
               pageSize={pageSize}
               total={mockOverdueBooks.length}

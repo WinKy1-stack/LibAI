@@ -3,6 +3,7 @@ import { Card, Table, Button, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { dashboardBooks, type BookRecord } from "../../../data";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -10,6 +11,14 @@ const { useToken } = theme;
 export default function BooksTable() {
   const { token } = useToken();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const columns: ColumnsType<BookRecord> = [
     { 
@@ -68,6 +77,10 @@ export default function BooksTable() {
         rowKey="key"
         dataSource={dashboardBooks}
         columns={columns}
+        loading={{
+          spinning: loading,
+          indicator: <></>,
+        }}
         pagination={false}
         scroll={{ x: 560 }}
       />

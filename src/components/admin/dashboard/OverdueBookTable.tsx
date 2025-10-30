@@ -113,7 +113,10 @@ export default function OverdueBookTable({
       rowKey="key"
       dataSource={dataSource}
       columns={columns}
-      loading={loading}
+      loading={{
+        spinning: loading,
+        indicator: <></>,
+      }}
       scroll={{ x: 1200 }}
       pagination={{
         current: currentPage,
