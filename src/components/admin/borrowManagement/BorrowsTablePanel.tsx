@@ -265,7 +265,10 @@ export const BorrowsTablePanel = ({
         columns={columns}
         dataSource={filteredData}
         rowKey="id"
-        loading={loading}
+        loading={{
+          spinning: loading,
+          indicator: <></>,
+        }}
         scroll={{ x: 1400 }}
         pagination={{
           pageSize: 10,

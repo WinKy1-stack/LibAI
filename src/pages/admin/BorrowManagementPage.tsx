@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Row, Col, Space, Spin } from "antd";
+import { Row, Col, Space } from "antd";
 import { HeaderCard } from "../../components/admin/borrowManagement/HeaderCard";
 import { StatsOverview } from "../../components/admin/borrowManagement/StatsOverview";
 import { BorrowTrendCard } from "../../components/admin/borrowManagement/BorrowTrendCard";
@@ -14,15 +14,24 @@ import {
 } from "../../data/mockBorrows";
 
 export const BorrowManagementPage = () => {
-  const [loading, setLoading] = useState(true);
+  const [trendLoading, setTrendLoading] = useState(true);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(true);
 
-  // Simulate loading data
+  // Simulate loading data with 10s timeout for testing
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 600);
+    const trendTimer = setTimeout(() => setTrendLoading(false), 10000);
+    const statusTimer = setTimeout(() => setStatusLoading(false), 10000);
+    const activityTimer = setTimeout(() => setActivityLoading(false), 10000);
+    const tableTimer = setTimeout(() => setTableLoading(false), 10000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(trendTimer);
+      clearTimeout(statusTimer);
+      clearTimeout(activityTimer);
+      clearTimeout(tableTimer);
+    };
   }, []);
 
   // Memoize data to avoid unnecessary re-renders
@@ -30,22 +39,6 @@ export const BorrowManagementPage = () => {
   const trendData = useMemo(() => borrowTrendData, []);
   const statusData = useMemo(() => statusDistribution, []);
   const activities = useMemo(() => latestBorrowActivities, []);
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "60vh",
-        }}
-      >
-        <Spin size="large" tip="Đang tải dữ liệu...">
-        </Spin>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -65,18 +58,18 @@ export const BorrowManagementPage = () => {
         {/* Charts Row */}
         <Row gutter={[16, 16]}>
           <Col xs={24} xl={14}>
-            <BorrowTrendCard data={trendData} loading={false} />
+            <BorrowTrendCard data={trendData} loading={trendLoading} />
           </Col>
           <Col xs={24} xl={10}>
-            <StatusDistributionCard data={statusData} loading={false} />
+            <StatusDistributionCard data={statusData} loading={statusLoading} />
           </Col>
         </Row>
 
         {/* Recent Activity */}
-        <RecentActivityCard activities={activities} loading={false} />
+        <RecentActivityCard activities={activities} loading={activityLoading} />
 
         {/* Main Table */}
-        <BorrowsTablePanel borrows={borrows} loading={false} />
+        <BorrowsTablePanel borrows={borrows} loading={tableLoading} />
       </Space>
     </div>
   );
