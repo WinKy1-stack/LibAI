@@ -1,4 +1,4 @@
-import { Card, Space, Typography, List, Tag, theme, Tabs, Badge, Progress } from "antd";
+import { Card, Space, Typography, List, Tag, theme, Tabs, Badge, Progress, Skeleton } from "antd";
 import { BookOutlined, UserOutlined, PieChartOutlined, CrownOutlined } from "@ant-design/icons";
 import type { TopMetrics } from "../../../data";
 import { getChartColors } from "./constants";
@@ -8,9 +8,10 @@ const { useToken } = theme;
 
 interface TopMetricsCardProps {
   data: TopMetrics;
+  loading?: boolean;
 }
 
-export function TopMetricsCard({ data }: TopMetricsCardProps) {
+export function TopMetricsCard({ data, loading = false }: TopMetricsCardProps) {
   const { token } = useToken();
   const chartColors = getChartColors(token);
 
@@ -149,7 +150,11 @@ export function TopMetricsCard({ data }: TopMetricsCardProps) {
           <Text type="secondary">Thống kê các mục nổi bật trong hệ thống</Text>
         </div>
 
-        <Tabs items={items} />
+        {loading ? (
+          <Skeleton active paragraph={{ rows: 5 }} />
+        ) : (
+          <Tabs items={items} />
+        )}
       </Space>
     </Card>
   );

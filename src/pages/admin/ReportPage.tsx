@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Col, Grid, Row, Space, Spin } from "antd";
+import { Col, Grid, Row, Space } from "antd";
 import {
   HeaderCard,
   StatsOverview,
@@ -29,15 +29,28 @@ export default function ReportPage() {
   const [categoryFilter, setCategoryFilter] = useState<"all" | ReportCategory>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | ReportStatus>("all");
   const [searchValue, setSearchValue] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  // Simulate loading data
+  // Individual loading states for each component with 10s timeout for testing
+  const [tableLoading, setTableLoading] = useState(true);
+  const [revenueLoading, setRevenueLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [categoryLoading, setCategoryLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
+    const tableTimer = setTimeout(() => setTableLoading(false), 10000);
+    const revenueTimer = setTimeout(() => setRevenueLoading(false), 10000);
+    const activityTimer = setTimeout(() => setActivityLoading(false), 10000);
+    const categoryTimer = setTimeout(() => setCategoryLoading(false), 10000);
+    const metricsTimer = setTimeout(() => setMetricsLoading(false), 10000);
+
+    return () => {
+      clearTimeout(tableTimer);
+      clearTimeout(revenueTimer);
+      clearTimeout(activityTimer);
+      clearTimeout(categoryTimer);
+      clearTimeout(metricsTimer);
+    };
   }, []);
 
   const filteredReports = useMemo(() => {
@@ -57,22 +70,6 @@ export default function ReportPage() {
       return matchSearch && matchType && matchCategory && matchStatus;
     });
   }, [typeFilter, categoryFilter, statusFilter, searchValue]);
-
-  if (loading) {
-    return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        minHeight: "60vh",
-        width: "100%" 
-      }}>
-        <Spin size="large" tip="">
-          <div />
-        </Spin>
-      </div>
-    );
-  }
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
@@ -97,6 +94,7 @@ export default function ReportPage() {
                 onStatusChange={(value) => setStatusFilter(value)}
                 onSearchChange={(value) => setSearchValue(value)}
                 onSearchSubmit={(value) => setSearchValue(value)}
+                loading={tableLoading}
               />
             </Col>
           </Row>
@@ -104,20 +102,20 @@ export default function ReportPage() {
           {/* Revenue and Activity Charts */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={14}>
-              <RevenueCard data={monthlyRevenue} />
+              <RevenueCard data={monthlyRevenue} loading={revenueLoading} />
             </Col>
             <Col xs={24} lg={10}>
-              <ActivityCard data={weeklyActivity} />
+              <ActivityCard data={weeklyActivity} loading={activityLoading} />
             </Col>
           </Row>
 
           {/* Category Performance and Top Metrics */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={14}>
-              <CategoryPerformanceCard data={categoryPerformance} />
+              <CategoryPerformanceCard data={categoryPerformance} loading={categoryLoading} />
             </Col>
             <Col xs={24} lg={10}>
-              <TopMetricsCard data={topMetrics} />
+              <TopMetricsCard data={topMetrics} loading={metricsLoading} />
             </Col>
           </Row>
         </Space>

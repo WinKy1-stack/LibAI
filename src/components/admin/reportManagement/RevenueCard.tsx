@@ -1,4 +1,4 @@
-import { Card, Space, Typography, theme } from "antd";
+import { Card, Space, Typography, theme, Skeleton } from "antd";
 import {
   BarChart,
   Bar,
@@ -17,9 +17,10 @@ const { useToken } = theme;
 
 interface RevenueCardProps {
   data: RevenueData[];
+  loading?: boolean;
 }
 
-export function RevenueCard({ data }: RevenueCardProps) {
+export function RevenueCard({ data, loading = false }: RevenueCardProps) {
   const { token } = useToken();
   const chartColors = getChartColors(token);
 
@@ -58,7 +59,12 @@ export function RevenueCard({ data }: RevenueCardProps) {
           </div>
         </div>
 
-        <ResponsiveContainer width="100%" height={300}>
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: 300 }}>
+            <Skeleton.Image active />
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorder}/>
             <XAxis
@@ -99,6 +105,7 @@ export function RevenueCard({ data }: RevenueCardProps) {
             <Bar dataKey="lateReturns" fill={chartColors.lateReturns} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
+        )}
       </Space>
     </Card>
   );

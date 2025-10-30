@@ -1,4 +1,4 @@
-import { Card, Space, Typography, Table, Progress, theme } from "antd";
+import { Card, Space, Typography, Table, Progress, theme, Skeleton } from "antd";
 import { TrophyOutlined } from "@ant-design/icons";
 import { getChartColors } from "./constants";
 
@@ -7,9 +7,10 @@ const { useToken } = theme;
 
 interface CategoryPerformanceProps {
   data: Array<{ category: string; borrowed: number; revenue: number }>;
+  loading?: boolean;
 }
 
-export function CategoryPerformanceCard({ data }: CategoryPerformanceProps) {
+export function CategoryPerformanceCard({ data, loading = false }: CategoryPerformanceProps) {
   const { token } = useToken();
   const chartColors = getChartColors(token);
 
@@ -94,7 +95,10 @@ export function CategoryPerformanceCard({ data }: CategoryPerformanceProps) {
           </div>
         </div>
 
-        <Table
+        {loading ? (
+          <Skeleton active paragraph={{ rows: 5 }} />
+        ) : (
+          <Table
           columns={columns}
           dataSource={data}
           rowKey="category"
@@ -102,6 +106,7 @@ export function CategoryPerformanceCard({ data }: CategoryPerformanceProps) {
           size="small"
           scroll={{ x: 400 }}
         />
+        )}
       </Space>
     </Card>
   );
