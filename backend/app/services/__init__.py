@@ -1,6 +1,58 @@
 """
-Business Logic Services
+Services Package - Business logic layer
 """
-from app.services.user_service import UserService
+# Prompt/AI services
+from .prompt import (
+    PromptService,
+    get_prompt_service,
+    reset_prompt_service,
+    ChatConfig,
+    PromptValidator,
+    PromptFormatter
+)
 
-__all__ = ['UserService']
+# Chat history services
+from .history import (
+    ChatHistoryService,
+    get_chat_history_service,
+    ConversationManager,
+    MessageManager
+)
+
+# User services
+from .user import UserService
+
+# Shared exceptions
+from .exceptions import (
+    ChatServiceError,
+    GeminiAPIError,
+    InvalidConfigurationError,
+    ValidationError,
+    EmptyResponseError
+)
+
+__all__ = [
+    # Prompt
+    'PromptService',
+    'get_prompt_service',
+    'reset_prompt_service',
+    'ChatConfig',
+    'PromptValidator',
+    'PromptFormatter',
+    
+    # History
+    'ChatHistoryService',
+    'get_chat_history_service',
+    'ConversationManager',
+    'MessageManager',
+    
+    # User
+    'UserService',
+    
+    # Exceptions
+    'ChatServiceError',
+    'GeminiAPIError',
+    'InvalidConfigurationError',
+    'ValidationError',
+    'EmptyResponseError'
+]

@@ -50,6 +50,10 @@ class Config:
     # CORS
     CORS_HEADERS = 'Content-Type'
 
+    # Google Gemini AI Configuration
+    GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+    GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'gemini-1.5-flash')
+
 class DevelopmentConfig(Config):
     """Cấu hình cho môi trường development"""
     DEBUG = True
