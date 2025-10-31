@@ -129,3 +129,4 @@ $RECYCLE.BIN/
 
 # GitHub or CI auto-generated
 .github/instructions/*
+.claude/settings.local.json
