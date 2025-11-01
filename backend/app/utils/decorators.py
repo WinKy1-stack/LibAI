@@ -6,6 +6,29 @@ from flask import jsonify
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request, get_jwt
 from app.models.user import User, UserRole
 
+
+def token_required(fn):
+    """
+    Decorator cơ bản yêu cầu JWT token
+    Trả về current_user info trong function
+    Usage: @token_required
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        current_user_id = get_jwt_identity()
+        claims = get_jwt()
+        
+        # Tạo dict current_user info
+        current_user = {
+            'id': current_user_id,
+            'role': claims.get('role'),
+            'username': claims.get('sub')
+        }
+        
+        return fn(current_user, *args, **kwargs)
+    return wrapper
+
 def role_required(*roles):
     """
     Decorator để kiểm tra role của user

@@ -34,12 +34,14 @@ def create_app(config_class=Config):
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
     from app.routes.mongodb_routes import mongodb_bp
-    from app.routes.library_routes import library_bp
+    from app.routes.library import library_bp
+    from app.routes.chat import chat_bp
     
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
     app.register_blueprint(mongodb_bp)  # Legacy books API
     app.register_blueprint(library_bp)  # New library system API
+    app.register_blueprint(chat_bp)  # Chat AI API
 
     # Health check endpoint
     @app.route('/health')

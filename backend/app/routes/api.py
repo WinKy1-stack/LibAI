@@ -2,7 +2,7 @@
 API Routes
 """
 from flask import Blueprint, request, jsonify
-from app.services.user_service import UserService
+from app.services.user import UserService
 from app.utils.validators import validate_user_data
 
 api_bp = Blueprint('api', __name__)

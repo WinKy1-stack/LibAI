@@ -3,6 +3,7 @@ import { ChatProvider } from './contexts/ChatContext';
 import { UserLayout } from './components/user/layout';
 import AdminLayout from './components/admin/layout/AdminLayout';
 import UserHomePage from './pages/user/UserHomePage';
+import ChatHistoryPage from './pages/user/ChatHistoryPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import UserManagementPage from './pages/admin/UserManagementPage';
 import BooksManagementPage from './pages/admin/BooksManagementPage';
@@ -54,6 +55,13 @@ function App() {
       <Route path="/user/home" element={<UserLayoutWrapper />}>
         <Route index element={<UserHomePage />} />
       </Route>
+
+      {/* User chat history route - PROTECTED - CHỈ ADMIN */}
+      <Route path="/user/chat" element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <UserLayout><ChatHistoryPage /></UserLayout>
+        </ProtectedRoute>
+      } />
       
       {/* Login page - PUBLIC - Tự động redirect nếu đã đăng nhập */}
       <Route path="/login" element={
