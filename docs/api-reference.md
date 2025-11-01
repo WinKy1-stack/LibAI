@@ -5,10 +5,6 @@ Tài liệu này cung cấp tài liệu tham khảo cho tất cả các điểm 
 ### URL cơ sở
 `http://localhost:5000`
 
-### Kiểm tra tình trạng
-- `GET /health`: Trả về trạng thái máy chủ.
-- `GET /api/health`: Trả về trạng thái API.
-
 ### Xác thực (`/api/auth`)
 
 | Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
@@ -54,12 +50,44 @@ Content-Type: application/json
 | ------ | --------------------- | ------------------------- | ---- | ----------- |
 | GET | `/marc-records` | Lấy tất cả các bản ghi MARC. | Có | Tất cả |
 | GET | `/marc-records/:id` | Lấy một bản ghi MARC duy nhất. | Có | Tất cả |
-| GET | `/marc-records/search?q=...` | Tìm kiếm các bản ghi MARC. | Có | Tất cả |
 | POST | `/marc-records` | Tạo một bản ghi MARC mới. | Có | Thủ thư+ |
 | PUT | `/marc-records/:id` | Cập nhật một bản ghi MARC. | Có | Thủ thư+ |
 | DELETE | `/marc-records/:id` | Xóa một bản ghi MARC. | Có | Quản trị viên |
-| GET | `/items` | Lấy tất cả các mục. | Có | Tất cả |
-| POST | `/items` | Tạo một mục mới. | Có | Thủ thư+ |
-| GET | `/loans` | Lấy tất cả các khoản mượn. | Có | Thủ thư+ |
-| POST | `/loans/checkout` | Mượn một cuốn sách. | Có | Thủ thư+ |
-| POST | `/loans/return` | Trả một cuốn sách. | Có | Thủ thư+ |
+
+### Trò chuyện (`/api/chat`)
+
+| Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
+| ------ | ----------- | ------------------------ | ------------- |
+| POST | `/message` | Gửi tin nhắn đến chatbot. | Có |
+| POST | `/recommend` | Nhận đề xuất sách. | Có |
+| GET | `/history/:id` | Lấy lịch sử trò chuyện. | Có |
+| GET | `/conversations`| Lấy danh sách cuộc trò chuyện.| Có |
+| GET | `/stats` | Lấy thống kê trò chuyện. | Có |
+| GET | `/health` | Kiểm tra tình trạng dịch vụ. | Không |
+
+**Ví dụ yêu cầu tin nhắn trò chuyện:**
+
+```bash
+POST /api/chat/message
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+
+{
+  "message": "Tìm sách về Python cho người mới bắt đầu"
+}
+```
+
+**Ví dụ phản hồi tin nhắn trò chuyện:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Tôi đề xuất cuốn 'Python Crash Course' của Eric Matthes.",
+    "conversation_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
+  },
+  "metadata": {
+    "latency_ms": 789
+  }
+}
+```
