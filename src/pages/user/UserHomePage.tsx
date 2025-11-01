@@ -34,6 +34,15 @@ export default function UserHomePage() {
   const isAuthenticated = authService.isAuthenticated();
   const { mode: themeMode } = useUserTheme();
 
+  // CRITICAL: Set data-theme attribute on document root để CSS apply đúng
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', themeMode);
+    // Cleanup khi unmount
+    return () => {
+      document.documentElement.removeAttribute('data-theme');
+    };
+  }, [themeMode]);
+
   // Sync messages từ hook vào local state để hiển thị
   useEffect(() => {
     if (messages.length > 0) {
@@ -164,9 +173,6 @@ export default function UserHomePage() {
   return (
     <div 
       className="flex h-screen overflow-hidden transition-colors duration-200"
-      style={{
-        backgroundColor: themeMode === 'dark' ? '#0f1419' : '#f9fafb',
-      }}
     >
       {/* Sidebar - CHỈ hiện khi đã đăng nhập với animation */}
       {isAuthenticated && (
@@ -196,13 +202,7 @@ export default function UserHomePage() {
           {isAuthenticated && (
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border"
-              style={{
-                background: themeMode === 'dark' ? 'rgba(30, 41, 54, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                borderColor: themeMode === 'dark' ? '#334155' : '#e5e7eb',
-                color: themeMode === 'dark' ? '#e5e7eb' : '#374151',
-                backdropFilter: 'blur(10px)',
-              }}
+              className="top-action-btn p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border"
               title={isSidebarOpen ? 'Ẩn lịch sử' : 'Hiện lịch sử'}
             >
               <Bars3Icon className="w-5 h-5" />
@@ -213,13 +213,7 @@ export default function UserHomePage() {
           {isChatting && (
             <button
               onClick={handleNewConversation}
-              className="p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border"
-              style={{
-                background: themeMode === 'dark' ? 'rgba(30, 41, 54, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                borderColor: themeMode === 'dark' ? '#334155' : '#e5e7eb',
-                color: themeMode === 'dark' ? '#e5e7eb' : '#374151',
-                backdropFilter: 'blur(10px)',
-              }}
+              className="top-action-btn p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border"
               title="Về trang chủ"
             >
               <HomeIcon className="w-5 h-5" />
@@ -230,9 +224,6 @@ export default function UserHomePage() {
         {/* Content: Hero/Search HOẶC Chat Messages */}
         <div 
           className="flex-1 overflow-y-auto transition-colors duration-200"
-          style={{
-            backgroundColor: themeMode === 'dark' ? '#0f1419' : '#f9fafb',
-          }}
         >
           {!isChatting ? (
             // Home view (hero + suggestions) - Hiện khi chưa chat
@@ -301,4 +292,3 @@ export default function UserHomePage() {
     </div>
   );
 }
-
