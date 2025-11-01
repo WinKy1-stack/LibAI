@@ -4,7 +4,7 @@ Hướng dẫn này giải thích cách sử dụng ứng dụng, bao gồm tài
 
 ## Tài khoản thử nghiệm
 
-Sau khi cài đặt ứng dụng và tạo dữ liệu mẫu cho cơ sở dữ liệu (hoặc kết nối với cơ sở dữ liệu đám mây đã được cấu hình sẵn), bạn có thể sử dụng các tài khoản thử nghiệm sau để đăng nhập:
+Sau khi cài đặt ứng dụng, bạn có thể sử dụng các tài khoản thử nghiệm sau để đăng nhập:
 
 | Email | Mật khẩu | Vai trò | Mô tả |
 | ---------------------- | ------------- | --------- | ---------------- |
@@ -17,9 +17,22 @@ Sau khi cài đặt ứng dụng và tạo dữ liệu mẫu cho cơ sở dữ l
 
 Ứng dụng sử dụng hệ thống kiểm soát truy cập dựa trên vai trò để quản lý quyền của người dùng.
 
-- **Reader**: Có thể xem và mượn sách, và xem hồ sơ của riêng họ.
-- **Librarian**: Có tất cả các quyền của `reader`, cộng với khả năng quản lý việc cho mượn sách và xem báo cáo.
-- **Admin**: Có toàn quyền truy cập vào hệ thống, bao gồm quản lý người dùng và cấu hình hệ thống.
+- **Reader (Độc giả)**:
+    - Có thể tìm kiếm sách bằng thanh tìm kiếm hoặc qua giao diện trò chuyện.
+    - Xem chi tiết sách.
+    - Xem lịch sử mượn của riêng họ.
+
+- **Librarian (Thủ thư)**:
+    - Có tất cả các quyền của `reader`.
+    - Quản lý sách (thêm, sửa, xóa).
+    - Quản lý việc cho mượn sách.
+    - Xem báo cáo và thống kê.
+
+- **Admin (Quản trị viên)**:
+    - Có toàn quyền truy cập vào hệ thống.
+    - Quản lý người dùng (thêm, sửa, xóa).
+    - Cấu hình cài đặt hệ thống.
+    - Xem tất cả các báo cáo và thống kê.
 
 ## Đăng xuất
 
