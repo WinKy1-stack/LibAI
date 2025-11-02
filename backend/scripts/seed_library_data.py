@@ -82,109 +82,149 @@ def seed_users():
     return user_ids
 
 def seed_marc_records():
-    """Seed sample MARC records"""
+    """Seed sample MARC records (LibraryRecordLite format)"""
     print("\n📚 Seeding MARC records...")
-    
+
+    import uuid
     records = [
         {
-            "control_number": "001",
-            "leader": "01359nam a2200301 a 4500",
-            "fields": {
-                "245": {"a": "Nhập môn Cơ sở dữ liệu", "b": "Lý thuyết & thực hành"},
-                "100": {"a": "Nguyễn Văn X"},
-                "260": {"a": "Hà Nội", "b": "NXB Giáo Dục", "c": "2022"},
-                "650": [{"a": "Cơ sở dữ liệu"}, {"a": "SQL"}]
+            "record_id": str(uuid.uuid4()),
+            "title": {
+                "main": "Nhập môn Cơ sở dữ liệu",
+                "subtitle": "Lý thuyết & thực hành"
             },
-            "normalized": {
-                "isbn": ["978-6040000001"],
-                "title": "Nhập môn Cơ sở dữ liệu: Lý thuyết & thực hành",
-                "authors": ["Nguyễn Văn X"],
+            "contributors": [
+                {"role": "author", "name": "Nguyễn Văn X"}
+            ],
+            "subjects": [
+                {"term": "Cơ sở dữ liệu", "subdivisions": []},
+                {"term": "SQL", "subdivisions": []}
+            ],
+            "publication": {
+                "place": "Hà Nội",
                 "publisher": "NXB Giáo Dục",
-                "year": 2022,
-                "subjects": ["Cơ sở dữ liệu", "SQL"]
+                "year": "2022"
             },
-            "raw_mrc_ref": "gridfs://mrc/001.mrc",
-            "source": MARCRecordSource.LOCAL.value
+            "identifiers": {
+                "isbn": [{"value": "978-6040000001"}]
+            },
+            "languages": ["vi"],
+            "format": ["book"],
+            "holdings": [
+                {"location_code": "Main Library", "call_number": "001.1/NH", "status": "available"}
+            ]
         },
         {
-            "control_number": "002",
-            "leader": "01359nam a2200301 a 4500",
-            "fields": {
-                "245": {"a": "Machine Learning cơ bản", "b": "Python & Scikit-learn"},
-                "100": {"a": "Vũ Hữu Tiệp"},
-                "260": {"a": "TP.HCM", "b": "NXB Trẻ", "c": "2023"},
-                "650": [{"a": "Machine Learning"}, {"a": "Python"}, {"a": "AI"}]
+            "record_id": str(uuid.uuid4()),
+            "title": {
+                "main": "Machine Learning cơ bản",
+                "subtitle": "Python & Scikit-learn"
             },
-            "normalized": {
-                "isbn": ["978-6040000002"],
-                "title": "Machine Learning cơ bản: Python & Scikit-learn",
-                "authors": ["Vũ Hữu Tiệp"],
+            "contributors": [
+                {"role": "author", "name": "Vũ Hữu Tiệp"}
+            ],
+            "subjects": [
+                {"term": "Machine Learning", "subdivisions": []},
+                {"term": "Python", "subdivisions": []},
+                {"term": "AI", "subdivisions": []}
+            ],
+            "publication": {
+                "place": "TP.HCM",
                 "publisher": "NXB Trẻ",
-                "year": 2023,
-                "subjects": ["Machine Learning", "Python", "AI"]
+                "year": "2023"
             },
-            "raw_mrc_ref": "gridfs://mrc/002.mrc",
-            "source": MARCRecordSource.LOCAL.value
+            "identifiers": {
+                "isbn": [{"value": "978-6040000002"}]
+            },
+            "languages": ["vi"],
+            "format": ["book"],
+            "holdings": [
+                {"location_code": "Science Library", "call_number": "002.1/ML", "status": "available"}
+            ]
         },
         {
-            "control_number": "003",
-            "leader": "01359nam a2200301 a 4500",
-            "fields": {
-                "245": {"a": "Lập trình Web hiện đại", "b": "React & Node.js"},
-                "100": {"a": "Trần Minh Y"},
-                "260": {"a": "Hà Nội", "b": "NXB Bách Khoa", "c": "2024"},
-                "650": [{"a": "Web Development"}, {"a": "React"}, {"a": "JavaScript"}]
+            "record_id": str(uuid.uuid4()),
+            "title": {
+                "main": "Lập trình Web hiện đại",
+                "subtitle": "React & Node.js"
             },
-            "normalized": {
-                "isbn": ["978-6040000003"],
-                "title": "Lập trình Web hiện đại: React & Node.js",
-                "authors": ["Trần Minh Y"],
+            "contributors": [
+                {"role": "author", "name": "Trần Minh Y"}
+            ],
+            "subjects": [
+                {"term": "Web Development", "subdivisions": []},
+                {"term": "React", "subdivisions": []},
+                {"term": "JavaScript", "subdivisions": []}
+            ],
+            "publication": {
+                "place": "Hà Nội",
                 "publisher": "NXB Bách Khoa",
-                "year": 2024,
-                "subjects": ["Web Development", "React", "JavaScript"]
+                "year": "2024"
             },
-            "raw_mrc_ref": "gridfs://mrc/003.mrc",
-            "source": MARCRecordSource.LOCAL.value
+            "identifiers": {
+                "isbn": [{"value": "978-6040000003"}]
+            },
+            "languages": ["vi"],
+            "format": ["book"],
+            "holdings": [
+                {"location_code": "IT Library", "call_number": "003.1/WEB", "status": "available"}
+            ]
         },
         {
-            "control_number": "004",
-            "leader": "01359nam a2200301 a 4500",
-            "fields": {
-                "245": {"a": "Deep Learning từ cơ bản đến nâng cao"},
-                "100": {"a": "Lê Hoàng Z"},
-                "260": {"a": "Hà Nội", "b": "NXB Đại Học Quốc Gia", "c": "2023"},
-                "650": [{"a": "Deep Learning"}, {"a": "Neural Networks"}, {"a": "AI"}]
+            "record_id": str(uuid.uuid4()),
+            "title": {
+                "main": "Deep Learning từ cơ bản đến nâng cao",
+                "subtitle": None
             },
-            "normalized": {
-                "isbn": ["978-6040000004"],
-                "title": "Deep Learning từ cơ bản đến nâng cao",
-                "authors": ["Lê Hoàng Z"],
+            "contributors": [
+                {"role": "author", "name": "Lê Hoàng Z"}
+            ],
+            "subjects": [
+                {"term": "Deep Learning", "subdivisions": []},
+                {"term": "Neural Networks", "subdivisions": []},
+                {"term": "AI", "subdivisions": []}
+            ],
+            "publication": {
+                "place": "Hà Nội",
                 "publisher": "NXB Đại Học Quốc Gia",
-                "year": 2023,
-                "subjects": ["Deep Learning", "Neural Networks", "AI"]
+                "year": "2023"
             },
-            "raw_mrc_ref": "gridfs://mrc/004.mrc",
-            "source": MARCRecordSource.LOCAL.value
+            "identifiers": {
+                "isbn": [{"value": "978-6040000004"}]
+            },
+            "languages": ["vi"],
+            "format": ["book"],
+            "holdings": [
+                {"location_code": "Science Library", "call_number": "004.1/DL", "status": "available"}
+            ]
         },
         {
-            "control_number": "005",
-            "leader": "01359nam a2200301 a 4500",
-            "fields": {
-                "245": {"a": "Cấu trúc dữ liệu và Giải thuật", "b": "C++ Implementation"},
-                "100": {"a": "Phạm Thị K"},
-                "260": {"a": "TP.HCM", "b": "NXB Thống Kê", "c": "2022"},
-                "650": [{"a": "Data Structures"}, {"a": "Algorithms"}, {"a": "C++"}]
+            "record_id": str(uuid.uuid4()),
+            "title": {
+                "main": "Cấu trúc dữ liệu và Giải thuật",
+                "subtitle": "C++ Implementation"
             },
-            "normalized": {
-                "isbn": ["978-6040000005"],
-                "title": "Cấu trúc dữ liệu và Giải thuật: C++ Implementation",
-                "authors": ["Phạm Thị K"],
+            "contributors": [
+                {"role": "author", "name": "Phạm Thị K"}
+            ],
+            "subjects": [
+                {"term": "Data Structures", "subdivisions": []},
+                {"term": "Algorithms", "subdivisions": []},
+                {"term": "C++", "subdivisions": []}
+            ],
+            "publication": {
+                "place": "TP.HCM",
                 "publisher": "NXB Thống Kê",
-                "year": 2022,
-                "subjects": ["Data Structures", "Algorithms", "C++"]
+                "year": "2022"
             },
-            "raw_mrc_ref": "gridfs://mrc/005.mrc",
-            "source": MARCRecordSource.LOCAL.value
+            "identifiers": {
+                "isbn": [{"value": "978-6040000005"}]
+            },
+            "languages": ["vi"],
+            "format": ["book"],
+            "holdings": [
+                {"location_code": "IT Library", "call_number": "005.1/DSA", "status": "available"}
+            ]
         }
     ]
     

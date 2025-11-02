@@ -63,3 +63,43 @@ Content-Type: application/json
 | GET | `/loans` | Lấy tất cả các khoản mượn. | Có | Thủ thư+ |
 | POST | `/loans/checkout` | Mượn một cuốn sách. | Có | Thủ thư+ |
 | POST | `/loans/return` | Trả một cuốn sách. | Có | Thủ thư+ |
+
+### Tìm kiếm Z39.50 (`/api/z3950`)
+
+Tìm kiếm sách từ các thư viện quốc tế sử dụng giao thức Z39.50.
+
+📖 **[Xem tài liệu chi tiết](./z3950-api.md)**
+
+| Phương thức | Điểm cuối | Mô tả | Xác thực | Vai trò |
+| ------ | --------------------- | ------------------------- | ---- | ----------- |
+| GET | `/search/all` | Tìm kiếm tất cả nguồn (LOC, UW, OCLC). | Không | Công khai |
+| GET | `/search/{source}` | Tìm kiếm một nguồn cụ thể. | Không | Công khai |
+| GET | `/sources` | Lấy danh sách nguồn khả dụng. | Không | Công khai |
+| GET | `/health` | Kiểm tra trạng thái service. | Không | Công khai |
+| POST | `/cache/clear` | Xóa cache Z39.50. | Có | Thủ thư+ |
+| GET | `/cache/stats` | Xem thống kê cache. | Có | Thủ thư+ |
+
+**Ví dụ tìm kiếm:**
+
+```bash
+# Tìm tất cả nguồn theo tiêu đề
+GET /api/z3950/search/all?q=machine%20learning&type=title&limit=10
+
+# Tìm theo ISBN
+GET /api/z3950/search/loc?q=978-0262035613&type=isbn
+
+# Tìm và lưu vào database
+GET /api/z3950/search/all?q=python&type=keyword&save=true
+```
+
+**Query Parameters:**
+- `q` (bắt buộc): Từ khóa tìm kiếm
+- `type`: Loại tìm kiếm - `isbn`, `title`, `author`, `subject`, `keyword` (mặc định: `keyword`)
+- `limit`: Số kết quả tối đa (1-100, mặc định: 10)
+- `cache`: Sử dụng cache (`true`/`false`, mặc định: `true`)
+- `save`: Lưu kết quả mới vào DB (`true`/`false`, mặc định: `false`)
+
+**Nguồn hỗ trợ:**
+- `loc` - Library of Congress (Thư viện Quốc hội Mỹ)
+- `uw` - UW-Madison (Đại học Wisconsin-Madison)
+- `oclc` - OCLC WorldCat (Yêu cầu xác thực, mặc định tắt)
