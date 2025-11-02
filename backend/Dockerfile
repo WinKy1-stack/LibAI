@@ -8,8 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-<<<<<<< Updated upstream
-CMD ["python", "test.py"]
-=======
 CMD ["python", "run.py"]
->>>>>>> Stashed changes
