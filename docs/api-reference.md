@@ -92,11 +92,50 @@ Authorization: Bearer <your_jwt_token>
 }
 ```
 **Ví dụ truy vấn dữ liệu:**
+1.Cài ứng dụng Yaz: https://www.indexdata.com/resources/software/yaz/
+  Phiên bản 3.31.0
+  Sau khi cài xong, kiểm tra trong Command Prompt:yaz-client
+  Kết quả trả về: Z>(Cài đặt thành công)
+  Nếu không vào PATH thêm file.bin
+2. Kiểm thử với Yaz: Mở Terminal:yaz-client z3950.loc.gov:7090/voyager
+  -find @attr 1=4 "python"
+  -show 1
+3.Chạy với dự án trong Visua Code
+   #Di chuyển vào thư mục backend
+    cd backend
+    # Tạo và kích hoạt môi trường ảo
+    python -m venv venv311
+    # Windows: .\venv311\Scripts\Activate.ps1
+    # Linux/macOS: source venv311/bin/activate
+
 - Chạy ứng dụng: python run.py
 - Thử nghiệm truy vấn với những trường:
 - Tác giả: http://127.0.0.1:5000/search?keyword=Stephen%20Hawking&field=author
 - Tên sách: http://127.0.0.1:5000/search?keyword=Deep%20Learning&field=title
 - Chủ đề: http://127.0.0.1:5000/search?keyword=Artificial%20Intelligence&field=subject
 - IISBN: http://127.0.0.1:5000/search?keyword=9780262035613&field=isbn
+### Tìm kiếm 
 
+| Phương thức | Điểm cuối                             | Mô tả                                                            | Yêu cầu xác thực |
+| ----------- | ------------------------------------- | ---------------------------------------------------------------- | ---------------- |
+| **GET**     | `/search?keyword=...&field=any`       | Tìm kiếm tổng hợp toàn văn (tiêu đề, tác giả, chủ đề, mô tả...). | Không            |
+| **GET**     | `/search?keyword=...&field=title`     | Tìm theo **nhan đề** (245$a).                                    | Không            |
+| **GET**     | `/search?keyword=...&field=author`    | Tìm theo **tác giả** (100$a hoặc 700$a).                         | Không            |
+| **GET**     | `/search?keyword=...&field=subject`   | Tìm theo **chủ đề** (650$a).                                     | Không            |
+| **GET**     | `/search?keyword=...&field=isbn`      | Tìm theo **ISBN** (020$a).                                       | Không            |
+| **GET**     | `/search?keyword=...&field=publisher` | Tìm theo **nhà xuất bản** (260$b).                               | Không            |
+| **GET**     | `/search?keyword=...&field=date`      | Tìm theo **năm xuất bản** (260$c).                               | Không            |
+### DS Các trường(`field`)
 
+| Mã MARC | Tên trường                         | Tiểu trường | Ý nghĩa                             |   `field` |  Ví dụ                                |
+| ------- | ---------------------------------- | ----------- | ----------------------------------- | ----------| --------------------------------------- |
+| **245** | Title Statement                    | `$a`        | Nhan đề chính của tài liệu          | `title`   | `?keyword=Deep+Learning&field=title`    |
+| **245** | Title Statement                    | `$c`        | Trách nhiệm (tác giả trong nhan đề) | `any`     | `?keyword=Goodfellow&field=any`         |
+| **100** | Main Entry — Personal Name         | `$a`        | Tác giả chính                       | `author`  | `?keyword=Stephen+Hawking&field=author` |
+| **700** | Added Entry — Personal Name        | `$a`        | Tác giả phụ                         | `author`  | `?keyword=Yoshua+Bengio&field=author`   |
+| **260** | Publication, Distribution, etc.    | `$b`        | Nhà xuất bản                        | `publisher`| `?keyword=Pearson&field=publisher`     |
+| **260** | Publication, Distribution, etc.    | `$c`        | Năm xuất bản                        | `date`     | `?keyword=2023&field=date`             |
+| **650** | Subject Added Entry — Topical Term | `$a`        | Chủ đề / lĩnh vực                   | `subject`  | `?keyword=Artificial+Intelligence&field=subject` |
+| **520** | Summary, etc.                      | `$a`        | Tóm tắt hoặc mô tả nội dung         | `any`      | `?keyword=neural+network&field=any`    |
+| **504** | Bibliography, etc. Note            | `$a`        | Ghi chú tài liệu tham khảo          | `any`      | `?keyword=reference&field=any`         |
+| **020** | ISBN                               | `$a`        | Mã số sách chuẩn quốc tế            | `isbn`     | `?keyword=9780262035613&field=isbn`    |
