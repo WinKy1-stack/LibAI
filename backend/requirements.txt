@@ -34,6 +34,7 @@ python-dotenv==1.0.1
 # AI & Machine Learning
 # ============================================
 # Google Generative AI SDK (Gemini)
+google-genai
 google-generativeai==0.8.3
 
 # ============================================
@@ -41,11 +42,6 @@ google-generativeai==0.8.3
 # ============================================
 requests==2.32.3
 urllib3==2.2.3
-
-# ============================================
-# Optional: Z39.50 Library 
-# ============================================
-PyZ3950==3.0.0
 
 # ============================================
 # Optional: Production Server (uncomment for production)
