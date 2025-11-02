@@ -88,7 +88,7 @@ def query_z3950(keyword: str, field: str):
         stderr = stderr.decode("utf-8", errors="ignore")
 
         # Ghi log phản hồi
-        log_path = Path("z3950_debug.log")
+        log_path = Path(getattr(Config, "Z3950_LOG_PATH", "z3950_debug.log")).resolve()
         log_path.write_text(stdout, encoding="utf-8")
 
         if "Number of hits: 0" in stdout or "Records: 0" in stdout:
