@@ -16,10 +16,17 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
   // Hide layout for login and signup pages
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  
+  // Check if we're on home page
+  const isHomePage = location.pathname === '/' || location.pathname === '/user/home';
 
   useEffect(() => {
     localStorage.setItem("user-theme", mode);
     document.documentElement.setAttribute("data-theme", mode);
+    
+    // Dispatch custom event để các component khác biết theme đã thay đổi
+    const event = new CustomEvent('theme-change', { detail: mode });
+    window.dispatchEvent(event);
   }, [mode]);
 
   // Auth pages (login/signup) - no layout
@@ -46,8 +53,8 @@ export default function UserLayout({ children }: UserLayoutProps) {
       {/* Page Content */}
       <main style={{
         flex: 1,
-        padding: "24px",
-        paddingTop: "calc(72px + 24px)", // TopBar height + padding
+        padding: isHomePage ? "0" : "24px",
+        paddingTop: isHomePage ? "0" : "calc(72px + 24px)", // TopBar height + padding
       }}>
         {children}
       </main>
