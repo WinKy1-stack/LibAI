@@ -82,7 +82,7 @@ def query_z3950(keyword: str, field: str):
             stderr=subprocess.PIPE,
         )
 
-        stdout, stderr = process.communicate(yaz_cmd.encode("utf-8"), timeout=45)
+        stdout, stderr = process.communicate(yaz_cmd.encode("utf-8"), timeout=Config.Z3950_QUERY_TIMEOUT)
 
         stdout = stdout.decode("utf-8", errors="ignore")
         stderr = stderr.decode("utf-8", errors="ignore")
