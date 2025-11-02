@@ -12,7 +12,7 @@ interface TopBarProps {
 }
 
 export default function TopBar({ mode, onToggleTheme }: TopBarProps) {
-  const { isChatting, setIsChatting } = useChatContext();
+  const { setIsChatting } = useChatContext();
   const [user, setUser] = useState<User | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();

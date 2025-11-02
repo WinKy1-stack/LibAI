@@ -1,8 +1,9 @@
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import type { ReactElement } from 'react';
 
 interface Suggestion {
   id: number;
-  icon: JSX.Element;
+  icon: ReactElement;
   text: string;
   action: string;
 }
