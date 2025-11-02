@@ -12,7 +12,7 @@ interface TopBarProps {
 }
 
 export default function TopBar({ mode, onToggleTheme }: TopBarProps) {
-  const { setIsChatting } = useChatContext();
+  const { isChatting, setIsChatting } = useChatContext();
   const [user, setUser] = useState<User | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
@@ -43,28 +43,41 @@ export default function TopBar({ mode, onToggleTheme }: TopBarProps) {
   return (
     <header
       className={
-        `h-16 fixed top-0 left-0 right-0 z-1000 backdrop-blur-xl flex items-center justify-between ` +
+        `h-16 fixed top-0 left-0 right-0 z-1000 flex items-center justify-between px-4 md:px-6 ` +
         (mode === 'dark'
-          ? 'border-b border-white/10 bg-black/90'
-          : 'border-b border-black/10 bg-white/95')
+          ? 'bg-transparent'
+          : 'bg-transparent')
       }
+      style={{ pointerEvents: 'none' }}
     >
-      {/* Logo */}
-      <Link
-        to="/"
-        onClick={() => setIsChatting(false)}
-        className="flex items-center gap-2 md:gap-3 no-underline px-3 md:px-6"
+      {/* Left Corner - Logo */}
+      <div 
+        className={`flex items-center gap-2 md:gap-3 rounded-2xl px-3 md:px-4 py-2 shadow-lg backdrop-blur-xl transition-all ${
+          mode === 'dark'
+            ? 'bg-black/80 border border-white/10'
+            : 'bg-white/90 border border-black/10'
+        }`}
+        style={{ pointerEvents: 'auto' }}
       >
-        <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 shadow-[0_4px_12px_rgba(236,72,153,0.4)] flex items-center justify-center">
-          <svg className="w-5 h-5 md:w-6 md:h-6 topbar-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
-          </svg>
-        </div>
-        <span className={`text-xl md:text-2xl font-bold ${mode === 'dark' ? 'text-white' : 'text-black'}`}>LibAI</span>
-      </Link>
+        <Link
+          to="/"
+          onClick={() => setIsChatting(false)}
+          className="flex items-center gap-2 no-underline"
+        >
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-linear-to-br from-pink-500 to-purple-600 shadow-[0_4px_12px_rgba(236,72,153,0.4)] flex items-center justify-center">
+            <svg className="w-5 h-5 md:w-6 md:h-6 topbar-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/>
+            </svg>
+          </div>
+          <span className={`text-lg md:text-xl font-bold ${mode === 'dark' ? 'text-white' : 'text-black'}`}>LibAI</span>
+        </Link>
+      </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-2 md:gap-4 px-3 md:px-6">
+      {/* Right Corner - Actions - Các nút riêng lẻ */}
+      <div 
+        className="flex items-center gap-2 md:gap-3"
+        style={{ pointerEvents: 'auto' }}
+      >
           {/* Chat History Button - CHỈ ADMIN */}
           {user && user.role === 'admin' && (
             <Link

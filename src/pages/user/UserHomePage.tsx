@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PaperAirplaneIcon, Bars3Icon, HomeIcon } from '@heroicons/react/24/outline';
+import { PaperAirplaneIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import { useChatContext } from '../../hooks/useChatContext';
 import { useChatHistory } from '../../hooks/useChatHistory';
 import '../../components/user/color.css';
@@ -17,6 +17,8 @@ export default function UserHomePage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(320); // Default 320px (w-80)
+  const [isResizing, setIsResizing] = useState(false);
   const { isChatting, setIsChatting } = useChatContext();
   
   // Use real chat API
@@ -42,6 +44,36 @@ export default function UserHomePage() {
       document.documentElement.removeAttribute('data-theme');
     };
   }, [themeMode]);
+
+  // Handle resize sidebar
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      const newWidth = e.clientX;
+      if (newWidth >= 250 && newWidth <= 500) { // Min 250px, Max 500px
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
   // Sync messages từ hook vào local state để hiển thị
   useEffect(() => {
@@ -172,17 +204,24 @@ export default function UserHomePage() {
   // Main layout - Always show sidebar + content area (Gemini style)
   return (
     <div 
-      className="flex h-screen overflow-hidden transition-colors duration-200"
+      className="relative"
+      style={{ 
+        minHeight: '100vh',
+        paddingTop: '64px', // TopBar height
+      }}
     >
-      {/* Sidebar - CHỈ hiện khi đã đăng nhập với animation */}
+      {/* Sidebar - CHỈ hiện khi đã đăng nhập - Fixed position ngay dưới TopBar - Resizable */}
       {isAuthenticated && (
         <div 
-          className={`flex-shrink-0 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? 'w-80' : 'w-0'
-          }`}
+          className="fixed left-0 ease-in-out"
           style={{
+            top: '64px', // Ngay dưới TopBar
+            height: 'calc(100vh - 64px)',
+            width: isSidebarOpen ? `${sidebarWidth}px` : '0',
             transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
             opacity: isSidebarOpen ? 1 : 0,
+            zIndex: 40,
+            transition: isResizing ? 'none' : 'all 0.3s ease-in-out',
           }}
         >
           <ConversationSidebar
@@ -191,35 +230,61 @@ export default function UserHomePage() {
             onNewConversation={handleNewConversation}
             themeMode={themeMode}
           />
+          
+          {/* Resize Handle */}
+          {isSidebarOpen && (
+            <div
+              className="absolute top-0 right-0 w-1 h-full cursor-ew-resize hover:bg-purple-500 transition-colors group"
+              onMouseDown={() => setIsResizing(true)}
+              style={{
+                background: isResizing ? 'rgba(147, 51, 234, 0.5)' : 'transparent',
+              }}
+            >
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-purple-500/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          )}
         </div>
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative">
-        {/* Top Action Buttons */}
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-          {/* Toggle Sidebar Button - Chỉ hiện khi authenticated */}
-          {isAuthenticated && (
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="top-action-btn p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border"
-              title={isSidebarOpen ? 'Ẩn lịch sử' : 'Hiện lịch sử'}
+      <div 
+        className="flex flex-col relative"
+        style={{
+          marginLeft: isAuthenticated && isSidebarOpen ? `${sidebarWidth}px` : '0',
+          minHeight: 'calc(100vh - 64px)',
+          transition: isResizing ? 'none' : 'margin-left 0.3s ease-in-out',
+        }}
+      >
+        {/* Toggle Sidebar Button - Hiện khi authenticated - Fixed position */}
+        {isAuthenticated && (
+          <div 
+            className="fixed z-50"
+            style={{
+              top: 'calc(64px + 16px)', // TopBar height + margin
+              left: isSidebarOpen ? `${sidebarWidth + 16}px` : '16px', // Sidebar width + margin hoặc just margin
+              transition: isResizing ? 'none' : 'left 0.3s ease-in-out',
+            }}
+          >
+            <div 
+              className="flex items-center gap-2 rounded-2xl px-3 py-2 shadow-lg backdrop-blur-xl border transition-all"
+              style={{
+                background: themeMode === 'dark' ? 'rgba(30, 35, 42, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+                borderColor: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+              }}
             >
-              <Bars3Icon className="w-5 h-5" />
-            </button>
-          )}
-
-          {/* Back to Home Button - Chỉ hiện khi đang chat */}
-          {isChatting && (
-            <button
-              onClick={handleNewConversation}
-              className="top-action-btn p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border"
-              title="Về trang chủ"
-            >
-              <HomeIcon className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200"
+                style={{
+                  color: themeMode === 'dark' ? '#e5e7eb' : '#111827',
+                }}
+                title={isSidebarOpen ? 'Ẩn lịch sử' : 'Hiện lịch sử'}
+              >
+                <Bars3Icon className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Content: Hero/Search HOẶC Chat Messages */}
         <div 
@@ -250,44 +315,58 @@ export default function UserHomePage() {
           )}
         </div>
 
-        {/* Fixed Chat Input at Bottom - Luôn hiện */}
-        <div 
-          className="fixed-chat-input-wrapper transition-colors duration-200"
-          style={{
-            borderTop: `1px solid ${themeMode === 'dark' ? '#1e293b' : '#e5e7eb'}`,
-            background: themeMode === 'dark' ? 'rgba(15, 20, 25, 0.95)' : 'rgba(249, 250, 251, 0.95)',
-            backdropFilter: 'blur(10px)',
-          }}
-        >
-          <div className="fixed-chat-input-container">
-            <form onSubmit={handleFixedChatSubmit}>
-              <span className="fixed-chat-icon">💬</span>
-              <input
-                type="text"
-                value={fixedChatInput}
-                onChange={(e) => setFixedChatInput(e.target.value)}
-                placeholder={isChatting ? "Tiếp tục hỏi thêm câu hỏi..." : "Bắt đầu trò chuyện với LibAI..."}
-                className="fixed-chat-input"
-                style={{
-                  background: themeMode === 'dark' ? 'rgba(30, 41, 54, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-                  borderColor: themeMode === 'dark' ? '#334155' : '#e5e7eb',
-                  color: themeMode === 'dark' ? '#e5e7eb' : '#111827',
-                }}
-                disabled={loading}
-              />
-              <div className="fixed-chat-actions">
+        {/* Fixed Chat Input at Bottom - Chỉ hiện khi đang chat - Thu gọn vào giữa */}
+        {isChatting && (
+          <div 
+            className="fixed bottom-4"
+            style={{
+              left: isAuthenticated && isSidebarOpen ? `calc(${sidebarWidth / 2}px + 50%)` : '50%',
+              transform: 'translateX(-50%)',
+              width: 'calc(100% - 32px)',
+              maxWidth: '800px',
+              zIndex: 50,
+              transition: isResizing ? 'none' : 'left 0.3s ease-in-out',
+            }}
+          >
+            <div 
+              className="rounded-2xl shadow-2xl backdrop-blur-xl border transition-all"
+              style={{
+                background: themeMode === 'dark' ? 'rgba(30, 35, 42, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+                borderColor: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                padding: '12px 16px',
+              }}
+            >
+              <form onSubmit={handleFixedChatSubmit} className="flex items-center gap-3">
+                <span className="text-xl">💬</span>
+                <input
+                  type="text"
+                  value={fixedChatInput}
+                  onChange={(e) => setFixedChatInput(e.target.value)}
+                  placeholder="Tiếp tục hỏi thêm câu hỏi..."
+                  className="flex-1 bg-transparent outline-none text-base placeholder:text-gray-500"
+                  style={{
+                    color: themeMode === 'dark' ? '#f3f4f6' : '#111827',
+                  }}
+                  disabled={loading}
+                />
                 <button 
                   type="submit"
-                  className="fixed-chat-btn"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all"
+                  style={{
+                    background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+                    color: 'white',
+                    opacity: !fixedChatInput.trim() || loading ? 0.5 : 1,
+                    cursor: !fixedChatInput.trim() || loading ? 'not-allowed' : 'pointer',
+                  }}
                   disabled={!fixedChatInput.trim() || loading}
                 >
-                  <span>{loading ? 'Đang gửi...' : 'Gửi'}</span>
+                  <span className="text-sm">{loading ? 'Đang gửi...' : 'Gửi'}</span>
                   <PaperAirplaneIcon style={{ width: 16, height: 16 }} />
                 </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
