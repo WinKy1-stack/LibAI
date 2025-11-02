@@ -11,14 +11,10 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
 
-    # SQLAlchemy Database (cho User authentication)
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
     # MongoDB Configuration
     # Mặc định: localhost (cho development)
     # Cloud: MongoDB Atlas (cho production/sharing)
-    USE_CLOUD_MONGODB = os.getenv('USE_CLOUD_MONGODB', 'false').lower() == 'true'
+    USE_CLOUD_MONGODB = os.getenv('USE_CLOUD_MONGODB', 'true')
     
     MONGO_URI_LOCAL = 'mongodb://localhost:27017/library_chatbox'
     MONGO_URI_CLOUD = 'mongodb+srv://nptb137:thaibao10112004@cluster0.e5wsuwa.mongodb.net/library_chatbox?retryWrites=true&w=majority&appName=Cluster0'
