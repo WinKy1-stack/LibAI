@@ -21,6 +21,13 @@ export function useUserTheme(): UseUserThemeReturn {
   useEffect(() => {
     localStorage.setItem('user-theme', mode);
     document.documentElement.setAttribute('data-theme', mode);
+    
+    // Thêm/xóa class 'dark' cho Tailwind
+    if (mode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [mode]);
 
   // Lắng nghe thay đổi từ các component khác (như TopBar)

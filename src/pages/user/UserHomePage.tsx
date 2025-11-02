@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import { PaperAirplaneIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import { useChatContext } from '../../hooks/useChatContext';
 import { useChatHistory } from '../../hooks/useChatHistory';
-import '../../components/user/color.css';
-import ChatMessages, { type ChatMessage } from '../../components/user/chat/ChatMessages';
-import FeedbackButtons from '../../components/user/chat/FeedbackButtons';
-import BookSuggestions from '../../components/user/chat/BookSuggestions';
-import { HeroSection, SearchBar, SuggestionsGrid } from '../../components/user/home';
+import { type ChatMessage } from '../../components/user/chat/ChatMessages';
+import HomeView from '../../components/user/home/HomeView';
+import ChatView from '../../components/user/chat/ChatView';
 import ConversationSidebar from '../../components/user/chat/ConversationSidebar';
+import ToggleSidebarButton from '../../components/user/layout/ToggleSidebarButton';
+import FixedChatInput from '../../components/user/chat/FixedChatInput';
 import { authService } from '../../services/authService';
-import { useUserTheme } from '../../hooks/useUserTheme';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export default function UserHomePage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,16 +33,16 @@ export default function UserHomePage() {
   } = useChatHistory();
 
   const isAuthenticated = authService.isAuthenticated();
-  const { mode: themeMode } = useUserTheme();
+  const colors = useThemeColors();
 
   // CRITICAL: Set data-theme attribute on document root để CSS apply đúng
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', themeMode);
+    document.documentElement.setAttribute('data-theme', colors.mode);
     // Cleanup khi unmount
     return () => {
       document.documentElement.removeAttribute('data-theme');
     };
-  }, [themeMode]);
+  }, [colors.mode]);
 
   // Handle resize sidebar
   useEffect(() => {
@@ -228,7 +227,7 @@ export default function UserHomePage() {
             currentConversationId={conversationId}
             onSelectConversation={handleSelectConversation}
             onNewConversation={handleNewConversation}
-            themeMode={themeMode}
+            themeMode={colors.mode}
           />
           
           {/* Resize Handle */}
@@ -255,119 +254,50 @@ export default function UserHomePage() {
           transition: isResizing ? 'none' : 'margin-left 0.3s ease-in-out',
         }}
       >
-        {/* Toggle Sidebar Button - Hiện khi authenticated - Fixed position */}
+        {/* Toggle Sidebar Button */}
         {isAuthenticated && (
-          <div 
-            className="fixed z-50"
-            style={{
-              top: 'calc(64px + 16px)', // TopBar height + margin
-              left: isSidebarOpen ? `${sidebarWidth + 16}px` : '16px', // Sidebar width + margin hoặc just margin
-              transition: isResizing ? 'none' : 'left 0.3s ease-in-out',
-            }}
-          >
-            <div 
-              className="flex items-center gap-2 rounded-2xl px-3 py-2 shadow-lg backdrop-blur-xl border transition-all"
-              style={{
-                background: themeMode === 'dark' ? 'rgba(30, 35, 42, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-                borderColor: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200"
-                style={{
-                  color: themeMode === 'dark' ? '#e5e7eb' : '#111827',
-                }}
-                title={isSidebarOpen ? 'Ẩn lịch sử' : 'Hiện lịch sử'}
-              >
-                <Bars3Icon className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+          <ToggleSidebarButton
+            isOpen={isSidebarOpen}
+            onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            sidebarWidth={sidebarWidth}
+            isResizing={isResizing}
+          />
         )}
 
         {/* Content: Hero/Search HOẶC Chat Messages */}
         <div 
-          className="flex-1 overflow-y-auto transition-colors duration-200"
+          className="flex-1 transition-colors duration-200 overflow-y-auto"
         >
           {!isChatting ? (
-            // Home view (hero + suggestions) - Hiện khi chưa chat
-            <div className="home-view" style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
-              <HeroSection />
-              <SearchBar
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                onSearch={handleSearch}
-              />
-              <SuggestionsGrid onSuggestionClick={handleSuggestionClick} />
-            </div>
+            <HomeView
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              onSearch={handleSearch}
+              onSuggestionClick={handleSuggestionClick}
+            />
           ) : (
-            // Chat interface - Hiện khi đang chat
-            <div className="chat-container">
-              <ChatMessages messages={chatMessages} isTyping={isTyping} />
-
-              {/* Books Section */}
-              <div className="chat-books-section">
-                <BookSuggestions />
-                <FeedbackButtons />
-              </div>
-            </div>
+            <ChatView
+              messages={chatMessages}
+              isTyping={isTyping}
+            />
           )}
         </div>
 
-        {/* Fixed Chat Input at Bottom - Chỉ hiện khi đang chat - Thu gọn vào giữa */}
+        {/* Fixed Chat Input */}
         {isChatting && (
-          <div 
-            className="fixed bottom-4"
-            style={{
-              left: isAuthenticated && isSidebarOpen ? `calc(${sidebarWidth / 2}px + 50%)` : '50%',
-              transform: 'translateX(-50%)',
-              width: 'calc(100% - 32px)',
-              maxWidth: '800px',
-              zIndex: 50,
-              transition: isResizing ? 'none' : 'left 0.3s ease-in-out',
-            }}
-          >
-            <div 
-              className="rounded-2xl shadow-2xl backdrop-blur-xl border transition-all"
-              style={{
-                background: themeMode === 'dark' ? 'rgba(30, 35, 42, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-                borderColor: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-                padding: '12px 16px',
-              }}
-            >
-              <form onSubmit={handleFixedChatSubmit} className="flex items-center gap-3">
-                <span className="text-xl">💬</span>
-                <input
-                  type="text"
-                  value={fixedChatInput}
-                  onChange={(e) => setFixedChatInput(e.target.value)}
-                  placeholder="Tiếp tục hỏi thêm câu hỏi..."
-                  className="flex-1 bg-transparent outline-none text-base placeholder:text-gray-500"
-                  style={{
-                    color: themeMode === 'dark' ? '#f3f4f6' : '#111827',
-                  }}
-                  disabled={loading}
-                />
-                <button 
-                  type="submit"
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all"
-                  style={{
-                    background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
-                    color: 'white',
-                    opacity: !fixedChatInput.trim() || loading ? 0.5 : 1,
-                    cursor: !fixedChatInput.trim() || loading ? 'not-allowed' : 'pointer',
-                  }}
-                  disabled={!fixedChatInput.trim() || loading}
-                >
-                  <span className="text-sm">{loading ? 'Đang gửi...' : 'Gửi'}</span>
-                  <PaperAirplaneIcon style={{ width: 16, height: 16 }} />
-                </button>
-              </form>
-            </div>
-          </div>
+          <FixedChatInput
+            value={fixedChatInput}
+            onChange={setFixedChatInput}
+            onSubmit={handleFixedChatSubmit}
+            loading={loading}
+            sidebarWidth={sidebarWidth}
+            isSidebarOpen={isSidebarOpen}
+            isAuthenticated={isAuthenticated}
+            isResizing={isResizing}
+          />
         )}
       </div>
+
     </div>
   );
 }

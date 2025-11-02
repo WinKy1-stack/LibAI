@@ -327,35 +327,45 @@ export default function ConversationSidebar({
           animation: gradient 3s ease-in-out infinite;
         }
 
-        /* Custom scrollbar */
+        /* Custom scrollbar - Updated colors */
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 8px;
         }
 
         .scrollbar-dark::-webkit-scrollbar-track {
-          background: rgba(15, 23, 42, 0.3);
+          background: rgba(30, 30, 30, 0.4);
+          border-radius: 10px;
+          margin: 4px 0;
         }
 
         .scrollbar-dark::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #a855f7 0%, #3b82f6 100%);
+          background: linear-gradient(180deg, #a855f7 0%, #ec4899 100%);
           border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4);
+          min-height: 40px;
         }
 
         .scrollbar-dark::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #9333ea 0%, #2563eb 100%);
+          background: linear-gradient(180deg, #9333ea 0%, #db2777 100%);
+          box-shadow: 0 2px 12px rgba(168, 85, 247, 0.6);
         }
 
         .scrollbar-light::-webkit-scrollbar-track {
-          background: rgba(243, 244, 246, 0.5);
+          background: linear-gradient(180deg, rgba(249, 250, 251, 0.9) 0%, rgba(243, 244, 246, 0.9) 100%);
+          border-radius: 10px;
+          margin: 4px 0;
         }
 
         .scrollbar-light::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #a855f7 0%, #3b82f6 100%);
+          background: linear-gradient(180deg, #e9d5ff 0%, #fbcfe8 100%);
           border-radius: 10px;
+          box-shadow: 0 2px 6px rgba(192, 132, 252, 0.2);
+          min-height: 40px;
         }
 
         .scrollbar-light::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #9333ea 0%, #2563eb 100%);
+          background: linear-gradient(180deg, #c084fc 0%, #f472b6 100%);
+          box-shadow: 0 2px 10px rgba(168, 85, 247, 0.4);
         }
       `}</style>
     </div>
