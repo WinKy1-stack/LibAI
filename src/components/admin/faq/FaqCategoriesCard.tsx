@@ -1,4 +1,4 @@
-import { Card, Divider, Empty, Progress, Space, Typography, theme } from "antd";
+import { Card, Divider, Empty, Progress, Space, Typography, theme, Skeleton } from "antd";
 import { categoryIcons, getFaqColors } from "./constants";
 
 const { Text, Title } = Typography;
@@ -7,12 +7,14 @@ interface FaqCategoriesCardProps {
   distribution: Array<{ category: string; categoryName: string; icon: string; count: number }>;
   totalFaqs: number;
   publishedFaqs: number;
+  loading?: boolean;
 }
 
 export function FaqCategoriesCard({
   distribution,
   totalFaqs,
   publishedFaqs,
+  loading = false,
 }: FaqCategoriesCardProps) {
   const { token } = theme.useToken();
   const faqColors = getFaqColors(token);
@@ -41,7 +43,13 @@ export function FaqCategoriesCard({
         body: { padding: "8px 24px 24px" }
       }}
     >
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      {loading ? (
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Skeleton active paragraph={{ rows: 3 }} />
+          <Skeleton.Button active style={{ width: "100%", height: 100 }} />
+        </Space>
+      ) : (
+        <Space direction="vertical" size={16} style={{ width: "100%" }}>
         {itemsWithPercentage.length === 0 ? (
           <Empty description="Chưa có dữ liệu phân bổ" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
@@ -108,6 +116,7 @@ export function FaqCategoriesCard({
           </Space>
         </Card>
       </Space>
+      )}
     </Card>
   );
 }

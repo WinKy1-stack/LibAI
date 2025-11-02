@@ -1,11 +1,20 @@
 import type { ColumnsType } from "antd/es/table";
 import { Card, Table, Button, Space, Typography, Image, theme } from "antd";
 import { bookIssuedData, type BookIssuedRecord } from "../../../data";
+import { useState, useEffect } from "react";
 
 const { Text, Link } = Typography;
 
 export default function BooksIssuedTable() {
   const { token } = theme.useToken();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
   const columns: ColumnsType<BookIssuedRecord> = [
     {
       title: "User ID",
@@ -102,6 +111,10 @@ export default function BooksIssuedTable() {
         rowKey="key"
         dataSource={bookIssuedData}
         columns={columns}
+        loading={{
+          spinning: loading,
+          indicator: <></>,
+        }}
         pagination={false}
         scroll={{ x: 600 }}
       />

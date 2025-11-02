@@ -9,6 +9,7 @@ LibAI là một ứng dụng giàu tính năng được thiết kế để hợp
 - **Giao diện thân thiện với người dùng** để tìm kiếm, mượn và quản lý sách.
 - **Bảng điều khiển quản trị** để quản lý người dùng, sách và xem thống kê.
 - **Xác thực dựa trên JWT** với kiểm soát truy cập dựa trên vai trò.
+- **Tích hợp Chatbot AI** để hỗ trợ người dùng.
 
 ## 🚀 Bắt đầu
 
@@ -16,7 +17,11 @@ LibAI là một ứng dụng giàu tính năng được thiết kế để hợp
 
 ## 📖 Tài liệu
 
-- **[Hướng dẫn sử dụng](./docs/usage.md)**: Tìm hiểu cách sử dụng ứng dụng và tài khoản thử nghiệm.
+Để hiểu sâu hơn về dự án, vui lòng tham khảo các tài liệu sau:
+
+- **[Hướng dẫn sử dụng](./docs/usage.md)**: Tìm hiểu cách sử dụng ứng dụng và các tài khoản thử nghiệm.
+- **[Hướng dẫn Frontend](./docs/frontend-guide.md)**: Tổng quan về kiến trúc frontend và các thành phần.
+- **[Hướng dẫn Backend](./docs/backend-guide.md)**: Tổng quan về kiến trúc backend và các API.
 - **[Cấu trúc dự án](./docs/project-structure.md)**: Tổng quan về cấu trúc thư mục của dự án.
 - **[Cấu trúc cơ sở dữ liệu](./docs/database-structure.md)**: Chi tiết về các bộ sưu tập MongoDB.
 - **[Tham chiếu API](./docs/api-reference.md)**: Hướng dẫn về tất cả các điểm cuối API có sẵn.
@@ -26,7 +31,7 @@ LibAI là một ứng dụng giàu tính năng được thiết kế để hợp
 ## 🎨 Ngăn xếp công nghệ
 
 - **Frontend**: React, TypeScript, Vite, Tailwind CSS, Ant Design
-- **Backend**: Flask, PyMongo, Flask-JWT-Extended
+- **Backend**: Flask, PyMongo, Flask-JWT-Extended, Gemini
 - **Cơ sở dữ liệu**: MongoDB (Cloud Atlas và Cục bộ)
 
 ## 📝 Giấy phép

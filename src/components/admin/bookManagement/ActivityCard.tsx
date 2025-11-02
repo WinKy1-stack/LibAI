@@ -1,5 +1,6 @@
-import { Avatar, Button, Card, List, Space, Tag, Typography, theme } from "antd";
+import { Avatar, Button, Card, List, Space, Tag, Typography, theme, Skeleton } from "antd";
 import { BookOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -17,6 +18,14 @@ interface ActivityCardProps {
 
 export function ActivityCard({ activities }: ActivityCardProps) {
   const { token } = useToken();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Card
@@ -29,29 +38,40 @@ export function ActivityCard({ activities }: ActivityCardProps) {
       }}
       extra={<Button type="link">Xem toàn bộ nhật ký</Button>}
     >
-      <List
-        dataSource={activities}
-        renderItem={(item) => (
-          <List.Item key={item.id}>
-            <List.Item.Meta
-              avatar={<Avatar icon={<BookOutlined />} />}
-              title={
-                <Space>
-                  <Text strong>{item.title}</Text>
-                  <Tag>{item.id}</Tag>
-                </Space>
-              }
-              description={
-                <Space direction="vertical" size={2}>
-                  <Text>{item.action}</Text>
-                  <Text type="secondary">{item.timestamp}</Text>
-                </Space>
-              }
-            />
-            <Button type="link">Chi tiết</Button>
-          </List.Item>
-        )}
-      />
+      {loading ? (
+        <List
+          dataSource={[1, 2, 3, 4, 5]}
+          renderItem={() => (
+            <List.Item>
+              <Skeleton avatar active paragraph={{ rows: 2 }} />
+            </List.Item>
+          )}
+        />
+      ) : (
+        <List
+          dataSource={activities}
+          renderItem={(item) => (
+            <List.Item key={item.id}>
+              <List.Item.Meta
+                avatar={<Avatar icon={<BookOutlined />} />}
+                title={
+                  <Space>
+                    <Text strong>{item.title}</Text>
+                    <Tag>{item.id}</Tag>
+                  </Space>
+                }
+                description={
+                  <Space direction="vertical" size={2}>
+                    <Text>{item.action}</Text>
+                    <Text type="secondary">{item.timestamp}</Text>
+                  </Space>
+                }
+              />
+              <Button type="link">Chi tiết</Button>
+            </List.Item>
+          )}
+        />
+      )}
     </Card>
   );
 }

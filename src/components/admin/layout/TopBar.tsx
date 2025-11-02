@@ -14,6 +14,7 @@ import {
   LogoutOutlined,
 } from '@ant-design/icons';
 import { authService } from '../../../services/authService';
+import type { User } from '../../../types/auth';
 
 const { useBreakpoint } = Grid;
 const { Text } = Typography;
@@ -24,6 +25,7 @@ interface TopBarProps {
   onToggle: () => void;
   mode: 'light' | 'dark';
   setMode: (mode: 'light' | 'dark') => void;
+  user?: User | null;
 }
 
 // userMenuItems - sẽ được tạo động trong component để có thể navigate
@@ -44,7 +46,7 @@ const createUserMenuItems = (navigate: (path: string) => void, handleLogout: () 
   },
 ];
 
-export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarProps) {
+export default function TopBar({ collapsed, onToggle, mode, setMode, user }: TopBarProps) {
   const screens = useBreakpoint();
   const navigate = useNavigate();
   const { token } = useToken();
@@ -150,14 +152,14 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
               <Space align="center" size={showUserInfo ? 12 : 0} style={{ cursor: 'pointer' }}>
                 {/* User info text - Chỉ hiện từ 992px trở lên */}
-                {showUserInfo && (
+                {showUserInfo && user && (
                   <div style={{ textAlign: 'right', marginRight: 8 }}>
                     <Text strong style={{ color: token.colorText, fontSize: 14 }}>
-                      La Thanh Toàn
+                      {user.name || 'User'}
                     </Text>
                     <br />
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                      Thủ Thư đẹp trai
+                      {user.role === 'admin' ? 'Quản trị viên' : user.role === 'librarian' ? 'Thủ thư' : 'Người dùng'}
                     </Text>
                   </div>
                 )}
@@ -166,7 +168,6 @@ export default function TopBar({ collapsed, onToggle, mode, setMode }: TopBarPro
                 <Avatar
                   size={isMobile ? 32 : isSmallTablet ? 34 : 40}
                   icon={<UserOutlined />}
-                  src="https://images-ext-1.discordapp.net/external/YgsUjW8zZkTOwywiLBV9ZNyntjC2SUDbt3N7_WH0ijA/https/lh3.googleusercontent.com/pw/AP1GczOxJur9COUK_irJFEBCrMcfGqg_Bds-0B02bbBv55ZJyOpY1eP4RwuXgDlSN6NRiJR_k1BS2Z6ph1pVIZJF9utI1frbOKamY75lGDJT-0L3EFyb6c-ovGbGVBxznEAxukuba7euzaLObdTk2C9aDrG0qQ?format=webp"
                 />
               </Space>
             </Dropdown>

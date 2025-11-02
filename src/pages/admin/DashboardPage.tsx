@@ -1,11 +1,11 @@
-import { Card, Space, Typography, Row, Col, Grid, Select, theme, Spin } from "antd";
+import { Card, Space, Typography, Row, Col, Grid, Select, theme } from "antd";
 import {
   UserOutlined,
   BookOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
 import { useMemo, useState, useEffect } from "react";
-import { 
+import {
   StatCard,
   UsersTable,
   BooksTable,
@@ -15,6 +15,8 @@ import {
   OverdueBookTable,
 } from "../../components/admin/dashboard";
 import { mockOverdueBooks } from "../../data";
+import { authService } from "../../services/authService";
+import type { User } from "../../types/auth";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -32,7 +34,8 @@ export default function DashboardPage() {
   const { token } = useToken();
   const [timeRange, setTimeRange] = useState("this-week");
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [overdueLoading, setOverdueLoading] = useState(true);
   const pageSize = 4;
 
   const currentDateString = useMemo(
@@ -40,34 +43,36 @@ export default function DashboardPage() {
     []
   );
 
-  // Simulate loading data
+  // Fetch user info
   useEffect(() => {
-    setLoading(true);
+    const fetchUser = async () => {
+      try {
+        const storedUser = authService.getStoredUser();
+        if (storedUser) {
+          setUser(storedUser);
+        } else {
+          const currentUser = await authService.getCurrentUser();
+          setUser(currentUser);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // Simulate loading overdue books data
+  useEffect(() => {
     const timer = setTimeout(() => {
-      setLoading(false);
-    }, 800);
+      setOverdueLoading(false);
+    }, 10000);
     return () => clearTimeout(timer);
   }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-
-  if (loading) {
-    return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        minHeight: "60vh",
-        width: "100%" 
-      }}>
-        <Spin size="large" tip="">
-          <div />
-        </Spin>
-      </div>
-    );
-  }
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
@@ -98,7 +103,9 @@ export default function DashboardPage() {
                     }}
                   >
                     Xin chào,{" "}
-                    <span style={{ color: token.colorPrimary }}>Thanh Toàn!</span>
+                    <span style={{ color: token.colorPrimary }}>
+                      {user?.name || "User"}!
+                    </span>
                   </Title>
                   <Text style={{ fontSize: screens.xs ? 14 : 16 }}>
                     {currentDateString}
@@ -165,6 +172,7 @@ export default function DashboardPage() {
             </div>
             <OverdueBookTable
               dataSource={mockOverdueBooks}
+              loading={overdueLoading}
               currentPage={currentPage}
               pageSize={pageSize}
               total={mockOverdueBooks.length}

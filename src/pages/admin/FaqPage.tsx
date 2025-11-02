@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Col, Grid, Row, Space, Spin, Tag, Input, message } from "antd";
+import { Col, Grid, Row, Space, Tag, Input, message } from "antd";
 import { 
   HeaderCard,
   FaqStatsOverview,
@@ -26,20 +26,27 @@ export default function FaqPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft" | "archived">("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [searchValue, setSearchValue] = useState("");
-  const [loading, setLoading] = useState(true);
   const [faqData, setFaqData] = useState<FaqItem[]>(mockFaqItems);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
   const [tempTags, setTempTags] = useState<string[]>([]);
   const [inputTag, setInputTag] = useState("");
 
-  // Simulate loading data
+  // Individual loading states with 10s timeout for testing
+  const [tableLoading, setTableLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
+
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
+    const tableTimer = setTimeout(() => setTableLoading(false), 10000);
+    const categoriesTimer = setTimeout(() => setCategoriesLoading(false), 10000);
+    const activityTimer = setTimeout(() => setActivityLoading(false), 10000);
+
+    return () => {
+      clearTimeout(tableTimer);
+      clearTimeout(categoriesTimer);
+      clearTimeout(activityTimer);
+    };
   }, []);
 
   const totals = useMemo(() => {
@@ -142,22 +149,6 @@ export default function FaqPage() {
     setTempTags(tempTags.filter((tag) => tag !== removedTag));
   };
 
-  if (loading) {
-    return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        minHeight: "60vh",
-        width: "100%" 
-      }}>
-        <Spin size="large" tip="">
-          <div />
-        </Spin>
-      </div>
-    );
-  }
-
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
@@ -178,6 +169,7 @@ export default function FaqPage() {
           onSearchSubmit={(value) => setSearchValue(value)}
           onEdit={handleEditFaq}
           onDelete={handleDeleteFaq}
+          loading={tableLoading}
         />
 
         {/* Phân bổ theo danh mục và Hoạt động mới nhất - 50/50 */}
@@ -187,10 +179,11 @@ export default function FaqPage() {
               distribution={faqCategoryDistribution}
               totalFaqs={totals.totalQuestions}
               publishedFaqs={totals.publishedQuestions}
+              loading={categoriesLoading}
             />
           </Col>
           <Col xs={24} lg={12}>
-            <FaqActivityCard activities={latestFaqActivities} />
+            <FaqActivityCard activities={latestFaqActivities} loading={activityLoading} />
           </Col>
         </Row>
       </Space>

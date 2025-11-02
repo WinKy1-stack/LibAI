@@ -1,4 +1,4 @@
-import { Card, Space, Typography, theme } from "antd";
+import { Card, Space, Typography, theme, Skeleton } from "antd";
 import {
   LineChart,
   Line,
@@ -17,9 +17,10 @@ const { useToken } = theme;
 
 interface ActivityCardProps {
   data: ActivityMetrics[];
+  loading?: boolean;
 }
 
-export function ActivityCard({ data }: ActivityCardProps) {
+export function ActivityCard({ data, loading = false }: ActivityCardProps) {
   const { token } = useToken();
   const chartColors = getChartColors(token);
 
@@ -54,7 +55,12 @@ export function ActivityCard({ data }: ActivityCardProps) {
           </div>
         </div>
 
-        <ResponsiveContainer width="100%" height={300}>
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: 300 }}>
+            <Skeleton.Image active />
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke={token.colorBorder} />
             <XAxis
@@ -111,6 +117,7 @@ export function ActivityCard({ data }: ActivityCardProps) {
             />
           </LineChart>
         </ResponsiveContainer>
+        )}
       </Space>
     </Card>
   );

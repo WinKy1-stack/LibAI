@@ -1,66 +1,92 @@
-# Hướng dẫn Cài đặt
+# 🚀 Hướng Dẫn Cài Đặt LibAI
 
-Hướng dẫn này cung cấp các bước chi tiết để cài đặt và chạy dự án LibAI trên máy cục bộ.
+> Hướng dẫn chi tiết để cài đặt và chạy dự án LibAI trên máy cục bộ của bạn, từ việc sao chép kho mã nguồn đến khi khởi chạy ứng dụng.
 
-## Yêu cầu tiên quyết
+## 📋 Yêu Cầu Hệ Thống
 
 Trước khi bắt đầu, hãy đảm bảo bạn đã cài đặt các phần mềm sau trên hệ thống của mình:
 
-**Frontend:**
-- **Node.js**: >= 18.0.0 (khuyến nghị phiên bản LTS)
-- **npm**: >= 9.0.0
-
-**Backend:**
-- **Python**: 3.11.9 hoặc 3.11+ (khuyến nghị 3.11.9)
+### ✅ Bắt Buộc:
+- **Git**: Phiên bản 2.0.0 trở lên
+- **Node.js**: Phiên bản 18.0.0 trở lên (khuyến nghị phiên bản LTS)
+- **npm**: Phiên bản 9.0.0 trở lên
+- **Python**: Phiên bản 3.11.9 (khuyến nghị) hoặc 3.11+
 - **pip**: Trình quản lý gói Python
 
-**Chung:**
-- **Git**: >= 2.0.0
+### 🔍 Kiểm Tra Phiên Bản:
 
----
-
-## Bước 1: Sao chép (Clone) Kho mã nguồn
-
-Đầu tiên, sao chép kho mã nguồn của dự án về máy cục bộ của bạn:
+Để kiểm tra xem bạn đã cài đặt đúng các phiên bản chưa, hãy chạy các lệnh sau trong terminal của bạn:
 
 ```bash
-git clone https://github.com/LockMan04/LibAI.git
-cd LibAI
+git --version
+node --version
+npm --version
+python --version
+pip --version
 ```
 
 ---
 
-## Bước 2: Cài đặt Frontend
+## 📥 Bước 1: Sao chép (Clone) Kho Mã Nguồn
 
-Đi đến thư mục gốc của dự án và chạy các lệnh sau để cài đặt các gói phụ thuộc và khởi động máy chủ phát triển:
+Đầu tiên, sao chép kho mã nguồn của dự án về máy cục bộ của bạn và di chuyển vào thư mục dự án:
 
 ```bash
-# Cài đặt các gói phụ thuộc
-npm install
+# Sao chép dự án từ GitHub
+git clone https://github.com/LockMan04/LibAI.git
+cd LibAI
 
-# Khởi động máy chủ phát triển
+# Chuyển sang nhánh phát triển mới nhất (tùy chọn)
+# git checkout feature/auth-implementation
+```
+
+---
+
+## ⚙️ Bước 2: Cài Đặt Frontend
+
+Tiếp theo, cài đặt các gói phụ thuộc cho frontend và khởi động máy chủ phát triển.
+
+### 2.1. Cài Đặt Các Gói Phụ Thuộc
+
+```bash
+# Đảm bảo bạn đang ở thư mục gốc của dự án
+# Cài đặt tất cả các gói từ package.json
+npm install
+```
+
+Quá trình này có thể mất vài phút tùy thuộc vào tốc độ mạng của bạn.
+
+### 2.2. Khởi Động Máy Chủ Phát Triển
+
+```bash
+# Khởi động máy chủ phát triển Vite
 npm run dev
 ```
 
-Frontend sẽ có thể truy cập được tại `http://localhost:5173`.
+Sau khi chạy lệnh, bạn sẽ thấy kết quả tương tự như sau:
 
-### Các Scripts có sẵn
+```
+VITE v5.x.x  ready in xxx ms
 
-- `npm run dev`: Khởi động máy chủ phát triển với tính năng tải lại nóng (hot-reloading).
-- `npm run build`: Xây dựng ứng dụng cho môi trường sản phẩm (production).
-- `npm run preview`: Xem trước bản dựng sản phẩm.
-- `npm run lint`: Kiểm tra lỗi trong mã nguồn.
+➜  Local:   http://localhost:5173/
+➜  Network: use --host to expose
+➜  press h + enter to show help
+```
+
+Frontend của bạn hiện đang chạy tại `http://localhost:5173`. Bạn có thể để nó chạy và mở một terminal mới cho các bước tiếp theo.
 
 ---
 
-## Bước 3: Cài đặt Backend
+## 🐍 Bước 3: Cài Đặt Backend
 
-Việc cài đặt backend bao gồm tạo một môi trường ảo Python và cài đặt các gói cần thiết.
+Bây giờ, hãy cài đặt backend, bao gồm việc tạo một môi trường ảo và cài đặt các gói Python cần thiết.
 
-### Windows (PowerShell)
+### 3.1. Tạo Môi Trường Ảo
+
+#### Windows (PowerShell):
 
 ```powershell
-# Đi đến thư mục backend
+# Di chuyển vào thư mục backend
 cd backend
 
 # Tạo một môi trường ảo
@@ -68,19 +94,15 @@ python -m venv venv311
 
 # Kích hoạt môi trường ảo
 .\venv311\Scripts\Activate.ps1
-
-# Cài đặt các gói phụ thuộc
-pip install -r requirements.txt
-
-# Kiểm tra phiên bản Python
-python --version
-# Kết quả mong đợi: Python 3.11.9
 ```
 
-### Linux/macOS
+> **Lưu ý trên Windows:** Nếu bạn gặp lỗi về chính sách thực thi của PowerShell, hãy chạy lệnh sau:
+> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+
+#### Linux/macOS:
 
 ```bash
-# Đi đến thư mục backend
+# Di chuyển vào thư mục backend
 cd backend
 
 # Tạo một môi trường ảo
@@ -88,86 +110,76 @@ python3.11 -m venv venv311
 
 # Kích hoạt môi trường ảo
 source venv311/bin/activate
+```
 
-# Cài đặt các gói phụ thuộc
+### 3.2. Cài Đặt Các Gói Phụ Thuộc Python
+
+```bash
+# Đảm bảo môi trường ảo đã được kích hoạt
+# Cài đặt tất cả các gói từ requirements.txt
 pip install -r requirements.txt
+```
 
-# Kiểm tra phiên bản Python
-python --version
-# Kết quả mong đợi: Python 3.11.9
+### 3.3. Cấu Hình Biến Môi Trường
+
+```bash
+# Trong thư mục backend, sao chép tệp .env.example
+# Đối với Windows PowerShell:
+Copy-Item .env.example .env
+
+# Đối với Linux/Mac:
+cp .env.example .env
 ```
 
 ---
 
-## Bước 4: Cấu hình MongoDB
+## ☁️ Bước 4: Cấu Hình Cơ Sở Dữ Liệu
 
-Bạn có thể chọn giữa việc sử dụng một phiên bản MongoDB Atlas được lưu trữ trên đám mây hoặc một máy chủ MongoDB cục bộ.
+Bạn có thể chọn giữa việc sử dụng MongoDB Atlas trên đám mây (khuyến nghị) hoặc một máy chủ MongoDB cục bộ.
 
-### Lựa chọn A: MongoDB Cloud Atlas (Khuyến nghị)
+### Lựa Chọn A: MongoDB Cloud Atlas (Khuyến Nghị)
 
-Sử dụng cơ sở dữ liệu đám mây được khuyến nghị cho việc hợp tác nhóm vì không cần cài đặt cục bộ.
+Đây là tùy chọn dễ nhất vì không cần cài đặt cơ sở dữ liệu cục bộ và đã có sẵn dữ liệu mẫu.
 
-1.  **Tạo một tệp `.env`** trong thư mục `backend/`:
+Trong tệp `backend/.env` của bạn, đảm bảo các cài đặt sau được định cấu hình:
 
-    ```bash
-    # Đối với Windows PowerShell
-    cd backend
-    Copy-Item .env.example .env
+```env
+# Cấu hình MongoDB
+USE_CLOUD_MONGODB=true
 
-    # Đối với Linux/macOS
-    cd backend
-    cp .env.example .env
-    ```
+# URI MongoDB Cloud (đã được cấu hình sẵn, không cần thay đổi)
+MONGO_URI_CLOUD=mongodb+srv://nptb137:thaibao10112004@cluster0.e5wsuwa.mongodb.net/library_chatbox?retryWrites=true&w=majority&appName=Cluster0
+```
 
-2.  **Cấu hình tệp `.env`** để sử dụng cơ sở dữ liệu đám mây:
+### Lựa Chọn B: MongoDB Cục Bộ
 
-    ```env
-    # Cấu hình MongoDB
-    USE_CLOUD_MONGODB=true
+Nếu bạn muốn chạy một máy chủ MongoDB cục bộ:
 
-    # URI MongoDB Cloud (thay thế bằng của bạn)
-    MONGO_URI_CLOUD=mongodb+srv://<username>:<password>@cluster0.e5wsuwa.mongodb.net/library_chatbox?retryWrites=true&w=majority&appName=Cluster0
-
-    # MongoDB Cục bộ
-    MONGO_URI_LOCAL=mongodb://localhost:27017/library_chatbox
-
-    # Cấu hình Flask
-    FLASK_APP=run.py
-    FLASK_ENV=development
-    SECRET_KEY=your-secret-key-here
-    JWT_SECRET_KEY=your-jwt-secret-key-here
-    ```
-
-### Lựa chọn B: MongoDB Localhost
-
-1.  **Cài đặt MongoDB Community Server**:
-    -   **Windows**: [Tải về tại đây](https://www.mongodb.com/try/download/community) và cài đặt dưới dạng dịch vụ.
+1.  **Cài Đặt MongoDB Community Server**:
+    -   **Windows**: [Tải về tại đây](https://www.mongodb.com/try/download/community)
     -   **Linux**: `sudo apt install mongodb-community`
     -   **macOS**: `brew install mongodb-community`
 
-2.  **Khởi động dịch vụ MongoDB**:
-
-    ```powershell
-    # Đối với Windows
-    net start MongoDB
-    ```
-
-    ```bash
-    # Đối với Linux/macOS
-    sudo systemctl start mongod
-    ```
+2.  **Khởi Động Dịch Vụ MongoDB**.
 
 3.  **Cập nhật tệp `.env`** để sử dụng cơ sở dữ liệu cục bộ:
-
     ```env
     USE_CLOUD_MONGODB=false
     ```
 
+4.  **Tạo Dữ Liệu Mẫu** (Chỉ dành cho cơ sở dữ liệu cục bộ):
+    ```bash
+    # Đảm bảo môi trường ảo của bạn đã được kích hoạt
+    python scripts/seed_library_data.py
+    ```
+
 ---
 
-## Bước 5: Tạo dữ liệu mẫu (Chỉ dành cho Localhost)
+## ▶️ Bước 5: Chạy Ứng Dụng
 
-Nếu bạn đang sử dụng một phiên bản MongoDB cục bộ, bạn cần tạo dữ liệu ban đầu cho nó.
+Sau khi đã cấu hình cả frontend và backend, bạn đã sẵn sàng để chạy ứng dụng.
+
+**Terminal 1: Khởi Động Backend**
 
 ```bash
 cd backend
@@ -176,33 +188,12 @@ cd backend
 # .\venv311\Scripts\Activate.ps1  (Windows)
 # source venv311/bin/activate    (Linux/macOS)
 
-# Chạy script tạo dữ liệu mẫu
-python scripts/seed_library_data.py
-```
-
-Bạn sẽ thấy một kết quả xác nhận việc tạo người dùng, bản ghi MARC, các mục và các khoản mượn.
-
----
-
-## Bước 6: Chạy Ứng dụng
-
-Sau khi đã cấu hình cả frontend và backend, bạn có thể chạy ứng dụng.
-
-**Terminal 1: Khởi động Backend**
-
-```bash
-cd backend
-
-# Kích hoạt môi trường ảo
-# .\venv311\Scripts\Activate.ps1  (Windows)
-# source venv311/bin/activate    (Linux/macOS)
-
 python run.py
 ```
 
 API backend sẽ có sẵn tại `http://localhost:5000`.
 
-**Terminal 2: Khởi động Frontend**
+**Terminal 2: Khởi Động Frontend**
 
 ```bash
 # Từ thư mục gốc của dự án
@@ -210,3 +201,5 @@ npm run dev
 ```
 
 Frontend sẽ có thể truy cập được tại `http://localhost:5173`.
+
+Bây giờ bạn có thể mở `http://localhost:5173` trong trình duyệt của mình để sử dụng ứng dụng.
