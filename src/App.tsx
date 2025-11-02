@@ -1,21 +1,23 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { ChatProvider } from './contexts/ChatContext';
 import { UserLayout } from './components/user/layout';
 import AdminLayout from './components/admin/layout/AdminLayout';
 import UserHomePage from './pages/user/UserHomePage';
-import ChatHistoryPage from './pages/user/ChatHistoryPage';
-import DashboardPage from './pages/admin/DashboardPage';
-import UserManagementPage from './pages/admin/UserManagementPage';
-import BooksManagementPage from './pages/admin/BooksManagementPage';
-import { BorrowManagementPage } from './pages/admin/BorrowManagementPage';
-import ReportPage from './pages/admin/ReportPage';
-import SettingsPage from './pages/admin/SettingsPage';
-import LibrarianSettingsPage from './pages/admin/LibrarianSettingsPage';
-import FaqPage from './pages/admin/FaqPage';
 import { LoginPage, RegisterPage, ProtectedRoute, PublicRoute } from './components/user/auth';
 import { authService } from './services/authService';
 import ForbiddenPage from './pages/ForbiddenPage';
 import './App.css';
+
+const ChatHistoryPage = lazy(() => import('./pages/user/ChatHistoryPage'));
+const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
+const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'));
+const BooksManagementPage = lazy(() => import('./pages/admin/BooksManagementPage'));
+const BorrowManagementPage = lazy(() => import('./pages/admin/BorrowManagementPage').then(module => ({ default: module.BorrowManagementPage })));
+const ReportPage = lazy(() => import('./pages/admin/ReportPage'));
+const SettingsPage = lazy(() => import('./pages/admin/SettingsPage'));
+const LibrarianSettingsPage = lazy(() => import('./pages/admin/LibrarianSettingsPage'));
+const FaqPage = lazy(() => import('./pages/admin/FaqPage'));
 
 // Wrapper component cho admin routes
 function AdminLayoutWrapper() {
@@ -38,11 +40,12 @@ function UserLayoutWrapper() {
 function App() {
   return (
     <ChatProvider>
-      <Routes>
-      {/* Public landing (can redirect if already logged in) */}
-      <Route
-        path="/"
-        element={
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          {/* Public landing (can redirect if already logged in) */}
+          <Route
+            path="/"
+            element={
           <PublicRoute>
             <UserLayoutWrapper />
           </PublicRoute>
@@ -116,6 +119,7 @@ function App() {
         element={<FallbackRedirect />}
       />
     </Routes>
+    </Suspense>
     </ChatProvider>
   );
 }
