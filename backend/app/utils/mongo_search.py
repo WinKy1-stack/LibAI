@@ -1,12 +1,12 @@
 from pymongo import MongoClient
-from config import MONGO_URI, MONGO_DB_NAME, MONGO_COLLECTION_NAME
+from app.config import Config
+
 
 def search_in_mongo(keyword: str, field: str = "any"):
     """Tìm kiếm trong MongoDB theo cấu trúc MARCJSON."""
-    client = MongoClient(MONGO_URI)
-    db = client[MONGO_DB_NAME]
-    collection = db[MONGO_COLLECTION_NAME]
-
+    client = MongoClient(Config.MONGO_URI)
+    db = client[Config.MONGO_DBNAME]
+    collection = db[Config.COLLECTION_MARC_RECORDS]
     field_map = {
         "any": [
             "fields.245.a", "fields.245.b",  # title

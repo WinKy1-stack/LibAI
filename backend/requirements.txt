@@ -1,7 +1,7 @@
 # ============================================
 # Flask Framework & Core Dependencies
 # ============================================
-Flask==3.1.0
+Flask==3.1.0          # (Nếu bạn muốn ép dùng 3.0.3 thì sửa dòng này)
 Werkzeug==3.1.0
 
 # ============================================
@@ -15,8 +15,9 @@ Flask-PyMongo==2.3.0
 # Database Drivers
 # ============================================
 # MongoDB Driver & DNS
-pymongo==4.10.1
+pymongo==4.10.1       # ✅ bạn có thể thay =4.7.2 nếu cần
 dnspython==2.7.0
+pymarc==5.1.0          # ✅ thêm mới – hỗ trợ đọc ghi MARC21
 
 # ============================================
 # Security & Authentication
@@ -40,6 +41,11 @@ google-generativeai==0.8.3
 # ============================================
 requests==2.32.3
 urllib3==2.2.3
+
+# ============================================
+# Optional: Z39.50 Library 
+# ============================================
+PyZ3950==3.0.0
 
 # ============================================
 # Optional: Production Server (uncomment for production)

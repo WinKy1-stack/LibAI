@@ -91,3 +91,12 @@ Authorization: Bearer <your_jwt_token>
   }
 }
 ```
+**Ví dụ truy vấn dữ liệu:**
+- Chạy ứng dụng: python run.py
+- Thử nghiệm truy vấn với những trường:
+- Tác giả: http://127.0.0.1:5000/search?keyword=Stephen%20Hawking&field=author
+- Tên sách: http://127.0.0.1:5000/search?keyword=Deep%20Learning&field=title
+- Chủ đề: http://127.0.0.1:5000/search?keyword=Artificial%20Intelligence&field=subject
+- IISBN: http://127.0.0.1:5000/search?keyword=9780262035613&field=isbn
+
+

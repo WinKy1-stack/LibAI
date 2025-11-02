@@ -1,7 +1,7 @@
 import subprocess
 import re
 from pathlib import Path
-from config import Z3950_SERVERS
+from app.config import Config
 
 
 def parse_yaz_output(raw_text: str):
@@ -55,7 +55,7 @@ def parse_yaz_output(raw_text: str):
 
 def query_z3950(keyword: str, field: str):
     """Truy vấn tối đa 5 record từ LOC (Library of Congress)."""
-    server = Z3950_SERVERS["LOC"]
+    server = Config.Z3950_SERVERS["LOC"]
 
     attr_map = {
         "any": "1016", "title": "4", "author": "1003",
