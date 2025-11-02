@@ -100,7 +100,7 @@ Authorization: Bearer <your_jwt_token>
 2. Kiểm thử với Yaz: Mở Terminal:yaz-client z3950.loc.gov:7090/voyager
   -find @attr 1=4 "python"
   -show 1
-3.Chạy với dự án trong Visua Code
+3.Chạy với dự án trong Visual Studio Code
    #Di chuyển vào thư mục backend
     cd backend
     # Tạo và kích hoạt môi trường ảo
