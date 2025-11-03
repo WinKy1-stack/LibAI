@@ -24,6 +24,13 @@ export default function UserLayout({ children }: UserLayoutProps) {
     localStorage.setItem("user-theme", mode);
     document.documentElement.setAttribute("data-theme", mode);
     
+    // Thêm/xóa class 'dark' cho Tailwind
+    if (mode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
     // Dispatch custom event để các component khác biết theme đã thay đổi
     const event = new CustomEvent('theme-change', { detail: mode });
     window.dispatchEvent(event);
