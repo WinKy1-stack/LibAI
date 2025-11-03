@@ -28,20 +28,45 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     jwt.init_app(app)
     mongo.init_app(app)
-    CORS(app)
+
+    # Cấu hình CORS chi tiết
+    CORS(app,
+         resources={r"/*": {"origins": "*"}},
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     # Đăng ký blueprints
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
     from app.routes.mongodb_routes import mongodb_bp
     from app.routes.library import library_bp
+    from app.routes.library.z3950_routes import z3950_bp
     from app.routes.chat import chat_bp
-    
+
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
     app.register_blueprint(mongodb_bp)  # Legacy books API
     app.register_blueprint(library_bp)  # New library system API
-    app.register_blueprint(chat_bp)  # Chat AI API
+    app.register_blueprint(z3950_bp)    # Z39.50 search API
+    app.register_blueprint(chat_bp)     # Chat AI API
+
+    # Root endpoint
+    @app.route('/')
+    def index():
+        return {
+            "message": "📚 Library Chatbox API đang chạy!",
+            "routes": [
+                "/api/auth/register - Đăng ký tài khoản",
+                "/api/auth/login - Đăng nhập",
+                "/api/auth/me - Lấy thông tin user",
+                "/api/mongodb/books - Danh sách sách",
+                "/search?keyword=AI - Tìm kiếm",
+                "/search/test - Test search",
+                "/health - Kiểm tra trạng thái server",
+                "/mongodb-test - Test kết nối MongoDB"
+            ]
+        }, 200
 
     # Health check endpoint
     @app.route('/health')

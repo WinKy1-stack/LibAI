@@ -23,7 +23,7 @@ class Config:
         'mongodb+srv://nptb137:thaibao10112004@cluster0.e5wsuwa.mongodb.net/'
         'library_chatbox?retryWrites=true&w=majority&appName=Cluster0'
     )
-    MONGO_URI = os.getenv('MONGO_URI', MONGO_URI_CLOUD if USE_CLOUD_MONGODB else MONGO_URI_LOCAL)
+    MONGO_URI = os.getenv('MONGO_URI', MONGO_URI_CLOUD if USE_CLOUD_MONGODB == 'true' else MONGO_URI_LOCAL)
     MONGO_DBNAME = os.getenv('MONGO_DBNAME', 'library_chatbox')
 
     # ========== 📚 MongoDB Collections ==========

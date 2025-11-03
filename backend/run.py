@@ -6,10 +6,6 @@ import sys
 import signal
 import logging
 from dotenv import load_dotenv
-from flask import Flask
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager
-from app.config import DevelopmentConfig
 
 # === Load biến môi trường (.env) ===
 load_dotenv()
@@ -20,41 +16,12 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-# === Khởi tạo Flask App ===
-def create_app():
-    """Khởi tạo Flask app và đăng ký các blueprint"""
-    app = Flask(__name__)
-    app.config.from_object(DevelopmentConfig)
-
-    # Bật CORS và JWT
-    CORS(app)
-    JWTManager(app)
-
-    # === Import và đăng ký các routes ===
-    # ⚙️ Sửa đúng đường dẫn import (library nằm trong routes)
-    from app.routes.mongodb_routes import mongodb_bp
-    from app.routes.library.z3950_routes import z3950_bp  # ✅ Đường dẫn chính xác
-
-    # ⚙️ Đăng ký Blueprint
-    app.register_blueprint(mongodb_bp)
-    app.register_blueprint(z3950_bp)
-
-    @app.route('/')
-    def index():
-        return {
-            "message": "📚 Library Chatbox API đang chạy!",
-            "routes": [
-                "/api/mongodb/books",
-                "/search?keyword=AI",
-                "/search/test"
-            ]
-        }
-
-    return app
-
+# === Import create_app từ app/__init__.py ===
+from app import create_app
+from app.config import DevelopmentConfig
 
 # === Tạo app ===
-app = create_app()
+app = create_app(DevelopmentConfig)
 
 
 # === Xử lý Ctrl+C (SIGINT) ===

@@ -299,7 +299,13 @@ class PromptService:
                 safety_settings=safety_settings
             )
             
-            response = model.generate_content(
+            #  HIỆN TẠI ĐANG DÙNG THƯ VIỆN CŨ CỦA GOOGLE, ĐÂY CHỈ LÀ MẪU MINH HỌA
+            #  VUI LÒNG THAY THẾ BẰNG THƯ VIỆN MỚI KHI CÓ SẴN
+            # from google import genai
+
+            chat = model.start_chat()
+
+            response = chat.send_message(
                 contents=contents,
                 generation_config={
                     'temperature': self.config.temperature,

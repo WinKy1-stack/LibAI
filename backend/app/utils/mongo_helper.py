@@ -17,10 +17,13 @@ class MongoHelper:
     def insert_one(collection_name, document):
         """Insert một document vào collection"""
         collection = MongoHelper.get_collection(collection_name)
-        document['created_at'] = datetime.now(timezone.utc)
-        document['updated_at'] = datetime.now(timezone.utc)
+        # Chỉ thêm timestamps nếu chưa có
+        if 'created_at' not in document:
+            document['created_at'] = datetime.now(timezone.utc)
+        if 'updated_at' not in document:
+            document['updated_at'] = datetime.now(timezone.utc)
         result = collection.insert_one(document)
-        return str(result.inserted_id)
+        return result.inserted_id
     
     @staticmethod
     def insert_many(collection_name, documents):
