@@ -14,7 +14,7 @@ import {
   VisitorsBorrowersChart,
   OverdueBookTable,
 } from "../../components/admin/dashboard";
-import { mockOverdueBooks } from "../../data";
+import { mockOverdueBooks, dashboardStatsData } from "../../data";
 import { authService } from "../../services/authService";
 import type { User } from "../../types/auth";
 
@@ -136,16 +136,16 @@ export default function DashboardPage() {
           {/* --- Stats Section --- */}
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={12} md={6}>
-              <StatCard title="Tổng lượt truy cập" value="1223" icon={<TeamOutlined />} />
+              <StatCard title="Tổng lượt truy cập" value={dashboardStatsData.totalVisitors} icon={<TeamOutlined />} />
             </Col>
             <Col xs={12} sm={12} md={6}>
-              <StatCard title="Sách đã mượn" value="740" icon={<BookOutlined />} />
+              <StatCard title="Sách đã mượn" value={dashboardStatsData.booksIssued} icon={<BookOutlined />} />
             </Col>
             <Col xs={12} sm={12} md={6}>
-              <StatCard title="Sách quá hạn" value="22" icon={<BookOutlined />} />
+              <StatCard title="Sách quá hạn" value={dashboardStatsData.overdueBooks} icon={<BookOutlined />} />
             </Col>
             <Col xs={12} sm={12} md={6}>
-              <StatCard title="Thành viên mới" value="60" icon={<UserOutlined />} />
+              <StatCard title="Thành viên mới" value={dashboardStatsData.newMembers} icon={<UserOutlined />} />
             </Col>
           </Row>
 

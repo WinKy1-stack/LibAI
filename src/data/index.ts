@@ -24,3 +24,6 @@ export * from './mockFaq';
 // User Home (chat) Data
 export * from './mockUserSuggestions';
 export * from './mockUserChatBooks';
+
+// Dashboard Stats Data
+export * from './mockDashboardStats';

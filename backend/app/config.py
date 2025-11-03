@@ -15,12 +15,8 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
-    # ========== 🧱 SQLAlchemy (cho User/Auth) ==========
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///app.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
     # ========== 🍃 MongoDB ==========
-    USE_CLOUD_MONGODB = os.getenv('USE_CLOUD_MONGODB', 'false').lower() == 'true'
+    USE_CLOUD_MONGODB = os.getenv('USE_CLOUD_MONGODB', 'true')
     
     MONGO_URI_LOCAL = 'mongodb://localhost:27017/library_chatbox'
     MONGO_URI_CLOUD = (

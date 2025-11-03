@@ -25,11 +25,26 @@ export interface User {
   last_login?: string;
 }
 
+// API response user object may have alternative field names
+export interface ApiUserResponse {
+  id?: string;
+  user_id?: string;
+  email?: string;
+  name?: string;
+  full_name?: string;
+  role?: 'admin' | 'librarian' | 'reader';
+  student_id?: string;
+  major?: string;
+  status?: string;
+  created_at?: string;
+  last_login?: string;
+}
+
 export interface AuthResponse {
   message: string;
   access_token: string;
   refresh_token: string;
-  user: User;
+  user: ApiUserResponse;
 }
 
 export interface ChangePasswordData {
