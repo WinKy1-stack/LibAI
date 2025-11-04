@@ -56,13 +56,15 @@ def send_message(current_user):
             )
             logger.info("Created new conversation: %s", conversation_id)
         
-        # Generate response with timing
+        # Generate response with timing - SỬ DỤNG CHAT SESSION
         start_time = time.time()
         prompt_service = get_prompt_service()
-        ai_response = prompt_service.generate_response(
+        
+        # Sử dụng session để AI nhớ được lịch sử
+        ai_response = prompt_service.generate_response_with_session(
+            conversation_id=conversation_id,
             user_message=user_message,
-            chat_history=chat_history,
-            context=context
+            instruction_type='default'
         )
         latency_ms = int((time.time() - start_time) * 1000)
         
