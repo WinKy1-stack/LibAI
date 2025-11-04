@@ -65,11 +65,63 @@ def send_message(current_user):
 
     # Lưu vào database
     try:
-        history_service.save_chat_exchange(
+        # Validate và lấy data
+        data = validate_request_data(required_fields=['message'])
+        
+        user_message = data['message'].strip()
+        chat_history = data.get('chat_history', [])
+        context = data.get('context')
+        conversation_id = data.get('conversation_id')
+        
+        logger.info("User %s sent message: %s...", current_user['id'], user_message[:50])
+        
+        # Tạo conversation mới nếu chưa có
+        history_service = get_chat_history_service()
+        if not conversation_id:
+            conversation_id = history_service.create_conversation(
+                user_id=current_user['id'],
+                channel='web',
+                model='gemini-2.0-flash-exp'
+            )
+            logger.info("Created new conversation: %s", conversation_id)
+        
+        # Generate response with timing - SỬ DỤNG CHAT SESSION
+        start_time = time.time()
+        prompt_service = get_prompt_service()
+        
+        # Sử dụng session để AI nhớ được lịch sử
+        ai_response = prompt_service.generate_response_with_session(
             conversation_id=conversation_id,
             user_message=user_message,
-            assistant_message=ai_response,
-            latency_ms=latency_ms
+            instruction_type='default'
+        )
+        latency_ms = int((time.time() - start_time) * 1000)
+        
+        # Lưu vào database
+        try:
+            history_service.save_chat_exchange(
+                conversation_id=conversation_id,
+                user_message=user_message,
+                assistant_message=ai_response,
+                latency_ms=latency_ms
+            )
+            logger.info("Saved chat to database: conversation=%s", conversation_id)
+        except Exception as db_error:  # pylint: disable=broad-except
+            logger.error("Failed to save chat history: %s", str(db_error))
+            # Continue even if DB save fails
+        
+        response_data = build_success_response(
+            data={
+                'message': ai_response,
+                'conversation_id': conversation_id
+            },
+            user_id=current_user['id'],
+            metadata={
+                'message_length': len(ai_response),
+                'has_context': context is not None,
+                'history_length': len(chat_history),
+                'latency_ms': latency_ms
+            }
         )
         logger.info("Saved chat to database: conversation=%s", conversation_id)
     except Exception as db_error:  # pylint: disable=broad-except
