@@ -5,12 +5,11 @@ import logging
 import time
 from flask import Blueprint, jsonify
 
-from app.services.prompt import get_prompt_service  # type: ignore
-from app.services.history import get_chat_history_service  # type: ignore
-from app.services.exceptions import ChatServiceError, ValidationError, GeminiAPIError  # type: ignore
-from app.utils.decorators import token_required  # type: ignore
-from app.routes.helpers import (  # type: ignore
-    build_error_response,
+from app.services.prompt import get_prompt_service
+from app.services.history import get_chat_history_service
+from app.exceptions import ApiError, ValidationError, GeminiAPIError
+from app.utils.decorators import token_required
+from app.routes.helpers import (
     validate_request_data,
     build_success_response
 )
@@ -34,74 +33,65 @@ def send_message(current_user):
             "conversation_id": str (optional) - ID conversation đang chat
         }
     """
-    conversation_id = None
-    try:
-        # Validate và lấy data
-        data = validate_request_data(required_fields=['message'])
-        
-        user_message = data['message'].strip()
-        chat_history = data.get('chat_history', [])
-        context = data.get('context')
-        conversation_id = data.get('conversation_id')
-        
-        logger.info("User %s sent message: %s...", current_user['id'], user_message[:50])
-        
-        # Tạo conversation mới nếu chưa có
-        history_service = get_chat_history_service()
-        if not conversation_id:
-            conversation_id = history_service.create_conversation(
-                user_id=current_user['id'],
-                channel='web',
-                model='gemini-2.0-flash-exp'
-            )
-            logger.info("Created new conversation: %s", conversation_id)
-        
-        # Generate response with timing - SỬ DỤNG CHAT SESSION
-        start_time = time.time()
-        prompt_service = get_prompt_service()
-        
-        # Sử dụng session để AI nhớ được lịch sử
-        ai_response = prompt_service.generate_response_with_session(
-            conversation_id=conversation_id,
-            user_message=user_message,
-            instruction_type='default'
-        )
-        latency_ms = int((time.time() - start_time) * 1000)
-        
-        # Lưu vào database
-        try:
-            history_service.save_chat_exchange(
-                conversation_id=conversation_id,
-                user_message=user_message,
-                assistant_message=ai_response,
-                latency_ms=latency_ms
-            )
-            logger.info("Saved chat to database: conversation=%s", conversation_id)
-        except Exception as db_error:  # pylint: disable=broad-except
-            logger.error("Failed to save chat history: %s", str(db_error))
-            # Continue even if DB save fails
-        
-        response_data = build_success_response(
-            data={
-                'message': ai_response,
-                'conversation_id': conversation_id
-            },
+    # Validate và lấy data
+    data = validate_request_data(required_fields=['message'])
+
+    user_message = data['message'].strip()
+    chat_history = data.get('chat_history', [])
+    context = data.get('context')
+    conversation_id = data.get('conversation_id')
+
+    logger.info("User %s sent message: %s...", current_user['id'], user_message[:50])
+
+    # Tạo conversation mới nếu chưa có
+    history_service = get_chat_history_service()
+    if not conversation_id:
+        conversation_id = history_service.create_conversation(
             user_id=current_user['id'],
-            metadata={
-                'message_length': len(ai_response),
-                'has_context': context is not None,
-                'history_length': len(chat_history),
-                'latency_ms': latency_ms
-            }
+            channel='web',
+            model='gemini-2.0-flash-exp'
         )
-        
-        logger.info("Response generated successfully for user %s", current_user['id'])
-        return jsonify(response_data), 200
-        
-    except (ValidationError, GeminiAPIError, ChatServiceError) as e:
-        return build_error_response(e)
-    except Exception as e:  # pylint: disable=broad-except
-        return build_error_response(e)
+        logger.info("Created new conversation: %s", conversation_id)
+    else:
+        # Validate conversation_id thuộc user hiện tại
+        if not history_service.conversation_belongs_to_user(conversation_id, current_user['id']):
+            logger.warning("Unauthorized access to conversation %s by user %s", conversation_id, current_user['id'])
+            raise ApiError("Không có quyền truy cập conversation này", status_code=403)
+        logger.debug("Using existing conversation: %s for user %s", conversation_id, current_user['id'])
+
+    # Generate response with timing
+    start_time = time.time()
+    prompt_service = get_prompt_service()
+    
+    # Dùng method có session để lưu history conversation
+    ai_response = prompt_service.generate_response_with_session(
+        conversation_id=conversation_id,
+        user_message=user_message,
+        instruction_type='default',
+        history_service=history_service,  # Truyền history_service để lưu/lấy từ DB
+        latency_ms=int((time.time() - start_time) * 1000)  # Tính latency
+    )
+    latency_ms = int((time.time() - start_time) * 1000)
+
+    # Lưu vào database đã được thực hiện bên trong generate_response_with_session()
+    # Nên không cần lưu lại ở đây
+
+    response_data = build_success_response(
+        data={
+            'message': ai_response,
+            'conversation_id': conversation_id
+        },
+        user_id=current_user['id'],
+        metadata={
+            'message_length': len(ai_response),
+            'has_context': context is not None,
+            'history_length': len(chat_history),
+            'latency_ms': latency_ms
+        }
+    )
+
+    logger.info("Response generated successfully for user %s", current_user['id'])
+    return jsonify(response_data), 200
 
 
 @message_bp.route('/message/guest', methods=['POST'])
@@ -116,44 +106,38 @@ def send_message_guest():
             "context": str (optional) - Context bổ sung
         }
     """
-    try:
-        # Validate và lấy data
-        data = validate_request_data(required_fields=['message'])
-        
-        user_message = data['message'].strip()
-        chat_history = data.get('chat_history', [])
-        context = data.get('context')
-        
-        logger.info("Guest sent message: %s...", user_message[:50])
-        
-        # Generate response with timing (KHÔNG LƯU DB)
-        start_time = time.time()
-        prompt_service = get_prompt_service()
-        ai_response = prompt_service.generate_response(
-            user_message=user_message,
-            chat_history=chat_history,
-            context=context
-        )
-        latency_ms = int((time.time() - start_time) * 1000)
-        
-        response_data = build_success_response(
-            data={
-                'message': ai_response,
-                'conversation_id': None  # Không có conversation_id
-            },
-            user_id='guest',
-            metadata={
-                'message_length': len(ai_response),
-                'has_context': context is not None,
-                'history_length': len(chat_history),
-                'latency_ms': latency_ms
-            }
-        )
-        
-        logger.info("Guest response generated successfully")
-        return jsonify(response_data), 200
-        
-    except (ValidationError, GeminiAPIError, ChatServiceError) as e:
-        return build_error_response(e)
-    except Exception as e:  # pylint: disable=broad-except
-        return build_error_response(e)
+    # Validate và lấy data
+    data = validate_request_data(required_fields=['message'])
+
+    user_message = data['message'].strip()
+    chat_history = data.get('chat_history', [])
+    context = data.get('context')
+
+    logger.info("Guest sent message: %s...", user_message[:50])
+
+    # Generate response with timing (KHÔNG LƯU DB)
+    start_time = time.time()
+    prompt_service = get_prompt_service()
+    ai_response = prompt_service.generate_response(
+        user_message=user_message,
+        chat_history=chat_history,
+        context=context
+    )
+    latency_ms = int((time.time() - start_time) * 1000)
+
+    response_data = build_success_response(
+        data={
+            'message': ai_response,
+            'conversation_id': None  # Không có conversation_id
+        },
+        user_id='guest',
+        metadata={
+            'message_length': len(ai_response),
+            'has_context': context is not None,
+            'history_length': len(chat_history),
+            'latency_ms': latency_ms
+        }
+    )
+
+    logger.info("Guest response generated successfully")
+    return jsonify(response_data), 200

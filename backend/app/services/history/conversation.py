@@ -247,3 +247,39 @@ class ConversationManager:
         except Exception as e:
             logger.error("Error getting conversation IDs: %s", str(e))
             return []
+    
+    @staticmethod
+    def belongs_to_user(conversation_id: str, user_id: str) -> bool:
+        """
+        Kiểm tra xem conversation này có thuộc user hiện tại không
+        
+        Args:
+            conversation_id: ID của conversation
+            user_id: ID của user
+            
+        Returns:
+            True nếu conversation thuộc user, False otherwise
+        """
+        try:
+            try:
+                conv_id = ObjectId(conversation_id)
+            except Exception:
+                conv_id = conversation_id
+            
+            try:
+                uid = ObjectId(user_id)
+            except Exception:
+                uid = user_id
+            
+            conversation = MongoHelper.find_one(
+                ConversationManager.COLLECTION_NAME,
+                query={'_id': conv_id, 'user_id': uid}
+            )
+            
+            result = conversation is not None
+            logger.debug(f"Conversation {conversation_id} belongs to user {user_id}: {result}")
+            return result
+            
+        except Exception as e:
+            logger.error("Error checking conversation ownership: %s", str(e))
+            return False

@@ -38,26 +38,30 @@ signal.signal(signal.SIGINT, signal_handler)
 def test_gemini_connection():
     """Test kết nối với Gemini API khi server khởi động"""
     try:
-        from app.services.prompt import get_prompt_service
+        from app.services.prompt import PromptService
 
         print("\n" + "=" * 70)
         print("TESTING GEMINI API CONNECTION...")
         print("=" * 70)
 
-        prompt_service = get_prompt_service()
+        # Tạo PromptService với app.config thay vì dùng get_prompt_service()
+        # vì get_prompt_service() cần Flask application context
+        with app.app_context():
+            from flask import current_app
+            prompt_service = PromptService(current_app.config)
 
-        # Gửi prompt thử
-        test_response = prompt_service.generate_response(
-            user_message="Hello, are you working?",
-            chat_history=[],
-            context=None
-        )
+            # Gửi prompt thử
+            test_response = prompt_service.generate_response(
+                user_message="Hello, are you working?",
+                chat_history=[],
+                context=None
+            )
 
-        print("✅ GEMINI API CONNECTION: SUCCESS")
-        print(f"Response: {test_response[:100]}...")
-        print("=" * 70 + "\n")
+            print("✅ GEMINI API CONNECTION: SUCCESS")
+            print(f"Response: {test_response[:100]}...")
+            print("=" * 70 + "\n")
 
-        return True
+            return True
 
     except Exception as e:
         print("❌ GEMINI API CONNECTION: FAILED")

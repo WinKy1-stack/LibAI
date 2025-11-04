@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.utils.mongo_search import search_in_mongo
 from app.utils.z3950_search import search_in_z3950
+from app.exceptions import ValidationError
 
 # ✅ Khai báo Blueprint (route bắt đầu bằng /search)
 z3950_bp = Blueprint('z3950_bp', __name__, url_prefix='/search')
@@ -17,7 +18,7 @@ def search():
     field = request.args.get("field", "any")
 
     if not keyword:
-        return jsonify({"error": "Thiếu tham số 'keyword'"}), 400
+        raise ValidationError("Thiếu tham số 'keyword'")
 
     # 1️⃣ Tìm trong MongoDB trước
     mongo_data = search_in_mongo(keyword, field)

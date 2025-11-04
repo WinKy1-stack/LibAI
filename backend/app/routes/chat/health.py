@@ -5,7 +5,8 @@ import logging
 from datetime import datetime
 from flask import Blueprint, jsonify
 
-from app.services.prompt import get_prompt_service  # type: ignore
+from app.services.prompt import get_prompt_service
+from app.exceptions import ApiError
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +27,9 @@ def health_check():
                 'model': prompt_service.model_id,
                 'timestamp': datetime.utcnow().isoformat(),
                 'config': {
-                    'max_tokens': prompt_service.config.max_output_tokens,
-                    'temperature': prompt_service.config.temperature,
-                    'max_books_context': prompt_service.config.max_books_in_context
+                    'max_tokens': prompt_service.config.get('GEMINI_MAX_TOKENS', 1000),
+                    'temperature': prompt_service.config.get('GEMINI_TEMPERATURE', 0.7),
+                    'max_books_context': prompt_service.config.get('MAX_BOOKS_IN_CONTEXT', 30)
                 }
             }
         }
@@ -38,10 +39,4 @@ def health_check():
         
     except Exception as e:  # pylint: disable=broad-except
         logger.error("Health check failed: %s", str(e))
-        return jsonify({
-            'success': False,
-            'error': {
-                'message': f'Service không khả dụng: {str(e)}',
-                'type': 'ServiceUnavailable'
-            }
-        }), 503
+        raise ApiError(f'Service không khả dụng: {str(e)}', status_code=503)
