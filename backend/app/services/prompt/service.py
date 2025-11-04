@@ -1,6 +1,6 @@
 """
 Prompt Service - Core AI logic cho chat system  
-Refactored version - sử dụng Validator và Formatter
+Refactored version - sử dụng Validator và Formatter với Chat Session
 """
 import logging
 import threading
@@ -19,6 +19,116 @@ from app.services.prompt.validators import PromptValidator
 from app.services.prompt.formatters import PromptFormatter
 
 logger = logging.getLogger(__name__)
+
+
+class ChatSession:
+    """
+    Quản lý chat session với Gemini API
+    Cho phép AI nhớ được lịch sử chat
+    """
+    
+    def __init__(self, client: genai.Client, model_id: str, config: ChatConfig, system_instruction: str):
+        """
+        Args:
+            client: Gemini client
+            model_id: Model ID
+            config: Chat config
+            system_instruction: System instruction cho chat
+        """
+        self.client = client
+        self.model_id = model_id
+        self.config = config
+        self.system_instruction = system_instruction
+        
+        # Tạo chat session với SDK mới
+        self.chat = self.client.chats.create(
+            model=self.model_id,
+            config=types.GenerateContentConfig(
+                temperature=config.temperature,
+                max_output_tokens=config.max_output_tokens,
+                top_p=config.top_p,
+                top_k=config.top_k,
+                system_instruction=system_instruction,
+            )
+        )
+        
+        logger.info("Created new chat session with model %s", model_id)
+    
+    def send_message(self, message: str) -> str:
+        """
+        Gửi message và nhận response
+        History được tự động lưu trong chat session
+        
+        Args:
+            message: User message
+            
+        Returns:
+            AI response text
+        """
+        try:
+            response = self.chat.send_message(message)
+            response_text = response.text
+            
+            logger.debug("Sent message to chat session, received %d chars", len(response_text))
+            return response_text.strip()
+            
+        except Exception as e:
+            logger.error("Error in chat session: %s", str(e))
+            raise GeminiAPIError(f"Lỗi khi chat với AI: {str(e)}") from e
+    
+    def send_message_stream(self, message: str):
+        """
+        Gửi message và nhận response dạng stream
+        
+        Args:
+            message: User message
+            
+        Yields:
+            Chunks of response text
+        """
+        try:
+            response = self.chat.send_message_stream(message)
+            for chunk in response:
+                if hasattr(chunk, 'text') and chunk.text:
+                    yield chunk.text
+                    
+        except Exception as e:
+            logger.error("Error in chat stream: %s", str(e))
+            raise GeminiAPIError(f"Lỗi khi stream chat: {str(e)}") from e
+    
+    def get_history(self) -> List[Dict[str, Any]]:
+        """
+        Lấy lịch sử chat từ session
+        
+        Returns:
+            List of messages với role và content
+        """
+        try:
+            history = []
+            for message in self.chat.get_history():
+                history.append({
+                    'role': message.role,
+                    'content': message.parts[0].text if message.parts else ''
+                })
+            return history
+            
+        except Exception as e:
+            logger.error("Error getting chat history: %s", str(e))
+            return []
+    
+    def clear_history(self):
+        """Clear chat history bằng cách tạo session mới"""
+        self.chat = self.client.chats.create(
+            model=self.model_id,
+            config=types.GenerateContentConfig(
+                temperature=self.config.temperature,
+                max_output_tokens=self.config.max_output_tokens,
+                top_p=self.config.top_p,
+                top_k=self.config.top_k,
+                system_instruction=self.system_instruction,
+            )
+        )
+        logger.info("Cleared chat history for session")
 
 
 class PromptService:
@@ -41,6 +151,10 @@ class PromptService:
             )
             self.formatter = PromptFormatter()
             
+            # Dictionary để lưu chat sessions theo conversation_id
+            self._chat_sessions: Dict[str, ChatSession] = {}
+            self._sessions_lock = threading.Lock()
+            
             # Test connection với Gemini API
             logger.info("=" * 60)
             logger.info("GEMINI AI SERVICE INITIALIZATION")
@@ -60,6 +174,92 @@ class PromptService:
         except Exception as e:
             logger.error("Failed to initialize PromptService: %s", str(e))
             raise InvalidConfigurationError(f"Không thể khởi tạo service: {str(e)}") from e
+    
+    def get_or_create_chat_session(
+        self,
+        conversation_id: str,
+        instruction_type: str = 'default'
+    ) -> ChatSession:
+        """
+        Lấy hoặc tạo chat session cho conversation
+        
+        Args:
+            conversation_id: ID của conversation
+            instruction_type: Loại system instruction
+            
+        Returns:
+            ChatSession instance
+        """
+        with self._sessions_lock:
+            if conversation_id not in self._chat_sessions:
+                system_instruction = SYSTEM_INSTRUCTIONS.get(
+                    instruction_type,
+                    SYSTEM_INSTRUCTIONS['default']
+                )
+                
+                self._chat_sessions[conversation_id] = ChatSession(
+                    client=self.client,
+                    model_id=self.model_id,
+                    config=self.config,
+                    system_instruction=system_instruction
+                )
+                
+                logger.info("Created chat session for conversation %s", conversation_id)
+            
+            return self._chat_sessions[conversation_id]
+    
+    def clear_chat_session(self, conversation_id: str) -> None:
+        """
+        Xóa chat session
+        
+        Args:
+            conversation_id: ID của conversation
+        """
+        with self._sessions_lock:
+            if conversation_id in self._chat_sessions:
+                del self._chat_sessions[conversation_id]
+                logger.info("Cleared chat session for conversation %s", conversation_id)
+    
+    def generate_response_with_session(
+        self,
+        conversation_id: str,
+        user_message: str,
+        instruction_type: str = 'default'
+    ) -> str:
+        """
+        Tạo response sử dụng chat session (có memory)
+        
+        Args:
+            conversation_id: ID của conversation
+            user_message: Tin nhắn từ người dùng
+            instruction_type: Loại instruction
+        
+        Returns:
+            Response text từ AI
+        """
+        try:
+            # Validate input
+            self.validator.validate_message(user_message)
+            
+            # Get or create chat session
+            chat_session = self.get_or_create_chat_session(conversation_id, instruction_type)
+            
+            # Send message through session (history tự động được lưu)
+            logger.debug("Sending message to chat session %s", conversation_id)
+            response_text = chat_session.send_message(user_message)
+            
+            if not response_text or not response_text.strip():
+                logger.warning("Empty response text")
+                raise EmptyResponseError("AI trả về nội dung trống")
+            
+            logger.info("Generated response: %d characters (with session)", len(response_text))
+            return response_text.strip()
+                
+        except (ValidationError, EmptyResponseError):
+            raise
+        except Exception as e:
+            logger.error("Error in generate_response_with_session: %s", str(e), exc_info=True)
+            raise GeminiAPIError(f"Lỗi khi gọi AI: {str(e)}") from e
     
     def generate_response(
         self,
