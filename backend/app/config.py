@@ -128,4 +128,3 @@ class TestingConfig(Config):
     """Cấu hình cho môi trường testing"""
     DEBUG = True
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'

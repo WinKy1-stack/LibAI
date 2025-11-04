@@ -5,8 +5,8 @@ Refactored version - sử dụng Validator và Formatter
 import logging
 import threading
 from typing import List, Dict, Optional, Any
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from google import genai
+from google.genai import types
 
 from app.services.prompt.config import ChatConfig, SYSTEM_INSTRUCTIONS
 from app.services.exceptions import (
@@ -30,8 +30,8 @@ class PromptService:
             self.config = config or ChatConfig.from_env()
             self.config.validate()
             
-            # Configure Gemini với SDK cũ
-            genai.configure(api_key=self.config.gemini_api_key)
+            # Configure Gemini với SDK mới (google-genai)
+            self.client = genai.Client(api_key=self.config.gemini_api_key)
             self.model_id = self.config.gemini_model
             
             # Khởi tạo validator và formatter
@@ -51,7 +51,7 @@ class PromptService:
                        self.config.gemini_api_key[-4:])
             logger.info("✓ Temperature: %.2f", self.config.temperature)
             logger.info("✓ Max Tokens: %d", self.config.max_output_tokens)
-            logger.info("✓ Gemini API configured successfully")
+            logger.info("✓ Gemini API configured successfully with new SDK")
             logger.info("=" * 60)
             
         except ValueError as e:
@@ -99,92 +99,18 @@ class PromptService:
             logger.debug("Calling Gemini API with %d messages", len(contents))
             response = self._call_gemini_api(contents, system_instruction)
             
-            # Validate response and handle finish_reason
+            # Validate response
             if not response:
                 logger.warning("Received null response from Gemini API")
                 raise EmptyResponseError()
             
-            # Check candidates và finish_reason
-            if not response.candidates:
-                logger.warning("No candidates in response")
-                raise EmptyResponseError("AI không thể tạo phản hồi")
-            
-            candidate = response.candidates[0]
-            finish_reason = candidate.finish_reason
-            
-            # Log finish_reason for debugging
-            logger.debug("Finish reason: %s (type: %s)", finish_reason, type(finish_reason))
-            
-            # Handle different finish reasons
-            # FinishReason enum values:
-            # FINISH_REASON_UNSPECIFIED = 0
-            # STOP = 1 (normal completion)
-            # MAX_TOKENS = 2
-            # SAFETY = 3 (blocked by safety filters)
-            # RECITATION = 4
-            # OTHER = 5
-            
-            # Convert enum to int for comparison (nếu là enum)
-            try:
-                finish_reason_value = int(finish_reason)
-            except (ValueError, TypeError):
-                # Nếu không convert được thì dùng name
-                finish_reason_name = str(finish_reason)
-                logger.warning("finish_reason type: %s, value: %s", type(finish_reason), finish_reason_name)
-                
-                if 'SAFETY' in finish_reason_name:
-                    logger.warning("Response blocked by safety filters")
-                    safety_ratings = candidate.safety_ratings if hasattr(candidate, 'safety_ratings') else []
-                    logger.debug("Safety ratings: %s", safety_ratings)
-                    raise GeminiAPIError(
-                        "Xin lỗi, câu hỏi của bạn có thể chứa nội dung không phù hợp. "
-                        "Vui lòng thử lại với câu hỏi khác."
-                    )
-                
-                if 'MAX_TOKENS' in finish_reason_name:
-                    logger.warning("Response truncated due to max tokens")
-                
-                if 'STOP' not in finish_reason_name and 'MAX_TOKENS' not in finish_reason_name:
-                    logger.warning("Unexpected finish_reason: %s", finish_reason_name)
-            else:
-                # Handle as integer
-                if finish_reason_value == 3:  # SAFETY
-                    logger.warning("Response blocked by safety filters")
-                    safety_ratings = candidate.safety_ratings if hasattr(candidate, 'safety_ratings') else []
-                    logger.debug("Safety ratings: %s", safety_ratings)
-                    raise GeminiAPIError(
-                        "Xin lỗi, câu hỏi của bạn có thể chứa nội dung không phù hợp. "
-                        "Vui lòng thử lại với câu hỏi khác."
-                    )
-                
-                if finish_reason_value == 2:  # MAX_TOKENS
-                    logger.warning("Response truncated due to max tokens")
-                
-                if finish_reason_value not in [1, 2]:  # Not STOP or MAX_TOKENS
-                    logger.warning("Unexpected finish_reason: %s", finish_reason_value)
-            
-            # Try to get text
+            # Với SDK mới, response có thuộc tính text trực tiếp
             try:
                 response_text = response.text
             except (ValueError, AttributeError) as e:
                 logger.error("Cannot access response.text: %s", str(e))
                 logger.debug("Response object: %s", response)
-                logger.debug("Candidate: %s", candidate)
-                logger.debug("Candidate content: %s", candidate.content if hasattr(candidate, 'content') else 'N/A')
-                logger.debug("Candidate parts: %s", candidate.content.parts if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts') else 'N/A')
-                
-                # Try to get from parts directly
-                if hasattr(candidate, 'content') and candidate.content and hasattr(candidate.content, 'parts') and candidate.content.parts:
-                    parts_with_text = [part for part in candidate.content.parts if hasattr(part, 'text')]
-                    if parts_with_text:
-                        response_text = ''.join(part.text for part in parts_with_text)
-                        logger.info("Successfully extracted text from parts: %d chars", len(response_text))
-                    else:
-                        logger.error("No parts with text attribute found")
-                        raise EmptyResponseError("AI không trả về nội dung hợp lệ") from e
-                else:
-                    logger.error("No valid content.parts in candidate")
-                    raise EmptyResponseError("AI không trả về nội dung hợp lệ") from e
+                raise EmptyResponseError("AI không trả về nội dung hợp lệ") from e
             
             if not response_text or not response_text.strip():
                 logger.warning("Empty response text")
@@ -282,38 +208,53 @@ class PromptService:
         contents: List[Dict[str, Any]],
         system_instruction: str
     ) -> Any:
-        """Call Gemini API với SDK cũ (google-generativeai 0.8.3)"""
+        """Call Gemini API với SDK mới (google-genai)"""
         try:
-            # SDK cũ dùng GenerativeModel với safety settings
-            # Sử dụng dict format cho safety_settings
-            safety_settings = {
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-            }
+            # SDK mới: from google import genai
+            # Cấu hình safety settings
+            safety_settings = [
+                types.SafetySetting(
+                    category='HARM_CATEGORY_HARASSMENT',
+                    threshold='BLOCK_MEDIUM_AND_ABOVE'
+                ),
+                types.SafetySetting(
+                    category='HARM_CATEGORY_HATE_SPEECH',
+                    threshold='BLOCK_MEDIUM_AND_ABOVE'
+                ),
+                types.SafetySetting(
+                    category='HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                    threshold='BLOCK_MEDIUM_AND_ABOVE'
+                ),
+                types.SafetySetting(
+                    category='HARM_CATEGORY_DANGEROUS_CONTENT',
+                    threshold='BLOCK_MEDIUM_AND_ABOVE'
+                ),
+            ]
             
-            model = genai.GenerativeModel(
-                model_name=self.model_id,
+            # Generation config
+            generation_config = types.GenerateContentConfig(
+                temperature=self.config.temperature,
+                max_output_tokens=self.config.max_output_tokens,
+                top_p=self.config.top_p,
+                top_k=self.config.top_k,
                 system_instruction=system_instruction,
                 safety_settings=safety_settings
             )
             
-            #  HIỆN TẠI ĐANG DÙNG THƯ VIỆN CŨ CỦA GOOGLE, ĐÂY CHỈ LÀ MẪU MINH HỌA
-            #  VUI LÒNG THAY THẾ BẰNG THƯ VIỆN MỚI KHI CÓ SẴN
-            # from google import genai
-
-            chat = model.start_chat()
-
-            response = chat.send_message(
-                contents=contents,
-                generation_config={
-                    'temperature': self.config.temperature,
-                    'max_output_tokens': self.config.max_output_tokens,
-                    'top_p': self.config.top_p,
-                    'top_k': self.config.top_k,
-                }
+            # Tách lịch sử và message cuối
+            current_message = contents[-1]['parts'][0] if contents else ""
+            
+            # Với SDK mới, nếu có history thì cần xử lý khác
+            # Hiện tại chỉ gửi message đơn với system instruction
+            # TODO: Implement chat history properly với SDK mới
+            
+            # Generate content với SDK mới
+            response = self.client.models.generate_content(
+                model=self.model_id,
+                contents=current_message,
+                config=generation_config
             )
+            
             return response
         except Exception as e:
             logger.error("Gemini API call failed: %s", str(e), exc_info=True)
@@ -321,19 +262,17 @@ class PromptService:
 
 
 # Singleton pattern với class để tránh global statement
+_singleton_lock = threading.Lock()
+
 class PromptServiceSingleton:
     """Singleton container cho PromptService"""
     _instance: Optional[PromptService] = None
-    _lock: Optional[threading.Lock] = None
     
     @classmethod
     def get_instance(cls, config: Optional[ChatConfig] = None) -> PromptService:
         """Lấy instance của PromptService (Thread-safe)"""
-        if cls._lock is None:
-            cls._lock = threading.Lock()
-        
         if cls._instance is None:
-            with cls._lock:
+            with _singleton_lock:
                 if cls._instance is None:
                     logger.info("Initializing PromptService singleton")
                     cls._instance = PromptService(config)
@@ -343,8 +282,9 @@ class PromptServiceSingleton:
     @classmethod
     def reset(cls) -> None:
         """Reset singleton instance (dùng cho testing)"""
-        cls._instance = None
-        logger.info("PromptService singleton reset")
+        with _singleton_lock:
+            cls._instance = None
+            logger.info("PromptService singleton reset")
 
 
 def get_prompt_service(config: Optional[ChatConfig] = None) -> PromptService:

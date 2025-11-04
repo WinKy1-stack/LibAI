@@ -1,10 +1,12 @@
 """
-Example routes with role-based authorization
+Example routes with role-based authorization (MongoDB Version)
 """
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.decorators import admin_required, librarian_required, role_required
-from app.models.user import User, UserRole
+from app.models.mongodb_schemas import UserRole
+from app.utils.mongo_helper import MongoHelper
+from bson import ObjectId
 
 example_bp = Blueprint('example', __name__, url_prefix='/api/example')
 
@@ -18,10 +20,20 @@ def public_route():
 def protected_route():
     """Route yêu cầu đăng nhập, bất kỳ role nào"""
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user = MongoHelper.find_one('users', {'_id': ObjectId(current_user_id)})
+    
+    if not user:
+        return jsonify({'error': 'Không tìm thấy người dùng'}), 404
+    
     return jsonify({
         'message': 'Bạn đã đăng nhập',
-        'user': user.to_dict()
+        'user': {
+            'id': str(user['_id']),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'role': user.get('role'),
+            'student_id': user.get('student_id')
+        }
     }), 200
 
 @example_bp.route('/admin-only', methods=['GET'])
@@ -30,10 +42,19 @@ def protected_route():
 def admin_only_route():
     """Route chỉ dành cho admin"""
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user = MongoHelper.find_one('users', {'_id': ObjectId(current_user_id)})
+    
+    if not user:
+        return jsonify({'error': 'Không tìm thấy người dùng'}), 404
+    
     return jsonify({
         'message': 'Đây là route chỉ dành cho admin',
-        'user': user.to_dict()
+        'user': {
+            'id': str(user['_id']),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'role': user.get('role')
+        }
     }), 200
 
 @example_bp.route('/librarian-access', methods=['GET'])
@@ -42,22 +63,40 @@ def admin_only_route():
 def librarian_route():
     """Route dành cho librarian và admin"""
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user = MongoHelper.find_one('users', {'_id': ObjectId(current_user_id)})
+    
+    if not user:
+        return jsonify({'error': 'Không tìm thấy người dùng'}), 404
+    
     return jsonify({
         'message': 'Đây là route dành cho librarian và admin',
-        'user': user.to_dict()
+        'user': {
+            'id': str(user['_id']),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'role': user.get('role')
+        }
     }), 200
 
 @example_bp.route('/admin-or-user', methods=['GET'])
 @jwt_required()
-@role_required(UserRole.ADMIN, UserRole.USER)
+@role_required(UserRole.ADMIN, UserRole.READER)
 def multi_role_route():
     """Route cho nhiều role cụ thể"""
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user = MongoHelper.find_one('users', {'_id': ObjectId(current_user_id)})
+    
+    if not user:
+        return jsonify({'error': 'Không tìm thấy người dùng'}), 404
+    
     return jsonify({
-        'message': 'Route này cho phép admin và user, nhưng không cho librarian',
-        'user': user.to_dict()
+        'message': 'Route này cho phép admin và reader, nhưng không cho librarian',
+        'user': {
+            'id': str(user['_id']),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'role': user.get('role')
+        }
     }), 200
 
 @example_bp.route('/user-info', methods=['GET'])
@@ -65,17 +104,27 @@ def multi_role_route():
 def get_user_info():
     """Lấy thông tin chi tiết user"""
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user = MongoHelper.find_one('users', {'_id': ObjectId(current_user_id)})
     
     if not user:
         return jsonify({'error': 'Không tìm thấy người dùng'}), 404
     
+    user_role = user.get('role', UserRole.READER.value)
+    
     return jsonify({
-        'user': user.to_dict(),
+        'user': {
+            'id': str(user['_id']),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'role': user_role,
+            'student_id': user.get('student_id'),
+            'major': user.get('major'),
+            'status': user.get('status')
+        },
         'permissions': {
-            'is_admin': user.is_admin(),
-            'is_librarian': user.is_librarian(),
-            'can_manage_books': user.has_role(UserRole.ADMIN, UserRole.LIBRARIAN),
-            'can_manage_users': user.is_admin(),
+            'is_admin': user_role == UserRole.ADMIN.value,
+            'is_librarian': user_role == UserRole.LIBRARIAN.value,
+            'can_manage_books': user_role in [UserRole.ADMIN.value, UserRole.LIBRARIAN.value],
+            'can_manage_users': user_role == UserRole.ADMIN.value,
         }
     }), 200
