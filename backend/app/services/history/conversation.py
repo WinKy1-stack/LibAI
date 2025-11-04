@@ -57,8 +57,11 @@ class ConversationManager:
                 conversation
             )
             
-            logger.info("Created conversation %s for user %s", conversation_id, user_id)
-            return conversation_id
+            # Ensure conversation_id is string (not ObjectId)
+            conversation_id_str = str(conversation_id)
+            
+            logger.info("Created conversation %s for user %s", conversation_id_str, user_id)
+            return conversation_id_str
             
         except Exception as e:
             logger.error("Error creating conversation: %s", str(e))

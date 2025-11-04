@@ -15,7 +15,7 @@ class MongoHelper:
     
     @staticmethod
     def insert_one(collection_name, document):
-        """Insert một document vào collection"""
+        """Insert một document vào collection, trả về string ID"""
         collection = MongoHelper.get_collection(collection_name)
         # Chỉ thêm timestamps nếu chưa có
         if 'created_at' not in document:
@@ -23,7 +23,8 @@ class MongoHelper:
         if 'updated_at' not in document:
             document['updated_at'] = datetime.now(timezone.utc)
         result = collection.insert_one(document)
-        return result.inserted_id
+        # Convert ObjectId to string before returning
+        return str(result.inserted_id)
     
     @staticmethod
     def insert_many(collection_name, documents):

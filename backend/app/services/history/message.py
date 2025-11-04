@@ -58,8 +58,11 @@ class MessageManager:
                 message
             )
             
-            logger.debug("Saved message %s to conversation %s", message_id, conversation_id)
-            return message_id
+            # Ensure message_id is string (not ObjectId)
+            message_id_str = str(message_id)
+            
+            logger.debug("Saved message %s to conversation %s", message_id_str, conversation_id)
+            return message_id_str
             
         except Exception as e:
             logger.error("Error saving message: %s", str(e))
@@ -106,9 +109,10 @@ class MessageManager:
                 conversation_id
             )
             
+            # Ensure IDs are strings (not ObjectId)
             return {
-                'user_message_id': user_msg_id,
-                'assistant_message_id': assistant_msg_id
+                'user_message_id': str(user_msg_id),
+                'assistant_message_id': str(assistant_msg_id)
             }
             
         except Exception as e:

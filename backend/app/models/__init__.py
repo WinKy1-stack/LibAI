@@ -1,6 +1,6 @@
 """
-Database Models
+Database Models (MongoDB Version)
 """
-from app.models.user import User
+# SQL models removed - now using MongoDB with mongodb_schemas.py
 
-__all__ = ['User']
+__all__ = []

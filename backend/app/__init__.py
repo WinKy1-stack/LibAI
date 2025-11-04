@@ -2,16 +2,12 @@
 Khởi tạo Flask application
 """
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_pymongo import PyMongo
 from app.config import Config
 
 # Khởi tạo extensions
-db = SQLAlchemy()
-migrate = Migrate()
 jwt = JWTManager()
 mongo = PyMongo()
 
@@ -24,8 +20,6 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     # Khởi tạo extensions
-    db.init_app(app)
-    migrate.init_app(app, db)
     jwt.init_app(app)
     mongo.init_app(app)
 
