@@ -5,6 +5,7 @@ from app.utils.mongo_helper import MongoHelper
 from bson import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
+from app.exceptions import ValidationError
 
 class UserService:
     """Service xử lý logic liên quan đến User"""
@@ -84,11 +85,11 @@ class UserService:
         """Tạo user mới"""
         # Kiểm tra student_id đã tồn tại chưa
         if MongoHelper.find_one('users', {'student_id': data.get('student_id')}):
-            raise ValueError('Student ID đã tồn tại')
+            raise ValidationError('Student ID đã tồn tại')
 
         # Kiểm tra email đã tồn tại chưa
         if MongoHelper.find_one('users', {'email': data.get('email')}):
-            raise ValueError('Email đã tồn tại')
+            raise ValidationError('Email đã tồn tại')
 
         # Tạo user mới
         new_user = {

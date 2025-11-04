@@ -33,14 +33,14 @@ def create_app(config_class=Config):
     # Đăng ký blueprints
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
-    from app.routes.mongodb_routes import mongodb_bp
     from app.routes.library import library_bp
     from app.routes.library.z3950_routes import z3950_bp
     from app.routes.chat import chat_bp
+    from app.routes.users import users_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(users_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
-    app.register_blueprint(mongodb_bp)  # Legacy books API
     app.register_blueprint(library_bp)  # New library system API
     app.register_blueprint(z3950_bp)    # Z39.50 search API
     app.register_blueprint(chat_bp)     # Chat AI API
@@ -85,5 +85,27 @@ def create_app(config_class=Config):
                 'status': 'error',
                 'message': f'MongoDB connection failed: {str(e)}'
             }, 500
+
+    # Error handlers
+    from app.exceptions import ApiError
+    from flask import jsonify
+
+    @app.errorhandler(ApiError)
+    def handle_api_error(error):
+        response = jsonify({
+            'success': False,
+            'message': error.message
+        })
+        response.status_code = error.status_code
+        return response
+
+    @app.errorhandler(500)
+    def handle_internal_error(error):
+        response = jsonify({
+            'success': False,
+            'message': 'Đã có lỗi xảy ra ở server'
+        })
+        response.status_code = 500
+        return response
 
     return app
