@@ -1,52 +1,55 @@
-import type { ThemeConfig } from 'antd';
+export const lightTheme = {
+  // Backgrounds
+  '--background-primary': '#FFFFFF',
+  '--background-secondary': '#F7F7F8',
+  '--background-tertiary': '#F0F0F2',
+  '--background-hover': '#EAEAEB',
 
-// Theme cho User trải nghiệm chung (không bắt buộc AntD nhưng giữ cấu trúc đồng nhất)
-export const userTheme: ThemeConfig = {
-  token: {
-    colorPrimary: '#9333ea',
-    colorSuccess: '#22c55e',
-    colorWarning: '#f59e0b',
-    colorError: '#ef4444',
-    colorInfo: '#3b82f6',
+  // Text
+  '--text-primary': '#1A1A1A',
+  '--text-secondary': '#6B6B6E',
+  '--text-placeholder': '#9A9A9C',
+  '--text-link': '#8A2BE2',
 
-    colorBgContainer: '#ffffff',
-    colorBgLayout: '#f8f9fa',
-    colorWhite: '#ffffff',
+  // Borders
+  '--border-primary': '#E0E0E2',
 
-    borderRadius: 12,
+  // Components
+  '--card-background': '#FFFFFF',
+  '--input-background': '#F7F7F8',
+  '--button-primary-bg': 'linear-gradient(to right, #D946EF, #8B5CF6)',
+  '--button-primary-text': '#FFFFFF',
 
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-    fontSize: 14,
-    fontSizeHeading1: 36,
-    fontSizeHeading2: 28,
-    fontSizeHeading3: 22,
-  },
+  // Special
+  '--scrollbar-thumb': '#C5C5C7',
+  '--scrollbar-track': '#F0F0F2',
 };
 
-export const userDarkTheme: ThemeConfig = {
-  token: {
-    colorPrimary: '#a855f7',
-    colorSuccess: '#22c55e',
-    colorWarning: '#f59e0b',
-    colorError: '#ef4444',
-    colorInfo: '#60a5fa',
+export const darkTheme = {
+  // Backgrounds
+  '--background-primary': '#1A1A1A',
+  '--background-secondary': '#232323',
+  '--background-tertiary': '#2C2C2E',
+  '--background-hover': '#353537',
 
-    colorBgContainer: '#0f0f10',
-    colorBgLayout: '#0a0a0a',
-    colorBgElevated: '#171717',
-    colorText: '#e5e7eb',
-    colorTextSecondary: '#9ca3af',
-    colorWhite: '#ffffff',
+  // Text
+  '--text-primary': '#F0F0F2',
+  '--text-secondary': '#9A9A9C',
+  '--text-placeholder': '#6B6B6E',
+  '--text-link': '#A020F0',
 
-    borderRadius: 12,
+  // Borders
+  '--border-primary': '#353537',
 
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-    fontSize: 14,
-    fontSizeHeading1: 36,
-    fontSizeHeading2: 28,
-    fontSizeHeading3: 22,
-  },
+  // Components
+  '--card-background': '#232323',
+  '--input-background': '#2C2C2E',
+  '--button-primary-bg': 'linear-gradient(to right, #C026D3, #7C3AED)',
+  '--button-primary-text': '#F0F0F2',
+
+  // Special
+  '--scrollbar-thumb': '#4D4D4F',
+  '--scrollbar-track': '#2C2C2E',
 };
 
-
-
+export type Theme = typeof lightTheme;
