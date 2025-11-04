@@ -75,6 +75,12 @@ class ChatHistoryService:
         """Lấy lịch sử messages của conversation"""
         return MessageManager.get_by_conversation(conversation_id, limit)
     
+    # Validation operations
+    @staticmethod
+    def conversation_belongs_to_user(conversation_id: str, user_id: str) -> bool:
+        """Kiểm tra xem conversation này có thuộc user không"""
+        return ConversationManager.belongs_to_user(conversation_id, user_id)
+    
     # Combined stats
     @staticmethod
     def get_conversation_stats(user_id: Optional[str] = None) -> Dict[str, Any]:

@@ -25,14 +25,46 @@ class EnvConfig:
         api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
             raise ValueError("GEMINI_API_KEY không được cấu hình trong .env")
+        
+        # Get MongoDB URI based on USE_CLOUD_MONGODB flag
+        use_cloud = os.getenv('USE_CLOUD_MONGODB', 'true').lower() == 'true'
+        mongo_uri = os.getenv('MONGO_URI_CLOUD') if use_cloud else os.getenv('MONGO_URI_LOCAL')
+        
+        if not mongo_uri:
+            raise ValueError("MONGO_URI không được cấu hình trong .env")
+        
+        # Get database name
+        mongo_dbname = os.getenv('MONGO_DBNAME', 'library_chatbox')
+        
+        # Ensure database name is in URI
+        if '?' in mongo_uri:
+            # URI has query params, insert database before ?
+            base_uri = mongo_uri.split('?')[0]
+            query_params = mongo_uri.split('?')[1]
+            
+            # Check if database is already in URI
+            if not base_uri.endswith(f'/{mongo_dbname}'):
+                if base_uri.endswith('/'):
+                    mongo_uri = f"{base_uri}{mongo_dbname}?{query_params}"
+                else:
+                    mongo_uri = f"{base_uri}/{mongo_dbname}?{query_params}"
+            else:
+                mongo_uri = f"{base_uri}?{query_params}"
+        else:
+            # No query params
+            if not mongo_uri.endswith(f'/{mongo_dbname}'):
+                if mongo_uri.endswith('/'):
+                    mongo_uri = f"{mongo_uri}{mongo_dbname}"
+                else:
+                    mongo_uri = f"{mongo_uri}/{mongo_dbname}"
 
         return cls(
             SECRET_KEY=os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production'),
             JWT_SECRET_KEY=os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production'),
-            MONGO_URI=os.getenv('MONGO_URI', 'mongodb://localhost:27017/library_chatbox'),
-            MONGO_DBNAME=os.getenv('MONGO_DBNAME', 'library_chatbox'),
+            MONGO_URI=mongo_uri,
+            MONGO_DBNAME=mongo_dbname,
             GEMINI_API_KEY=api_key,
-            GEMINI_MODEL=os.getenv('GEMINI_MODEL', 'gemini-1.5-flash'),
+            GEMINI_MODEL=os.getenv('GEMINI_MODEL', 'gemini-2.0-flash'),
             GEMINI_MAX_TOKENS=int(os.getenv('GEMINI_MAX_TOKENS', '1000')),
             GEMINI_TEMPERATURE=float(os.getenv('GEMINI_TEMPERATURE', '0.7')),
             MAX_BOOKS_IN_CONTEXT=int(os.getenv('MAX_BOOKS_IN_CONTEXT', '30')),

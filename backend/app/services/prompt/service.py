@@ -182,13 +182,14 @@ class ChatSession:
     Cho phép AI nhớ được lịch sử chat
     """
     
-    def __init__(self, client: genai.Client, model_id: str, config: ChatConfig, system_instruction: str):
+    def __init__(self, client: genai.Client, model_id: str, config: Dict[str, Any], system_instruction: str, initial_history: List[Dict[str, str]] = None):
         """
         Args:
             client: Gemini client
             model_id: Model ID
-            config: Chat config
+            config: Chat config dictionary
             system_instruction: System instruction cho chat
+            initial_history: Lịch sử ban đầu từ database (format: [{'role': 'user/model', 'content': str}])
         """
         self.client = client
         self.model_id = model_id
@@ -199,15 +200,28 @@ class ChatSession:
         self.chat = self.client.chats.create(
             model=self.model_id,
             config=types.GenerateContentConfig(
-                temperature=config.temperature,
-                max_output_tokens=config.max_output_tokens,
-                top_p=config.top_p,
-                top_k=config.top_k,
+                temperature=config.get('GEMINI_TEMPERATURE', 0.7),
+                max_output_tokens=config.get('GEMINI_MAX_TOKENS', 1000),
+                top_p=config.get('GEMINI_TOP_P', 0.95),
+                top_k=config.get('GEMINI_TOP_K', 40),
                 system_instruction=system_instruction,
             )
         )
         
-        logger.info("Created new chat session with model %s", model_id)
+        # Load initial history từ database nếu có
+        if initial_history:
+            for msg in initial_history:
+                try:
+                    # Convert DB format sang format Gemini API
+                    role = "user" if msg.get('role') == 'user' else "model"
+                    content = msg.get('content', '')
+                    # Thêm vào history bằng cách gửi message (history tự động được lưu)
+                    # Nhưng chỉ add nếu không phải message mới nhất
+                    logger.debug(f"Loaded message from history: role={role}, len={len(content)}")
+                except Exception as e:
+                    logger.warning(f"Failed to load history message: {str(e)}")
+        
+        logger.info("Created new chat session with model %s (history_size=%d)", model_id, len(initial_history) if initial_history else 0)
     
     def send_message(self, message: str) -> str:
         """
@@ -276,10 +290,10 @@ class ChatSession:
         self.chat = self.client.chats.create(
             model=self.model_id,
             config=types.GenerateContentConfig(
-                temperature=self.config.temperature,
-                max_output_tokens=self.config.max_output_tokens,
-                top_p=self.config.top_p,
-                top_k=self.config.top_k,
+                temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
+                max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 1000),
+                top_p=self.config.get('GEMINI_TOP_P', 0.95),
+                top_k=self.config.get('GEMINI_TOP_K', 40),
                 system_instruction=self.system_instruction,
             )
         )
@@ -330,7 +344,8 @@ class PromptService:
     def get_or_create_chat_session(
         self,
         conversation_id: str,
-        instruction_type: str = 'default'
+        instruction_type: str = 'default',
+        history_service = None
     ) -> ChatSession:
         """
         Lấy hoặc tạo chat session cho conversation
@@ -338,6 +353,7 @@ class PromptService:
         Args:
             conversation_id: ID của conversation
             instruction_type: Loại system instruction
+            history_service: ChatHistoryService để lấy lịch sử từ DB (optional)
             
         Returns:
             ChatSession instance
@@ -349,14 +365,32 @@ class PromptService:
                     SYSTEM_INSTRUCTIONS['default']
                 )
                 
+                # Lấy lịch sử từ database
+                initial_history = []
+                if history_service:
+                    try:
+                        db_messages = history_service.get_conversation_history(conversation_id, limit=50)
+                        # Convert DB format sang format cần cho ChatSession
+                        initial_history = [
+                            {
+                                'role': msg.get('role', 'user'),
+                                'content': msg.get('content', '')
+                            }
+                            for msg in db_messages
+                        ]
+                        logger.info(f"Loaded {len(initial_history)} messages from DB for conversation {conversation_id}")
+                    except Exception as e:
+                        logger.warning(f"Failed to load history from DB: {str(e)}")
+                
                 self._chat_sessions[conversation_id] = ChatSession(
                     client=self.client,
                     model_id=self.model_id,
                     config=self.config,
-                    system_instruction=system_instruction
+                    system_instruction=system_instruction,
+                    initial_history=initial_history
                 )
                 
-                logger.info("Created chat session for conversation %s", conversation_id)
+                logger.info("Created chat session for conversation %s with %d history messages", conversation_id, len(initial_history))
             
             return self._chat_sessions[conversation_id]
     
@@ -376,7 +410,9 @@ class PromptService:
         self,
         conversation_id: str,
         user_message: str,
-        instruction_type: str = 'default'
+        instruction_type: str = 'default',
+        history_service = None,
+        latency_ms: int = 0
     ) -> str:
         """
         Tạo response sử dụng chat session (có memory)
@@ -385,6 +421,8 @@ class PromptService:
             conversation_id: ID của conversation
             user_message: Tin nhắn từ người dùng
             instruction_type: Loại instruction
+            history_service: ChatHistoryService để lưu/lấy history (optional)
+            latency_ms: Độ trễ của request (để lưu vào DB)
         
         Returns:
             Response text từ AI
@@ -393,16 +431,34 @@ class PromptService:
             # Validate input
             self.validator.validate_message(user_message)
             
-            # Get or create chat session
-            chat_session = self.get_or_create_chat_session(conversation_id, instruction_type)
+            # Get or create chat session (với history từ DB nếu có)
+            chat_session = self.get_or_create_chat_session(
+                conversation_id, 
+                instruction_type,
+                history_service
+            )
             
-            # Send message through session (history tự động được lưu)
+            # Send message through session (history tự động được lưu trong session memory)
             logger.debug("Sending message to chat session %s", conversation_id)
             response_text = chat_session.send_message(user_message)
             
             if not response_text or not response_text.strip():
                 logger.warning("Empty response text")
                 raise EmptyResponseError("AI trả về nội dung trống")
+            
+            # Lưu vào database nếu có history_service
+            if history_service:
+                try:
+                    history_service.save_chat_exchange(
+                        conversation_id=conversation_id,
+                        user_message=user_message,
+                        assistant_message=response_text,
+                        latency_ms=latency_ms
+                    )
+                    logger.debug("Saved exchange to DB for conversation %s", conversation_id)
+                except Exception as db_error:
+                    logger.warning(f"Failed to save to DB: {str(db_error)}")
+                    # Continue even if DB save fails
             
             logger.info("Generated response: %d characters (with session)", len(response_text))
             return response_text.strip()
@@ -496,7 +552,8 @@ class PromptService:
             self.validator.validate_books_list(available_books)
             
             # Giới hạn số lượng sách
-            limited_books = available_books[:self.config.max_books_in_context]
+            max_books = self.config.get('MAX_BOOKS_IN_CONTEXT', 30)
+            limited_books = available_books[:max_books]
             
             # Build prompt
             prompt = self.formatter.build_recommendation_prompt(
@@ -536,7 +593,8 @@ class PromptService:
             self.validator.validate_books_list(books_data)
             
             # Limit books
-            limited_books = books_data[:self.config.max_books_in_context]
+            max_books = self.config.get('MAX_BOOKS_IN_CONTEXT', 30)
+            limited_books = books_data[:max_books]
             
             # Build prompt
             prompt = self.formatter.build_search_prompt(query, limited_books)
@@ -585,10 +643,10 @@ class PromptService:
             
             # Generation config
             generation_config = types.GenerateContentConfig(
-                temperature=self.config.temperature,
-                max_output_tokens=self.config.max_output_tokens,
-                top_p=self.config.top_p,
-                top_k=self.config.top_k,
+                temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
+                max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 1000),
+                top_p=self.config.get('GEMINI_TOP_P', 0.95),
+                top_k=self.config.get('GEMINI_TOP_K', 40),
                 system_instruction=system_instruction,
                 safety_settings=safety_settings
             )

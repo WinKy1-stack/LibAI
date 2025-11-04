@@ -6,6 +6,9 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_pymongo import PyMongo
 from app.config import Config
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Khởi tạo extensions
 jwt = JWTManager()
@@ -19,9 +22,34 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Log MongoDB URI (ẩn password)
+    mongo_uri = app.config.get('MONGO_URI', 'NOT SET')
+    if mongo_uri and '@' in mongo_uri:
+        # Hide password in log
+        parts = mongo_uri.split('@')
+        if len(parts) == 2:
+            credentials = parts[0].split('://')[1]
+            if ':' in credentials:
+                user = credentials.split(':')[0]
+                logger.info(f"MongoDB URI configured for user: {user}")
+    else:
+        logger.info(f"MongoDB URI: {mongo_uri}")
+    
     # Khởi tạo extensions
     jwt.init_app(app)
-    mongo.init_app(app)
+    
+    # Khởi tạo MongoDB
+    try:
+        mongo.init_app(app)
+        # Test connection
+        if mongo.db is not None:
+            mongo.db.command('ping')
+            logger.info("MongoDB connected successfully")
+        else:
+            logger.error("MongoDB db is None after init_app")
+    except Exception as e:
+        logger.error(f"MongoDB connection failed: {str(e)}")
+        raise
 
     # Cấu hình CORS chi tiết
     CORS(app,
