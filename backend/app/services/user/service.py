@@ -5,7 +5,7 @@ from app.utils.mongo_helper import MongoHelper
 from bson import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
-from app.exceptions import ValidationError
+from app.exceptions import ValidationError, NotFoundError
 
 class UserService:
     """Service xử lý logic liên quan đến User"""
@@ -31,54 +31,51 @@ class UserService:
     @staticmethod
     def get_user_by_id(user_id):
         """Lấy user theo ID"""
-        try:
-            user = MongoHelper.find_one('users', {'_id': ObjectId(user_id)})
-            if user:
-                return {
-                    'id': str(user['_id']),
-                    'email': user.get('email'),
-                    'name': user.get('name'),
-                    'student_id': user.get('student_id'),
-                    'role': user.get('role'),
-                    'status': user.get('status'),
-                    'major': user.get('major'),
-                    'preferences': user.get('preferences'),
-                    'created_at': user.get('created_at'),
-                    'last_login': user.get('last_login')
-                }
-            return None
-        except:
-            return None
+        user = MongoHelper.find_one('users', {'_id': ObjectId(user_id)})
+        if not user:
+            raise NotFoundError('Không tìm thấy user')
+        return {
+            'id': str(user['_id']),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'student_id': user.get('student_id'),
+            'role': user.get('role'),
+            'status': user.get('status'),
+            'major': user.get('major'),
+            'preferences': user.get('preferences'),
+            'created_at': user.get('created_at'),
+            'last_login': user.get('last_login')
+        }
 
     @staticmethod
     def get_user_by_username(username):
         """Lấy user theo username (student_id)"""
         user = MongoHelper.find_one('users', {'student_id': username})
-        if user:
-            return {
-                'id': str(user['_id']),
-                'email': user.get('email'),
-                'name': user.get('name'),
-                'student_id': user.get('student_id'),
-                'role': user.get('role'),
-                'status': user.get('status')
-            }
-        return None
+        if not user:
+            raise NotFoundError('Không tìm thấy user')
+        return {
+            'id': str(user['_id']),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'student_id': user.get('student_id'),
+            'role': user.get('role'),
+            'status': user.get('status')
+        }
 
     @staticmethod
     def get_user_by_email(email):
         """Lấy user theo email"""
         user = MongoHelper.find_one('users', {'email': email})
-        if user:
-            return {
-                'id': str(user['_id']),
-                'email': user.get('email'),
-                'name': user.get('name'),
-                'student_id': user.get('student_id'),
-                'role': user.get('role'),
-                'status': user.get('status')
-            }
-        return None
+        if not user:
+            raise NotFoundError('Không tìm thấy user')
+        return {
+            'id': str(user['_id']),
+            'email': user.get('email'),
+            'name': user.get('name'),
+            'student_id': user.get('student_id'),
+            'role': user.get('role'),
+            'status': user.get('status')
+        }
 
     @staticmethod
     def create_user(data):
@@ -120,51 +117,47 @@ class UserService:
     @staticmethod
     def update_user(user_id, data):
         """Cập nhật thông tin user"""
-        try:
-            user = MongoHelper.find_one('users', {'_id': ObjectId(user_id)})
-            if not user:
-                return None
+        user = MongoHelper.find_one('users', {'_id': ObjectId(user_id)})
+        if not user:
+            raise NotFoundError('Không tìm thấy user')
 
-            update_data = {}
-            
-            # Cập nhật các trường nếu có
-            if 'email' in data:
-                update_data['email'] = data['email']
-            if 'name' in data:
-                update_data['name'] = data['name']
-            if 'password' in data:
-                update_data['password_hash'] = generate_password_hash(data['password'])
-            if 'status' in data:
-                update_data['status'] = data['status']
-            if 'major' in data:
-                update_data['major'] = data['major']
-            if 'preferences' in data:
-                update_data['preferences'] = data['preferences']
+        update_data = {}
 
-            if update_data:
-                MongoHelper.update_one('users', {'_id': ObjectId(user_id)}, {'$set': update_data})
-            
-            updated_user = MongoHelper.find_one('users', {'_id': ObjectId(user_id)})
-            return {
-                'id': str(updated_user['_id']),
-                'email': updated_user.get('email'),
-                'name': updated_user.get('name'),
-                'student_id': updated_user.get('student_id'),
-                'role': updated_user.get('role'),
-                'status': updated_user.get('status')
-            }
-        except:
-            return None
+        # Cập nhật các trường nếu có
+        if 'email' in data:
+            update_data['email'] = data['email']
+        if 'name' in data:
+            update_data['name'] = data['name']
+        if 'password' in data:
+            update_data['password_hash'] = generate_password_hash(data['password'])
+        if 'status' in data:
+            update_data['status'] = data['status']
+        if 'major' in data:
+            update_data['major'] = data['major']
+        if 'preferences' in data:
+            update_data['preferences'] = data['preferences']
+
+        if update_data:
+            MongoHelper.update_one('users', {'_id': ObjectId(user_id)}, {'$set': update_data})
+
+        updated_user = MongoHelper.find_one('users', {'_id': ObjectId(user_id)})
+        return {
+            'id': str(updated_user['_id']),
+            'email': updated_user.get('email'),
+            'name': updated_user.get('name'),
+            'student_id': updated_user.get('student_id'),
+            'role': updated_user.get('role'),
+            'status': updated_user.get('status')
+        }
 
     @staticmethod
     def delete_user(user_id):
         """Xóa user (soft delete - set status to inactive)"""
-        try:
-            result = MongoHelper.update_one(
-                'users',
-                {'_id': ObjectId(user_id)},
-                {'$set': {'status': 'inactive'}}
-            )
-            return result > 0
-        except:
-            return False
+        result = MongoHelper.update_one(
+            'users',
+            {'_id': ObjectId(user_id)},
+            {'$set': {'status': 'inactive'}}
+        )
+        if result == 0:
+            raise NotFoundError('Không tìm thấy user')
+        return True

@@ -16,13 +16,10 @@ def get_users():
         'data': users
     }), 200
 
-@users_bp.route('/users/<int:user_id>', methods=['GET'])
+@users_bp.route('/users/<string:user_id>', methods=['GET'])
 def get_user(user_id):
     """Lấy thông tin user theo ID"""
     user = UserService.get_user_by_id(user_id)
-    if not user:
-        raise NotFoundError('Không tìm thấy user')
-
     return jsonify({
         'success': True,
         'data': user
@@ -45,14 +42,11 @@ def create_user():
         'data': user
     }), 201
 
-@users_bp.route('/users/<int:user_id>', methods=['PUT'])
+@users_bp.route('/users/<string:user_id>', methods=['PUT'])
 def update_user(user_id):
     """Cập nhật thông tin user"""
     data = request.get_json()
     user = UserService.update_user(user_id, data)
-
-    if not user:
-        raise NotFoundError('Không tìm thấy user')
 
     return jsonify({
         'success': True,
@@ -60,13 +54,10 @@ def update_user(user_id):
         'data': user
     }), 200
 
-@users_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@users_bp.route('/users/<string:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     """Xóa user"""
     success = UserService.delete_user(user_id)
-
-    if not success:
-        raise NotFoundError('Không tìm thấy user')
 
     return jsonify({
         'success': True,
