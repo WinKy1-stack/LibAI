@@ -1,5 +1,4 @@
-import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import { useThemeColors } from '../../../hooks/useThemeColors';
+import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
 
 interface FixedChatInputProps {
   value: string;
@@ -22,8 +21,6 @@ export default function FixedChatInput({
   isAuthenticated,
   isResizing,
 }: FixedChatInputProps) {
-  const colors = useThemeColors();
-
   return (
     <div 
       className="fixed bottom-4"
@@ -36,44 +33,27 @@ export default function FixedChatInput({
         transition: isResizing ? 'none' : 'left 0.3s ease-in-out',
       }}
     >
-      <div 
-        className="rounded-2xl shadow-2xl backdrop-blur-xl border transition-all"
-        style={{
-          background: colors.isDark ? 'rgba(100, 100, 100, 0.3)' : 'rgba(255, 255, 255, 0.98)',
-          borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-          padding: '12px 16px',
-        }}
-      >
+      <div className="rounded-2xl shadow-lg bg-background-primary/80 backdrop-blur-md border border-border-primary p-3">
         <form onSubmit={onSubmit} className="flex items-center gap-3">
-          <span className="text-xl">💬</span>
           <input
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder="Tiếp tục hỏi thêm câu hỏi..."
-            className="flex-1 bg-transparent outline-none text-base placeholder:text-gray-500"
-            style={{
-              color: colors.primaryText,
-            }}
+            className="flex-1 bg-transparent outline-none text-base text-text-primary placeholder:text-text-placeholder"
             disabled={loading}
           />
           <button 
             type="submit"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all"
-            style={{
-              background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
-              color: colors.isDark ? '#ffffff' : '#111827',
-              opacity: !value.trim() || loading ? 0.5 : 1,
-              cursor: !value.trim() || loading ? 'not-allowed' : 'pointer',
-            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all bg-purple-600 text-white
+                       disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-700 active:scale-95"
             disabled={!value.trim() || loading}
           >
             <span className="text-sm">{loading ? 'Đang gửi...' : 'Gửi'}</span>
-            <PaperAirplaneIcon style={{ width: 16, height: 16 }} />
+            <PaperAirplaneIcon className="w-4 h-4" />
           </button>
         </form>
       </div>
     </div>
   );
 }
-
