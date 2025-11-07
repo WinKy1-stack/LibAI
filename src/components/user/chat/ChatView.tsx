@@ -13,7 +13,7 @@ export default function ChatView({ messages, isTyping }: ChatViewProps) {
       <div className="w-full max-w-3xl">
         <ChatMessages messages={messages} isTyping={isTyping} />
         <BookSuggestions />
-        <FeedbackButtons />
+        <FeedbackButtons/>
       </div>
     </div>
   );

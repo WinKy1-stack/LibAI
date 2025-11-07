@@ -20,6 +20,10 @@ export const lightTheme = {
   '--button-primary-bg': 'linear-gradient(to right, #D946EF, #8B5CF6)',
   '--button-primary-text': '#FFFFFF',
 
+  // Gradient colors
+  '--color-primary': '#3B82F6',
+  '--color-accent': '#8B5CF6',
+
   // Special
   '--scrollbar-thumb': '#C5C5C7',
   '--scrollbar-track': '#F0F0F2',
@@ -46,6 +50,10 @@ export const darkTheme = {
   '--input-background': '#2C2C2E',
   '--button-primary-bg': 'linear-gradient(to right, #C026D3, #7C3AED)',
   '--button-primary-text': '#F0F0F2',
+
+  // Gradient colors - softer/lighter for dark mode
+  '--color-primary': '#60A5FA',
+  '--color-accent': '#A78BFA',
 
   // Special
   '--scrollbar-thumb': '#4D4D4F',

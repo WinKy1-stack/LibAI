@@ -24,7 +24,7 @@ export default function ToggleSidebarButton({
     >
       <button
         onClick={onToggle}
-        className="rounded-lg p-2 shadow-md backdrop-blur-lg border transition-all hover:scale-105
+        className="rounded-lg p-2 shadow-md backdrop-blur-lg transition-all hover:scale-105
                    bg-background-secondary/80 border-border-primary text-text-primary"
         title={isOpen ? 'Ẩn lịch sử' : 'Hiện lịch sử'}
       >

@@ -1,10 +1,10 @@
-import { useRef, useEffect } from 'react';
-import { SparklesIcon, UserIcon } from '@heroicons/react/24/solid';
-import { formatTime } from '../utils';
+import { useRef, useEffect } from "react";
+import { SparklesIcon, UserIcon } from "@heroicons/react/24/solid";
+import { formatTime } from "../utils";
 
 export interface ChatMessage {
   id: string;
-  type: 'user' | 'bot';
+  type: "user" | "bot";
   content: string;
   timestamp: Date;
 }
@@ -18,7 +18,7 @@ export default function ChatMessages({ messages, isTyping }: ChatMessagesProps) 
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -26,64 +26,83 @@ export default function ChatMessages({ messages, isTyping }: ChatMessagesProps) 
   }, [messages, isTyping]);
 
   return (
-    <div className="w-full mb-6 py-4 space-y-4">
-      {messages.map((message) => (
-        <div 
-          key={message.id} 
-          className={`flex gap-3 animate-[fadeIn_0.3s_ease-out] ${
-            message.type === 'user' ? 'flex-row-reverse' : 'flex-row'
-          }`}
-        >
-          {/* Avatar */}
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0
-            ${message.type === 'bot'
-              ? 'bg-purple-600'
-              : 'bg-gray-300 dark:bg-gray-600'
-            }`
-          }>
-            {message.type === 'bot'
-              ? <SparklesIcon className="w-5 h-5 text-white" />
-              : <UserIcon className="w-5 h-5 text-gray-800 dark:text-gray-200" />
-            }
-          </div>
+    <div className="w-full mb-6 py-4 space-y-5 transition-colors duration-300">
+      {messages.map((message) => {
+        const isUser = message.type === "user";
 
-          {/* Message Bubble */}
-          <div className={`flex-1 flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] ${
-            message.type === 'user' ? 'items-end' : 'items-start'
-          }`}>
-            <div 
-              className={`py-2.5 px-4 rounded-2xl leading-relaxed text-base break-words
-                ${message.type === 'bot'
-                  ? 'bg-gray-100 dark:bg-gray-700 text-text-primary rounded-bl-lg'
-                  : 'bg-purple-600 text-white rounded-br-lg'
-                }`
-              }
+        return (
+          <div
+            key={message.id}
+            className={`flex gap-3 animate-[fadeIn_0.35s_ease-out] ${
+              isUser ? "flex-row-reverse" : "flex-row"
+            }`}
+          >
+            {/* Avatar */}
+            <div
+              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 
+                shadow-[0_2px_10px_rgba(0,0,0,0.15)] transition-all duration-300
+                ${
+                  isUser
+                    ? "bg-background-tertiary text-text-primary"
+                    : "bg-gradient-to-br from-[#D946EF] to-[#8B5CF6] text-white"
+                }`}
             >
-              {message.content}
+              {isUser ? (
+                <UserIcon className="w-5 h-5" />
+              ) : (
+                <SparklesIcon className="w-5 h-5" />
+              )}
             </div>
-            <span className="text-xs text-text-secondary px-1">
-              {formatTime(message.timestamp)}
-            </span>
+
+            {/* Message Bubble */}
+            <div
+              className={`flex-1 flex flex-col gap-1 max-w-[85%] sm:max-w-[80%] ${
+                isUser ? "items-end" : "items-start"
+              }`}
+            >
+              <div
+                className={`py-2.5 px-4 rounded-2xl text-sm sm:text-[15px] leading-relaxed break-words
+                  transition-all duration-200 shadow-[0_2px_12px_rgba(0,0,0,0.1)]
+                  ${
+                    isUser
+                      ? "bg-gradient-primary text-white rounded-br-md"
+                      : "bg-background-secondary/95 text-text-primary rounded-bl-md shadow-[0_2px_14px_rgba(0,0,0,0.05)]"
+                  }`}
+              >
+                {message.content}
+              </div>
+              <span className="text-xs text-text-secondary px-1 select-none">
+                {formatTime(message.timestamp)}
+              </span>
+            </div>
           </div>
-        </div>
-      ))}
-      
+        );
+      })}
+
       {/* Typing Indicator */}
       {isTyping && (
         <div className="flex gap-3 mb-2 animate-[fadeIn_0.3s_ease-out]">
-          <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-            <SparklesIcon className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#D946EF] to-[#8B5CF6] flex items-center justify-center shrink-0 text-white shadow-[0_2px_10px_rgba(0,0,0,0.15)]">
+            <SparklesIcon className="w-5 h-5" />
           </div>
           <div className="flex-1 flex flex-col gap-1 max-w-[80%]">
-            <div className="flex gap-1.5 py-3.5 px-4 rounded-2xl rounded-bl-lg bg-gray-100 dark:bg-gray-700 w-fit">
-              <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-[typingDot_1.4s_infinite]"></div>
-              <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-[typingDot_1.4s_infinite]" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-[typingDot_1.4s_infinite]" style={{ animationDelay: '0.4s' }}></div>
+            <div className="flex items-center gap-1.5 py-3 px-4 rounded-2xl rounded-bl-md 
+                            bg-background-secondary/95 shadow-[0_2px_12px_rgba(0,0,0,0.08)]
+                            transition-all duration-300">
+              <span className="w-2 h-2 bg-text-secondary/60 rounded-full animate-[bounce_1.1s_infinite_cubic-bezier(0.55,0,0.45,1)]" />
+              <span
+                className="w-2 h-2 bg-text-secondary/60 rounded-full animate-[bounce_1.1s_infinite_cubic-bezier(0.55,0,0.45,1)]"
+                style={{ animationDelay: "0.18s" }}
+              />
+              <span
+                className="w-2 h-2 bg-text-secondary/60 rounded-full animate-[bounce_1.1s_infinite_cubic-bezier(0.55,0,0.45,1)]"
+                style={{ animationDelay: "0.36s" }}
+              />
             </div>
           </div>
         </div>
       )}
-      
+
       <div ref={chatMessagesEndRef} />
     </div>
   );

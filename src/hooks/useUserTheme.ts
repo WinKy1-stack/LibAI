@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { theme as antdTheme } from 'antd';
-import { userTheme, userDarkTheme } from '../config/userTheme';
-import type { ThemeConfig } from 'antd';
+import { useState, useEffect } from 'react';
+import { lightTheme, darkTheme } from '../config/userTheme';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -9,82 +7,79 @@ interface UseUserThemeReturn {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
   toggleMode: () => void;
-  themeConfig: ThemeConfig;
 }
 
 export function useUserTheme(): UseUserThemeReturn {
-  const [mode, setModeState] = useState<ThemeMode>(() => {
-    const savedTheme = localStorage.getItem('user-theme');
-    return (savedTheme === 'dark' || savedTheme === 'light') ? savedTheme : 'dark';
-  });
-
-  useEffect(() => {
-    localStorage.setItem('user-theme', mode);
-    document.documentElement.setAttribute('data-theme', mode);
-    
-    // Thêm/xóa class 'dark' cho Tailwind
-    if (mode === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [mode]);
-
-  // Lắng nghe thay đổi từ các component khác (như TopBar)
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user-theme' && e.newValue) {
-        const newMode = e.newValue as ThemeMode;
-        if (newMode === 'dark' || newMode === 'light') {
-          setModeState(newMode);
-        }
-      }
-    };
-
-    // Lắng nghe custom event cho same-window changes
-    const handleCustomThemeChange = (e: Event) => {
-      const customEvent = e as CustomEvent<ThemeMode>;
-      if (customEvent.detail === 'dark' || customEvent.detail === 'light') {
-        setModeState(customEvent.detail);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('theme-change', handleCustomThemeChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('theme-change', handleCustomThemeChange);
-    };
-  }, []);
-
-  const themeConfig = useMemo(() => {
-    const baseTheme = mode === 'dark' ? userDarkTheme : userTheme;
-    return {
-      ...baseTheme,
-      algorithm: mode === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-    } as ThemeConfig;
-  }, [mode]);
-
-  const toggleMode = () => {
-    setModeState((prev) => {
-      const newMode = prev === 'light' ? 'dark' : 'light';
-      // Dispatch event
-      const event = new CustomEvent('theme-change', { detail: newMode });
-      window.dispatchEvent(event);
-      return newMode;
-    });
+  // --- INIT: Lấy theme từ localStorage hoặc mặc định ---
+  const getInitialMode = (): ThemeMode => {
+    if (typeof window === 'undefined') return 'dark';
+    const saved = localStorage.getItem('user-theme');
+    return saved === 'light' || saved === 'dark' ? saved : 'dark';
   };
 
-  const setMode = (newMode: ThemeMode) => {
-    setModeState(newMode);
-    // Dispatch event
+  const [mode, setModeState] = useState<ThemeMode>(getInitialMode);
+
+  // --- Apply theme ngay khi init ---
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', mode);
+    root.classList.toggle('dark', mode === 'dark');
+    
+    // Apply CSS variables on initial load
+    const themeVars = mode === 'dark' ? darkTheme : lightTheme;
+    Object.entries(themeVars).forEach(([key, value]) => {
+      root.style.setProperty(key, value as string);
+    });
+  }, [mode]);
+
+  // --- Function áp dụng và đồng bộ theme ---
+  const applyTheme = (newMode: ThemeMode) => {
+    const root = document.documentElement;
+    localStorage.setItem('user-theme', newMode);
+    root.setAttribute('data-theme', newMode);
+    root.classList.toggle('dark', newMode === 'dark');
+
+    // Apply CSS variables to root
+    const themeVars = newMode === 'dark' ? darkTheme : lightTheme;
+    Object.entries(themeVars).forEach(([key, value]) => {
+      root.style.setProperty(key, value as string);
+    });
+
     const event = new CustomEvent('theme-change', { detail: newMode });
     window.dispatchEvent(event);
   };
 
-  return { mode, setMode, toggleMode, themeConfig };
+  // --- Update khi user chuyển mode ---
+  useEffect(() => {
+    applyTheme(mode);
+  }, [mode]);
+
+  // --- Lắng nghe thay đổi giữa tab hoặc component ---
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'user-theme' && e.newValue) {
+        const val = e.newValue as ThemeMode;
+        if (val === 'light' || val === 'dark') setModeState(val);
+      }
+    };
+
+    const handleCustom = (e: Event) => {
+      const val = (e as CustomEvent<ThemeMode>).detail;
+      if (val === 'light' || val === 'dark') setModeState(val);
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('theme-change', handleCustom);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('theme-change', handleCustom);
+    };
+  }, []);
+
+  // --- Toggle & Set mode ---
+  const toggleMode = () =>
+    setModeState((prev) => (prev === 'light' ? 'dark' : 'light'));
+  const setMode = (val: ThemeMode) => setModeState(val);
+
+  return { mode, setMode, toggleMode };
 }
-
-
-

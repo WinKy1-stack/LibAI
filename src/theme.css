@@ -1,0 +1,145 @@
+/* Global theme variables and dark mode styles */
+
+:root {
+  /* Light theme - default */
+  --background-primary: #FFFFFF;
+  --background-secondary: #F7F7F8;
+  --background-tertiary: #F0F0F2;
+  --background-hover: #EAEAEB;
+
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6E;
+  --text-placeholder: #9A9A9C;
+  --text-link: #8A2BE2;
+
+  --border-primary: #84849628;
+
+  --card-background: #FFFFFF;
+  --input-background: #F7F7F8;
+  --button-primary-bg: linear-gradient(to right, #D946EF, #8B5CF6);
+  --button-primary-text: #FFFFFF;
+  --button-text: #FFFFFF;
+
+  /* Gradient colors for light mode */
+  --color-primary: #3B82F6;
+  --color-accent: #8B5CF6;
+
+  --scrollbar-thumb: #C5C5C7;
+  --scrollbar-track: #F0F0F2;
+}
+
+:root.dark {
+  /* Dark theme */
+  --background-primary: #1A1A1A;
+  --background-secondary: #232323;
+  --background-tertiary: #2C2C2E;
+  --background-hover: #353537;
+
+  --text-primary: #F0F0F2;
+  --text-secondary: #9A9A9C;
+  --text-placeholder: #6B6B6E;
+  --text-link: #A020F0;
+
+  --border-primary: #353537;
+
+  --card-background: #232323;
+  --input-background: #2C2C2E;
+  --button-primary-bg: linear-gradient(to right, #C026D3, #7C3AED);
+  --button-primary-text: #F0F0F2;
+  --button-text: #F0F0F2;
+
+  /* Gradient colors for dark mode - softer/lighter versions */
+  --color-primary: #60A5FA;
+  --color-accent: #A78BFA;
+
+  --scrollbar-thumb: #404043;
+  --scrollbar-track: #2C2C2E;
+}
+
+/* Apply theme colors using CSS variables */
+body {
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+}
+
+/* Tailwind utilities - override with CSS variables */
+.bg-background-primary {
+  background-color: var(--background-primary) !important;
+}
+
+.bg-background-secondary {
+  background-color: var(--background-secondary) !important;
+}
+
+.bg-background-tertiary {
+  background-color: var(--background-tertiary) !important;
+}
+
+.bg-background-hover {
+  background-color: var(--background-hover) !important;
+}
+
+.text-text-primary {
+  color: var(--text-primary) !important;
+}
+
+.text-text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-text-placeholder {
+  color: var(--text-placeholder) !important;
+}
+
+.text-text-link {
+  color: var(--text-link) !important;
+}
+
+.bg-card-background {
+  background-color: var(--card-background) !important;
+}
+
+.bg-input-background {
+  background-color: var(--input-background) !important;
+}
+
+.hover\:bg-background-hover:hover {
+  background-color: var(--background-hover) !important;
+}
+
+.hover\:text-text-primary:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--scrollbar-track);
+}
+
+/* Theme-aware custom utilities */
+.ring-border-primary {
+  --tw-ring-color: var(--border-primary) !important;
+}
+
+.text-button-text {
+  color: var(--button-text) !important;
+}
+
+.bg-button-primary {
+  background: var(--button-primary-bg) !important;
+  color: var(--button-primary-text) !important;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(90deg, #D946EF, #8B5CF6, #D946EF);
+  background-size: 200% 200%;
+}
+
+.borrow-button {
+  background: #f7aa05 !important;
+  color: var(--button-primary-text) !important;
+}
