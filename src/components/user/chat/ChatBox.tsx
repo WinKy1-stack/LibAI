@@ -1,13 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { useChatContext } from '../../../hooks/useChatContext';
-import ChatMessages from './ChatMessages';
-import type { ChatMessage as LocalChatMessage } from './ChatMessages';
+import { useState, useRef, useEffect } from "react";
+import { useChatContext } from "../../../hooks/useChatContext";
+import ChatMessages from "./ChatMessages";
+import type { ChatMessage as LocalChatMessage } from "./ChatMessages";
 import {
   PaperAirplaneIcon,
   XMarkIcon,
   ArrowPathIcon,
   ClockIcon,
-} from '@heroicons/react/24/outline';
+  ChatBubbleLeftEllipsisIcon,
+} from "@heroicons/react/24/outline";
 
 interface ChatBoxProps {
   onClose?: () => void;
@@ -25,142 +26,135 @@ export default function ChatBox({ onClose, context }: ChatBoxProps) {
     endConversation,
   } = useChatContext();
 
-  const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [inputMessage, setInputMessage] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Convert history messages to local format
   const localMessages: LocalChatMessage[] = historyMessages.map((msg, index) => ({
     id: `${msg.timestamp || Date.now()}-${index}`,
-    type: msg.role === 'user' ? 'user' : 'bot',
+    type: msg.role === "user" ? "user" : "bot",
     content: msg.content,
     timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
   }));
 
-  // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  // Handle send message
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || loading) return;
-
     const messageToSend = inputMessage.trim();
-    setInputMessage('');
-    setIsTyping(true);
-
+    setInputMessage("");
     try {
       await sendMessage(messageToSend, context);
     } catch (err) {
-      console.error('Failed to send message:', err);
-    } finally {
-      setIsTyping(false);
+      console.error("Failed to send message:", err);
     }
   };
 
-  // Handle key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  // Handle new conversation
   const handleNewConversation = async () => {
     if (conversationId) {
       try {
         await endConversation();
       } catch (err) {
-        console.error('Failed to end conversation:', err);
+        console.error("Failed to end conversation:", err);
       }
     }
     startNewConversation();
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="flex flex-col h-full bg-background-primary rounded-2xl shadow-2xl overflow-hidden border border-border-primary/50">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white border-b border-purple-700">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-background-secondary/90 to-background-primary/80 border-b border-border-primary/60 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-            <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24">
-              <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
-            </svg>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shadow-inner">
+            <ClockIcon className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-base font-semibold">Chat Assistant</h3>
+            <h3 className="text-base font-semibold text-text-primary">
+              Trợ lý AI
+            </h3>
             {conversationId && (
-              <p className="text-xs opacity-90 flex items-center gap-1">
-                <ClockIcon className="w-3 h-3" />
-                <span>{localMessages.length} messages</span>
+              <p className="text-xs text-text-secondary">
+                {localMessages.length} tin nhắn
               </p>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* New Conversation Button */}
+        <div className="flex items-center gap-1">
           <button
-            className="p-2 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 rounded-lg text-text-secondary hover:bg-background-hover transition-all active:scale-95 disabled:opacity-50"
             onClick={handleNewConversation}
-            title="New conversation"
+            title="Cuộc trò chuyện mới"
             disabled={loading}
           >
-            <ArrowPathIcon className="w-5 h-5" />
+            <ArrowPathIcon className="w-4 h-4" />
           </button>
-          
-          {/* Close Button */}
+
           {onClose && (
-            <button 
-              className="p-2 rounded-lg hover:bg-white/20 transition-colors" 
-              onClick={onClose} 
-              title="Close"
+            <button
+              className="p-2 rounded-lg text-text-secondary hover:bg-background-hover transition-all active:scale-95"
+              onClick={onClose}
+              title="Đóng"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-5 bg-gray-50">
-        {localMessages.length === 0 && !isTyping && (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <svg className="w-12 h-12 opacity-30" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
-            </svg>
-            <p className="mt-3 text-sm">Start a conversation</p>
+      <div className="relative flex-1 overflow-y-auto p-4 bg-background-primary scrollbar-thin scrollbar-thumb-border-primary/30 scrollbar-thumb-rounded-md">
+        {localMessages.length === 0 && !loading && (
+          <div className="flex flex-col items-center justify-center h-full text-text-secondary animate-fadeIn">
+            <ChatBubbleLeftEllipsisIcon className="w-12 h-12 opacity-50" />
+            <p className="mt-3 text-sm">Bắt đầu cuộc trò chuyện</p>
           </div>
         )}
-        <ChatMessages messages={localMessages} isTyping={isTyping} />
+        <ChatMessages messages={localMessages} isTyping={loading} />
+
+        {/* subtle top/bottom gradient */}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-background-primary to-transparent" />
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-background-primary to-transparent" />
       </div>
 
-      {/* Error Display */}
+      {/* Error */}
       {error && (
-        <div className="px-5 py-3 bg-red-50 border-t border-b border-red-200 text-red-600 text-sm">
+        <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 border-t border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 text-sm">
           <span>{error}</span>
         </div>
       )}
 
       {/* Input */}
-      <div className="flex items-end gap-3 p-4 bg-white border-t border-gray-200">
+      <div className="flex items-end gap-3 p-3 bg-background-secondary/80 border-t border-border-primary/60 backdrop-blur-md">
         <textarea
           ref={inputRef}
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Type your message..."
-          className="flex-1 min-h-[44px] max-h-[120px] px-4 py-3 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:border-purple-600 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+          placeholder="Nhập tin nhắn của bạn..."
+          className="flex-1 min-h-[44px] max-h-[120px] px-4 py-2.5 bg-input-background border border-border-primary rounded-xl text-sm resize-none
+                     focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                     transition-all duration-200 disabled:bg-background-tertiary"
           rows={1}
           disabled={loading}
         />
         <button
-          className="w-11 h-11 rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 text-white flex items-center justify-center transition-all hover:shadow-lg hover:scale-105 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          className="w-11 h-11 rounded-xl bg-gradient-to-r from-primary to-accent text-white flex items-center justify-center
+                     shadow-md hover:shadow-lg active:scale-95 transition-all
+                     disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={handleSendMessage}
           disabled={!inputMessage.trim() || loading}
+          title="Gửi"
         >
-          <PaperAirplaneIcon className="w-5 h-5" />
+          <PaperAirplaneIcon className="w-5 h-5 -rotate-45" />
         </button>
       </div>
     </div>

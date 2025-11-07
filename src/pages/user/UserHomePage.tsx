@@ -8,7 +8,6 @@ import ConversationSidebar from '../../components/user/chat/ConversationSidebar'
 import ToggleSidebarButton from '../../components/user/layout/ToggleSidebarButton';
 import FixedChatInput from '../../components/user/chat/FixedChatInput';
 import { authService } from '../../services/authService';
-import { useThemeColors } from '../../hooks/useThemeColors';
 
 export default function UserHomePage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,16 +32,6 @@ export default function UserHomePage() {
   } = useChatHistory();
 
   const isAuthenticated = authService.isAuthenticated();
-  const colors = useThemeColors();
-
-  // CRITICAL: Set data-theme attribute on document root để CSS apply đúng
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', colors.mode);
-    // Cleanup khi unmount
-    return () => {
-      document.documentElement.removeAttribute('data-theme');
-    };
-  }, [colors.mode]);
 
   // Handle resize sidebar
   useEffect(() => {
@@ -227,7 +216,6 @@ export default function UserHomePage() {
             currentConversationId={conversationId}
             onSelectConversation={handleSelectConversation}
             onNewConversation={handleNewConversation}
-            themeMode={colors.mode}
           />
           
           {/* Resize Handle */}

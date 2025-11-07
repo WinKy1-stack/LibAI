@@ -8,19 +8,24 @@ export default {
   ],
   theme: {
     extend: {
+      backgroundColor: {
+        'background-primary': 'var(--background-primary)',
+        'background-secondary': 'var(--background-secondary)',
+        'background-tertiary': 'var(--background-tertiary)',
+        'background-hover': 'var(--background-hover)',
+      },
+      textColor: {
+        'text-primary': 'var(--text-primary)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-placeholder': 'var(--text-placeholder)',
+        'text-link': 'var(--text-link)',
+      },
+      borderColor: {
+        'border-primary': 'var(--border-primary)',
+      },
       colors: {
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-        },
+        primary: 'var(--color-primary)',
+        accent: 'var(--color-accent)',
       },
       animation: {
         'fadeIn': 'fadeIn 0.3s ease-in',
@@ -59,8 +64,6 @@ export default {
       },
     },
   },
-  plugins: [
-    require('tailwind-scrollbar')({ nocompatible: true }),
-  ],
+  plugins: [],
 } satisfies Config;
 

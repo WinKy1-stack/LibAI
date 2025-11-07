@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./theme.css";
 
 /* Ensure gradient text works */
 .bg-clip-text {

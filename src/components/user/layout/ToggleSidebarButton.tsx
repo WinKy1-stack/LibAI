@@ -1,5 +1,4 @@
 import { Bars3Icon } from '@heroicons/react/24/outline';
-import { useThemeColors } from '../../../hooks/useThemeColors';
 
 interface ToggleSidebarButtonProps {
   isOpen: boolean;
@@ -14,8 +13,6 @@ export default function ToggleSidebarButton({
   sidebarWidth, 
   isResizing 
 }: ToggleSidebarButtonProps) {
-  const colors = useThemeColors();
-
   return (
     <div 
       className="fixed z-50"
@@ -27,17 +24,12 @@ export default function ToggleSidebarButton({
     >
       <button
         onClick={onToggle}
-        className="rounded-xl px-2 py-2 shadow-md backdrop-blur-xl border transition-all hover:scale-105"
-        style={{
-          background: colors.isDark ? 'rgba(30, 35, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-          color: colors.primaryText,
-        }}
+        className="rounded-lg p-2 shadow-md backdrop-blur-lg transition-all hover:scale-105
+                   bg-background-secondary/80 border-border-primary text-text-primary"
         title={isOpen ? 'Ẩn lịch sử' : 'Hiện lịch sử'}
       >
-        <Bars3Icon className="w-4 h-4" />
+        <Bars3Icon className="w-5 h-5" />
       </button>
     </div>
   );
 }
-

@@ -1,74 +1,65 @@
 import { useState } from 'react';
 import { ChatBox, ConversationHistory, ChatStats } from '../../components/user/chat';
+import { ChatBubbleLeftRightIcon, ClockIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+
+type View = 'chat' | 'history' | 'stats';
 
 export default function ChatHistoryPage() {
-  const [view, setView] = useState<'chat' | 'history' | 'stats'>('chat');
+  const [view, setView] = useState<View>('chat');
+
+  const navItems = [
+    { id: 'chat', label: 'Trò chuyện', icon: ChatBubbleLeftRightIcon },
+    { id: 'history', label: 'Lịch sử', icon: ClockIcon },
+    { id: 'stats', label: 'Thống kê', icon: ChartBarIcon },
+  ];
+
+  const renderContent = () => {
+    switch (view) {
+      case 'chat':
+        return <div className="h-[calc(100vh-200px)]"><ChatBox /></div>;
+      case 'history':
+        return <div className="h-[calc(100vh-200px)]"><ConversationHistory /></div>;
+      case 'stats':
+        return <ChatStats />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Chat with History
-        </h1>
-        <p className="text-gray-600">
-          Chat with AI and view your conversation history
-        </p>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200 pb-2">
-        <button
-          onClick={() => setView('chat')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            view === 'chat'
-              ? 'bg-purple-600 text-white'
-              : 'bg-transparent text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          Chat
-        </button>
-        <button
-          onClick={() => setView('history')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            view === 'history'
-              ? 'bg-purple-600 text-white'
-              : 'bg-transparent text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          History
-        </button>
-        <button
-          onClick={() => setView('stats')}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            view === 'stats'
-              ? 'bg-purple-600 text-white'
-              : 'bg-transparent text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          Statistics
-        </button>
-      </div>
-
-      {/* Content */}
+    <div className="min-h-screen bg-background-secondary text-text-primary p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        {view === 'chat' && (
-          <div className="max-w-3xl mx-auto h-[600px]">
-            <ChatBox />
-          </div>
-        )}
+        {/* Header */}
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold">Lịch sử trò chuyện</h1>
+          <p className="text-text-secondary mt-1">
+            Xem lại, quản lý và phân tích các cuộc trò chuyện của bạn với trợ lý AI.
+          </p>
+        </header>
 
-        {view === 'history' && (
-          <div className="max-w-3xl mx-auto h-[600px]">
-            <ConversationHistory />
-          </div>
-        )}
+        {/* Navigation Tabs */}
+        <nav className="flex items-center border-b border-border-primary mb-6">
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setView(item.id as View)}
+              className={`flex items-center gap-2 px-4 py-3 font-medium text-sm sm:text-base transition-colors duration-200
+                ${view === item.id
+                  ? 'border-b-2 border-purple-600 text-purple-600 dark:text-purple-400 dark:border-purple-400'
+                  : 'text-text-secondary hover:text-text-primary'
+                }`
+              }
+            >
+              <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
 
-        {view === 'stats' && (
-          <div className="max-w-5xl mx-auto">
-            <ChatStats />
-          </div>
-        )}
+        {/* Content */}
+        <main>
+          {renderContent()}
+        </main>
       </div>
     </div>
   );
