@@ -88,7 +88,7 @@ class Config:
 
     # ========== 📚 MongoDB Collections ==========
     COLLECTION_USERS = 'users'
-    COLLECTION_MARC_RECORDS = 'marc_records'
+    COLLECTION_MARC_RECORDS = 'marc_21'
     COLLECTION_ITEMS = 'items'
     COLLECTION_LOANS = 'loans'
     COLLECTION_CONVERSATIONS = 'conversations'

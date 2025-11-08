@@ -198,10 +198,10 @@ def seed_marc_records(db):
     ]
     
     # Clear existing MARC records
-    db.marc_records.delete_many({})
+    db.marc_21.delete_many({})
     
     # Insert MARC records
-    result = db.marc_records.insert_many(marc_records)
+    result = db.marc_21.insert_many(marc_records)
     print(f"✅ Created {len(result.inserted_ids)} MARC records")
     return result.inserted_ids
 

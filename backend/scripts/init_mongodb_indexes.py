@@ -23,22 +23,22 @@ def create_users_indexes():
     print("  ✅ Users indexes created")
 
 def create_marc_records_indexes():
-    """Create indexes for marc_records collection"""
-    print("📝 Creating indexes for 'marc_records'...")
+    """Create indexes for marc_21 collection"""
+    print("📝 Creating indexes for 'marc_21'...")
 
     # Text search index for new schema
-    MongoHelper.create_index('marc_records', [
+    MongoHelper.create_index('marc_21', [
         ('title.main', 'text'),
         ('title.subtitle', 'text'),
         ('contributors.name', 'text'),
         ('subjects.term', 'text')
     ])
 
-    MongoHelper.create_index('marc_records', [('publication.year', 1), ('publication.publisher', 1)])
-    MongoHelper.create_index('marc_records', [('record_id', 1)], unique=True)
-    MongoHelper.create_index('marc_records', [('identifiers.isbn.value', 1)])
-    MongoHelper.create_index('marc_records', [('subjects.term', 1)])
-    MongoHelper.create_index('marc_records', [('contributors.name', 1)])
+    MongoHelper.create_index('marc_21', [('publication.year', 1), ('publication.publisher', 1)])
+    MongoHelper.create_index('marc_21', [('record_id', 1)], unique=True)
+    MongoHelper.create_index('marc_21', [('identifiers.isbn.value', 1)])
+    MongoHelper.create_index('marc_21', [('subjects.term', 1)])
+    MongoHelper.create_index('marc_21', [('contributors.name', 1)])
 
     print("  ✅ MARC records indexes created")
 
@@ -169,7 +169,7 @@ def list_all_indexes():
     print("\n📊 Index Summary:")
     
     collections = [
-        'users', 'marc_records', 'items', 'loans', 
+        'users', 'marc_21', 'items', 'loans', 
         'conversations', 'messages', 'faq', 'documents',
         'recommend_events', 'metrics', 'admin_configs',
         'z3950_cache', 'oai_records', 'sip2_events', 'auth_sessions'

@@ -6,7 +6,7 @@ def search_in_mongo(keyword: str, field: str = "any"):
     """Tìm kiếm trong MongoDB theo cấu trúc MARCJSON."""
     client = MongoClient(Config.MONGO_URI)
     db = client[Config.MONGO_DBNAME]
-    collection = db[Config.COLLECTION_MARC_RECORDS]
+    collection = db[Config.COLLECTION_MARC_RECORDS]  # Uses marc_21
     field_map = {
         "any": [
             "fields.245.a", "fields.245.b",  # title

@@ -18,7 +18,7 @@ stats_bp = Blueprint('stats', __name__)
 def get_stats_overview():
     """Lấy thống kê tổng quan"""
     stats = {
-        'total_marc_records': MongoHelper.count_documents('marc_records', {}),
+        'total_marc_records': MongoHelper.count_documents('marc_21', {}),
         'total_items': MongoHelper.count_documents('items', {}),
         'available_items': MongoHelper.count_documents('items', {'status': ItemStatus.AVAILABLE.value}),
         'ongoing_loans': MongoHelper.count_documents('loans', {'status': LoanStatus.ONGOING.value}),

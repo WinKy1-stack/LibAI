@@ -228,8 +228,8 @@ def seed_marc_records():
         }
     ]
     
-    MongoHelper.delete_many('marc_records', {})
-    record_ids = MongoHelper.insert_many('marc_records', records)
+    MongoHelper.delete_many('marc_21', {})
+    record_ids = MongoHelper.insert_many('marc_21', records)
     print(f"  ✅ Created {len(record_ids)} MARC records")
     return record_ids
 
@@ -579,7 +579,7 @@ def print_statistics():
     
     collections = {
         'users': '👥 Users',
-        'marc_records': '📚 MARC Records',
+        'marc_21': '📚 MARC Records',
         'items': '📖 Items',
         'loans': '📋 Loans',
         'conversations': '💬 Conversations',

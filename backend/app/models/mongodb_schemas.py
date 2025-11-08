@@ -97,7 +97,7 @@ def get_user_schema() -> Dict[str, Any]:
     }
 
 def get_marc_record_schema() -> Dict[str, Any]:
-    """Schema cho collection marc_records (LibraryRecordLite format)"""
+    """Schema cho collection marc_21 (LibraryRecordLite format)"""
     return {
         "record_id": "",  # UUID string
         "title": {
@@ -125,7 +125,7 @@ def get_item_schema() -> Dict[str, Any]:
     Collection 'items' này có thể được dùng cho quản lý chi tiết hơn hoặc deprecated.
     """
     return {
-        "record_id": None,  # UUID string ref to marc_records.record_id (hoặc ObjectId nếu dùng _id)
+        "record_id": None,  # UUID string ref to marc_21.record_id (hoặc ObjectId nếu dùng _id)
         "barcode": "",  # unique
         "status": ItemStatus.AVAILABLE.value,
         "location": {
@@ -203,7 +203,7 @@ def get_recommend_event_schema() -> Dict[str, Any]:
     """Schema cho collection recommend_events"""
     return {
         "user_id": None,  # ObjectId ref to users
-        "record_id": None,  # ObjectId ref to marc_records
+        "record_id": None,  # ObjectId ref to marc_21
         "event": RecommendEvent.VIEW.value,
         "score": 1.0,
         "context": {},  # {"query": "...", "major": "..."}
@@ -246,7 +246,7 @@ def get_oai_record_schema() -> Dict[str, Any]:
         "datestamp": "",
         "setSpec": [],
         "metadata": {},  # MARCXML/DC
-        "mapped_record_id": None,  # ObjectId ref to marc_records
+        "mapped_record_id": None,  # ObjectId ref to marc_21
         "harvest_log": []  # [{"ts": ISODate(), "status": "ok", "note": ""}]
     }
 

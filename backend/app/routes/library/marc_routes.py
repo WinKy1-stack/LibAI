@@ -38,14 +38,14 @@ def get_marc_records():
         query['normalized.subjects'] = subject
 
     records = MongoHelper.find_many(
-        'marc_records',
+        'marc_21',
         query=query,
         sort=[('normalized.year', -1)],
         skip=skip,
         limit=limit
     )
 
-    total = MongoHelper.count_documents('marc_records', query)
+    total = MongoHelper.count_documents('marc_21', query)
 
     return jsonify({
         'records': records,
@@ -59,7 +59,7 @@ def get_marc_records():
 @marc_bp.route('/<record_id>', methods=['GET'])
 def get_marc_record(record_id):
     """Lấy chi tiết một MARC record"""
-    record = MongoHelper.find_one('marc_records', {'_id': record_id})
+    record = MongoHelper.find_one('marc_21', {'_id': record_id})
     if not record:
         raise NotFoundError('Không tìm thấy bản ghi')
 
@@ -85,7 +85,7 @@ def create_marc_record():
         if field not in data:
             raise ValidationError(f'Thiếu trường {field}')
 
-    record_id = MongoHelper.insert_one('marc_records', data)
+    record_id = MongoHelper.insert_one('marc_21', data)
 
     return jsonify({
         'message': 'Tạo MARC record thành công',

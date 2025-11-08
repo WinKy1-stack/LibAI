@@ -192,7 +192,7 @@ class Z3950Service:
 
                     if isbn_values:
                         existing = MongoHelper.find_one(
-                            'marc_records',
+                            'marc_21',
                             {'identifiers.isbn.value': {'$in': isbn_values}}
                         )
 
@@ -202,7 +202,7 @@ class Z3950Service:
                             continue
 
                     # Save new record
-                    MongoHelper.insert_one('marc_records', record)
+                    MongoHelper.insert_one('marc_21', record)
                     stats['saved_to_db'] += 1
                     logger.info(f"Saved new record: {record.get('title', {}).get('main', 'Unknown')}")
 
