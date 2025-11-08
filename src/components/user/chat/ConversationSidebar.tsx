@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChatBubbleLeftRightIcon,
   PlusIcon,
   SparklesIcon,
   FireIcon,
   ArrowPathIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useChatHistory } from "../../../hooks/useChatHistory";
 import type { Conversation } from "../../../services/chatService";
@@ -13,14 +14,22 @@ interface ConversationSidebarProps {
   currentConversationId: string | null;
   onSelectConversation: (conversationId: string) => void;
   onNewConversation: () => void;
+  onConversationDeleted?: (conversationId: string) => void;  // ✅ Callback khi xóa
 }
 
 export default function ConversationSidebar({
   currentConversationId,
   onSelectConversation,
   onNewConversation,
+  onConversationDeleted,
 }: ConversationSidebarProps) {
   const { conversations, loadConversations, loading } = useChatHistory();
+
+  const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
+  const [softDeletedIds, setSoftDeletedIds] = useState<Set<string>>(new Set());
+  const timersRef = useRef<Record<string, number>>({});
+  const [lastDeletedId, setLastDeletedId] = useState<string | null>(null);
+  const [isUndoVisible, setIsUndoVisible] = useState(false);
 
   useEffect(() => {
     loadConversations(50, 0);
@@ -41,13 +50,106 @@ export default function ConversationSidebar({
     return date.toLocaleDateString("vi-VN");
   };
 
+  const visibleConversations = useMemo(() => {
+    if (!softDeletedIds.size) return conversations;
+    return conversations.filter((c: Conversation) => !softDeletedIds.has(c.conversation_id));
+  }, [conversations, softDeletedIds]);
+
+  // ✅ Xóa thật ngay lập tức, không đợi 5s
+  const finalizeDelete = async (id: string) => {
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      
+      const res = await fetch(`/api/conversations/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Delete failed: ${res.status}`);
+      }
+      
+      // ✅ Callback để clear messages ở parent
+      if (onConversationDeleted) {
+        onConversationDeleted(id);
+      }
+      
+      // ✅ Refresh list ngay
+      loadConversations(50, 0);
+    } catch (err) {
+      console.error("❌ Lỗi xóa conversation:", err);
+      undoDelete(id, { silent: true });
+    } finally {
+      if (timersRef.current[id]) {
+        window.clearTimeout(timersRef.current[id]);
+        delete timersRef.current[id];
+      }
+      if (lastDeletedId === id) {
+        setIsUndoVisible(false);
+        setLastDeletedId(null);
+      }
+    }
+  };
+
+  // ✅ Xóa ngay không đợi animation
+  const handleDeleteClick = (id: string) => {
+    // Fade out nhanh
+    setFadingIds((prev) => new Set(prev).add(id));
+    
+    setTimeout(() => {
+      setFadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      
+      // Ẩn khỏi UI
+      setSoftDeletedIds((prev) => new Set(prev).add(id));
+      
+      // ✅ XÓA NGAY, KHÔNG ĐỢI 5s
+      finalizeDelete(id);
+      
+      // Snackbar undo 3s
+      setLastDeletedId(id);
+      setIsUndoVisible(true);
+      const t = window.setTimeout(() => {
+        setIsUndoVisible(false);
+        setLastDeletedId(null);
+      }, 3000);
+      timersRef.current[id] = t;
+    }, 180);
+  };
+
+  const undoDelete = (id: string, opts?: { silent?: boolean }) => {
+    if (timersRef.current[id]) {
+      window.clearTimeout(timersRef.current[id]);
+      delete timersRef.current[id];
+    }
+    setSoftDeletedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    if (!opts?.silent) {
+      if (lastDeletedId === id) {
+        setIsUndoVisible(false);
+        setLastDeletedId(null);
+      }
+    }
+    // ✅ Reload để khôi phục
+    loadConversations(50, 0);
+  };
+
   return (
     <aside
-      className="flex flex-col h-full bg-background-secondary 
+      className="relative flex flex-col h-full bg-background-secondary 
                  shadow-[0_1px_4px_rgba(0,0,0,0.08)] dark:shadow-[0_1px_6px_rgba(0,0,0,0.4)]
                  transition-all duration-300"
     >
-      {/* Header */}
       <div className="px-4 py-4">
         <button
           onClick={onNewConversation}
@@ -60,30 +162,33 @@ export default function ConversationSidebar({
         </button>
       </div>
 
-      {/* Conversation list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
         {loading ? (
           <div className="flex justify-center items-center h-full text-text-secondary">
             <ArrowPathIcon className="w-6 h-6 animate-spin text-color-primary" />
           </div>
-        ) : conversations.length === 0 ? (
+        ) : visibleConversations.length === 0 ? (
           <div className="flex flex-col justify-center items-center h-full text-text-secondary text-center px-4">
             <ChatBubbleLeftRightIcon className="w-10 h-10 opacity-40 mb-3" />
             <p className="text-sm">Chưa có cuộc trò chuyện nào</p>
           </div>
         ) : (
-          conversations.map((c: Conversation) => {
+          visibleConversations.map((c: Conversation) => {
             const active = c.conversation_id === currentConversationId;
+            const isFading = fadingIds.has(c.conversation_id);
+
             return (
               <button
                 key={c.conversation_id}
                 onClick={() => onSelectConversation(c.conversation_id)}
-                className={`group w-full text-left p-3 rounded-xl transition-all duration-200 relative overflow-hidden
-                  ${
-                    active
-                      ? "bg-button-primary shadow-[0_0_0_2px_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_2px_rgba(255,255,255,0.1)]"
-                      : "bg-background-primary/60 hover:bg-background-hover hover:shadow-sm"
-                  }`}
+                className={[
+                  "group w-full text-left p-3 rounded-xl transition-all duration-200 relative overflow-hidden",
+                  active
+                    ? "bg-button-primary shadow-[0_0_0_2px_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_2px_rgba(255,255,255,0.1)]"
+                    : "bg-background-primary/60 hover:bg-background-hover hover:shadow-sm",
+                  "transform transition duration-200 ease-out",
+                  isFading ? "opacity-0 translate-y-1 scale-[0.98] pointer-events-none" : "opacity-100",
+                ].join(" ")}
               >
                 {active && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-button-primary rounded-l-xl shadow-[0_0_6px_rgba(0,0,0,0.1)]" />
@@ -99,9 +204,34 @@ export default function ConversationSidebar({
                   >
                     Cuộc trò chuyện
                   </p>
-                  <span className="text-xs text-text-secondary/80">
-                    {formatDate(c.started_at)}
-                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(c.conversation_id);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteClick(c.conversation_id);
+                        }
+                      }}
+                      className="p-1 rounded-md opacity-70 transition cursor-pointer
+                                 hover:opacity-100 hover:text-red-500 focus:outline-none
+                                 focus:ring-2 focus:ring-red-500/40"
+                      title="Xóa cuộc trò chuyện"
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </div>
+
+                    <span className="text-xs text-text-secondary/80">
+                      {formatDate(c.started_at)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-text-secondary/90 relative z-[1]">
@@ -122,16 +252,42 @@ export default function ConversationSidebar({
         )}
       </div>
 
-      {/* Footer */}
       <footer className="p-4 mt-auto bg-background-tertiary/40 shadow-[0_-2px_6px_rgba(0,0,0,0.05)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.35)]">
         <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg
                         bg-background-secondary/70 backdrop-blur-sm">
           <SparklesIcon className="w-4 h-4 text-color-primary" />
           <p className="text-sm font-medium text-text-primary">
-            {conversations.length} cuộc trò chuyện
+            {visibleConversations.length} cuộc trò chuyện
           </p>
         </div>
       </footer>
+
+      {isUndoVisible && lastDeletedId && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 bottom-4 z-50
+                     rounded-lg px-4 py-2 shadow-md
+                     bg-background-primary text-text-primary
+                     border border-black/5 dark:border-white/10
+                     animate-[fadeIn_150ms_ease-out]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-sm">Đã xóa</span>
+            <button
+              onClick={() => undoDelete(lastDeletedId)}
+              className="text-sm font-semibold underline-offset-2 hover:underline hover:text-color-primary transition"
+            >
+              Hoàn tác
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </aside>
   );
 }
