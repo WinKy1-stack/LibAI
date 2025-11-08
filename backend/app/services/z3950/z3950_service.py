@@ -37,7 +37,7 @@ class Z3950Service:
         source: str,
         query: str,
         query_type: str = "keyword",
-        limit: int = 10,
+        limit: int = 5,
         use_cache: bool = True
     ) -> List[Dict[str, Any]]:
         """
@@ -83,7 +83,7 @@ class Z3950Service:
         self,
         query: str,
         query_type: str = "keyword",
-        limit: int = 10,
+        limit: int = 5,
         use_cache: bool = True
     ) -> Dict[str, List[Dict[str, Any]]]:
         """
@@ -144,7 +144,7 @@ class Z3950Service:
         self,
         query: str,
         query_type: str = "keyword",
-        limit: int = 10,
+        limit: int = 5,
         source: Optional[str] = None,
         save_to_db: bool = True
     ) -> Dict[str, Any]:

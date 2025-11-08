@@ -25,7 +25,7 @@ def search_all_sources():
     Query params:
         - q: Search query (required)
         - type: Query type (isbn, title, author, subject, keyword) - default: keyword
-        - limit: Max results per source - default: 10
+        - limit: Max results per source - default: 5
         - cache: Use cache (true/false) - default: true
         - save: Save new records to DB (true/false) - default: false
 
@@ -38,7 +38,7 @@ def search_all_sources():
             return jsonify({'error': 'Query parameter "q" is required'}), 400
 
         query_type = request.args.get('type', 'keyword')
-        limit = int(request.args.get('limit', 10))
+        limit = int(request.args.get('limit', 5))
         use_cache = request.args.get('cache', 'true').lower() == 'true'
         save_to_db = request.args.get('save', 'false').lower() == 'true'
 
@@ -96,7 +96,7 @@ def search_single_source(source):
     Query params:
         - q: Search query (required)
         - type: Query type - default: keyword
-        - limit: Max results - default: 10
+        - limit: Max results - default: 5
         - cache: Use cache - default: true
         - save: Save new records to DB - default: false
 
@@ -113,7 +113,7 @@ def search_single_source(source):
             return jsonify({'error': 'Query parameter "q" is required'}), 400
 
         query_type = request.args.get('type', 'keyword')
-        limit = int(request.args.get('limit', 10))
+        limit = int(request.args.get('limit', 5))
         use_cache = request.args.get('cache', 'true').lower() == 'true'
         save_to_db = request.args.get('save', 'false').lower() == 'true'
 

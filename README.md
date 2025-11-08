@@ -58,7 +58,3 @@ LibAI là một ứng dụng giàu tính năng được thiết kế để hợp
 - Library of Congress (LOC) Z39.50
 - UW-Madison Z39.50
 - OCLC WorldCat Z39.50 (Optional)
-
-## 📝 Giấy phép
-
-Dự án này được cấp phép theo Giấy phép MIT.

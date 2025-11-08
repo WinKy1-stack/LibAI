@@ -1,159 +1,215 @@
-# Hướng dẫn Docker
+# Hướng Dẫn Chạy Ứng Dụng
 
-Hướng dẫn chi tiết về việc sử dụng Docker và Docker Compose để chạy ứng dụng Library Chatbox System.
+## Chuẩn Bị
 
-## Mục lục
+**Yêu cầu**: 
+- Docker (version 20.10+)
+- Docker Compose (version 2.0+)
 
-- [Giới thiệu](#giới-thiệu)
-- [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
-- [Quick Start](#quick-start)
-- [Docker Compose Services](#docker-compose-services)
-- [Các lệnh Docker thường dùng](#các-lệnh-docker-thường-dùng)
-- [Troubleshooting](#troubleshooting)
-
-## Giới thiệu
-
-Dự án sử dụng Docker Compose để orchestrate các services:
-- **Flask Backend** - API server chạy trên gunicorn
-- **MongoDB** - Database chính
-- **Redis** - Cache cho Z39.50 search
-- **Redis Commander** (optional) - Web UI để quản lý Redis
-
-## Yêu cầu hệ thống
-
-### Cài đặt Docker
-
-**Windows:**
-1. Download [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
-2. Install và khởi động Docker Desktop
-3. Enable WSL 2 backend (khuyến nghị)
-
-**macOS:**
-1. Download [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop)
-2. Install và khởi động Docker Desktop
-
-**Linux (Ubuntu/Debian):**
-\`\`\`bash
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose
-sudo usermod -aG docker $USER
-newgrp docker
+**Kiểm tra cài đặt**:
+```bash
 docker --version
-\`\`\`
+docker-compose --version
+```
 
-## Quick Start
+## Các Bước Chạy
 
-### 1. Setup môi trường
+### 1. Chạy Ứng Dụng
 
-\`\`\`bash
-cd backend
-cp .env.example .env
-nano .env
-\`\`\`
-
-### 2. Start tất cả services
-
-\`\`\`bash
+```bash
+# Build và start tất cả services
 docker-compose up -d
+
+# Nếu build lần đầu, có thể mất vài phút
+# Xem logs để theo dõi tiến trình
 docker-compose logs -f
-\`\`\`
+```
 
-### 3. Kiểm tra
+**Lưu ý**: 
+- Lần đầu build có thể mất 5-10 phút để download images và build
+- Đảm bảo ports 80 (frontend) và 5000 (backend) chưa bị sử dụng
 
-\`\`\`bash
-docker-compose ps
-curl http://localhost:5000/health
-curl http://localhost:5000/api/z3950/health
-\`\`\`
+### 2. Kiểm Tra
 
-### 4. Stop services
+Mở trình duyệt truy cập:
+- **Frontend**: http://localhost
+- **Backend API**: http://localhost:5000/health
 
-\`\`\`bash
+### 3. Dừng Ứng Dụng
+
+```bash
+# Dừng services
 docker-compose down
-\`\`\`
 
-## Docker Compose Services
+# Dừng và xóa dữ liệu
+docker-compose down -v
+```
 
-### Backend (`backend`)
-- **Port:** 5000
-- **Image:** Custom build từ Dockerfile
-- **Command:** gunicorn
-- **Depends on:** mongo, redis
+## Các Lệnh Hữu Ích
 
-### MongoDB (`mongo`)
-- **Port:** 27017
-- **Image:** mongo:7.0
-- **Volume:** mongo-data
+### Xem Logs
 
-### Redis (`redis`)
-- **Port:** 6379
-- **Image:** redis:7.2-alpine
-- **Config:** 256MB max memory, LRU eviction
+```bash
+# Logs tất cả services
+docker-compose logs -f
 
-### Redis Commander (`redis-commander`)
-- **Port:** 8081
-- **Profile:** tools
-- **Start:** docker-compose --profile tools up -d
-
-## Các lệnh Docker thường dùng
-
-### Container Management
-
-\`\`\`bash
-# List containers
-docker ps
-
-# Logs
+# Logs backend
 docker-compose logs -f backend
 
-# Exec
+# Logs 100 dòng cuối
+docker-compose logs --tail=100 backend
+```
+
+### Restart Services
+
+```bash
+# Restart tất cả
+docker-compose restart
+
+# Restart backend
+docker-compose restart backend
+```
+
+### Truy Cập Container
+
+```bash
+# Vào backend shell
 docker-compose exec backend bash
-docker-compose exec mongo mongosh
-docker-compose exec redis redis-cli
-\`\`\`
 
-### Build & Deploy
-
-\`\`\`bash
-docker-compose build
-docker-compose build --no-cache
-docker-compose up -d
-docker-compose down
-\`\`\`
-
-### Database
-
-\`\`\`bash
-# MongoDB
+# Vào MongoDB shell
 docker-compose exec mongo mongosh library_chatbox
 
-# Redis
+# Vào Redis CLI
 docker-compose exec redis redis-cli
-docker-compose exec redis redis-cli KEYS "z3950:*"
-docker-compose exec redis redis-cli FLUSHDB
-\`\`\`
+```
 
-## Troubleshooting
+### Kiểm Tra Trạng Thái
+
+```bash
+# Xem status containers
+docker-compose ps
+
+# Xem resource usage
+docker stats
+
+# Health check
+curl http://localhost:5000/health
+```
+
+## Backup & Restore
+
+### Backup MongoDB
+
+```bash
+# Tạo backup
+docker-compose exec mongo mongodump \
+  --out /data/backup/$(date +%Y%m%d) \
+  --db library_chatbox
+
+# Copy ra host
+docker cp lib-ai-mongo:/data/backup ./backups/
+```
+
+### Restore MongoDB
+
+```bash
+# Restore từ backup
+docker-compose exec mongo mongorestore /data/backup/20240101/library_chatbox
+```
+
+## Xử Lý Lỗi Thường Gặp
+
+### Port đã được sử dụng
+
+```bash
+# Kiểm tra port 80
+sudo lsof -i :80
+
+# Kiểm tra port 5000
+sudo lsof -i :5000
+
+# Kill process
+sudo kill -9 <PID>
+```
 
 ### Container không start
-\`\`\`bash
-docker-compose logs backend
-docker-compose build --no-cache
-\`\`\`
 
-### Port conflict
-\`\`\`bash
-sudo lsof -i :5000
-sudo kill -9 <PID>
-\`\`\`
+```bash
+# Xem logs lỗi
+docker-compose logs <service-name>
 
-### Clean up
-\`\`\`bash
+# Rebuild (xóa cache)
+docker-compose build --no-cache <service-name>
+docker-compose up -d
+
+# Ví dụ: Rebuild frontend
+docker-compose build --no-cache frontend
+docker-compose up -d frontend
+```
+
+### Frontend build lỗi
+
+```bash
+# Kiểm tra logs frontend
+docker-compose logs frontend
+
+# Rebuild frontend
+docker-compose build --no-cache frontend
+
+# Nếu vẫn lỗi, thử xóa node_modules trong container
+docker-compose run --rm frontend sh -c "rm -rf node_modules && npm ci"
+```
+
+### Kết nối MongoDB/Redis lỗi
+
+```bash
+# Test MongoDB
+docker-compose exec mongo mongosh --eval "db.adminCommand('ping')"
+
+# Test Redis
+docker-compose exec redis redis-cli PING
+
+# Kiểm tra network
+docker-compose exec backend ping mongo
+docker-compose exec backend ping redis
+```
+
+### Dọn dọn Docker
+
+```bash
+# Xóa images/containers không dùng
 docker system prune -a
+
+# Xóa volumes không dùng
 docker volume prune
-\`\`\`
+```
 
-## Tài liệu tham khảo
+## Cập Nhật Ứng Dụng
 
-- [Z39.50 API Guide](./z3950-api.md)
-- [API Reference](./api-reference.md)
+```bash
+# Pull code mới
+git pull
+
+# Rebuild và restart
+docker-compose build
+docker-compose up -d
+
+# Hoặc rebuild từng service nếu cần
+docker-compose build frontend  # Nếu chỉ sửa frontend
+docker-compose build backend   # Nếu chỉ sửa backend
+docker-compose up -d
+```
+
+## Cấu Hình Môi Trường (Tùy chọn)
+
+Nếu cần thay đổi cấu hình, tạo file `.env` trong thư mục root:
+
+```bash
+# Ví dụ .env
+SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-secret-key
+MONGO_URI=mongodb://mongo:27017/library_chatbox
+GEMINI_API_KEY=your-gemini-api-key
+```
+
+Xem file `docker-compose.yml` để biết các biến môi trường cần thiết.
