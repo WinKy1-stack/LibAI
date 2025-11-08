@@ -182,6 +182,85 @@ def get_current_user():
         }
     }), 200
 
+@auth_bp.route('/profile', methods=['PUT'])
+@jwt_required()
+def update_profile():
+    """Cập nhật thông tin profile - MongoDB"""
+    current_user_id = get_jwt_identity()
+    user = MongoHelper.find_one('users', {'_id': ObjectId(current_user_id)})
+
+    if not user:
+        raise NotFoundError('Không tìm thấy người dùng')
+
+    data = request.get_json()
+    
+    # Các trường được phép cập nhật
+    update_fields = {}
+    
+    if 'name' in data:
+        name = data['name'].strip()
+        if name:
+            update_fields['name'] = name
+    
+    if 'major' in data:
+        update_fields['major'] = data['major'].strip()
+    
+    if 'email' in data:
+        new_email = data['email'].strip()
+        if new_email and new_email != user.get('email'):
+            # Validate email
+            if not validate_email(new_email):
+                raise ValidationError('Email không hợp lệ')
+            # Check if email already exists
+            existing_user = MongoHelper.find_one('users', {'email': new_email})
+            if existing_user:
+                raise ValidationError('Email đã được sử dụng')
+            update_fields['email'] = new_email
+    
+    if 'student_id' in data:
+        new_student_id = data['student_id'].strip()
+        if new_student_id and new_student_id != user.get('student_id'):
+            # Check if student_id already exists
+            existing_user = MongoHelper.find_one('users', {'student_id': new_student_id})
+            if existing_user:
+                raise ValidationError('Mã sinh viên đã được sử dụng')
+            update_fields['student_id'] = new_student_id
+    
+    # Update preferences if provided
+    if 'preferences' in data:
+        preferences = user.get('preferences', {})
+        if 'lang' in data['preferences']:
+            preferences['lang'] = data['preferences']['lang']
+        if 'theme' in data['preferences']:
+            preferences['theme'] = data['preferences']['theme']
+        update_fields['preferences'] = preferences
+    
+    if not update_fields:
+        raise ValidationError('Không có thông tin để cập nhật')
+    
+    # Update in MongoDB
+    MongoHelper.update_one(
+        'users',
+        {'_id': user['_id']},
+        {'$set': update_fields}
+    )
+    
+    # Get updated user
+    updated_user = MongoHelper.find_one('users', {'_id': user['_id']})
+    
+    return jsonify({
+        'message': 'Cập nhật thông tin thành công',
+        'user': {
+            'id': str(updated_user['_id']),
+            'email': updated_user.get('email'),
+            'name': updated_user.get('name'),
+            'role': updated_user.get('role'),
+            'student_id': updated_user.get('student_id'),
+            'major': updated_user.get('major', ''),
+            'status': updated_user.get('status')
+        }
+    }), 200
+
 @auth_bp.route('/change-password', methods=['POST'])
 @jwt_required()
 def change_password():

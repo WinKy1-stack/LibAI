@@ -104,6 +104,16 @@ export const authService = {
     return response.data.user;
   },
 
+  // Update profile
+  updateProfile: async (data: Partial<User>): Promise<{ message: string; user: User }> => {
+    const response = await api.put('/auth/profile', data);
+    // Update localStorage with new user data
+    if (response.data.user) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
   // Change password
   changePassword: async (data: ChangePasswordData): Promise<{ message: string }> => {
     const response = await api.post('/auth/change-password', data);
