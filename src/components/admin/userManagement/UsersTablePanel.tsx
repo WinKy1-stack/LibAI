@@ -39,6 +39,7 @@ interface UsersTablePanelProps {
   onRoleChange: (value: "all" | UserRole) => void;
   onSearchChange: (value: string) => void;
   onSearchSubmit: (value: string) => void;
+  onUserClick?: (user: AdminUser) => void;
 }
 
 export function UsersTablePanel({
@@ -51,6 +52,7 @@ export function UsersTablePanel({
   onRoleChange,
   onSearchChange,
   onSearchSubmit,
+  onUserClick,
 }: UsersTablePanelProps) {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
@@ -162,9 +164,14 @@ export function UsersTablePanel({
         title: "",
         key: "actions",
         fixed: "right" as const,
-        render: () => (
+        render: (_, record) => (
           <Space direction="vertical" size={0}>
-            <Button type="link" size="small" icon={<InfoCircleOutlined />}>
+            <Button 
+              type="link" 
+              size="small" 
+              icon={<InfoCircleOutlined />}
+              onClick={() => onUserClick?.(record)}
+            >
               Chi tiết
             </Button>
             <Button type="link" size="small" icon={<BellOutlined />}>
@@ -175,7 +182,7 @@ export function UsersTablePanel({
         width: screens.md ? 120 : 60,
       },
     ],
-    [token.colorPrimary, screens.md],
+    [token.colorPrimary, screens.md, onUserClick],
   );
 
   return (

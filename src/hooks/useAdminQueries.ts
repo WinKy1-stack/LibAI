@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/authService';
-import { userService } from '../services/userService';
+import { userService, type CreateUserData, type UpdateUserData } from '../services/userService';
 import { bookService, type MarcRecord } from '../services/bookService';
 import { faqService, type FaqRecord } from '../services/faqService';
 import type { User } from '../types/auth';
@@ -850,6 +850,58 @@ export function useDeleteFaq() {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqCategories });
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqCategoryDistribution });
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqActivities });
+    },
+  });
+}
+
+// User Mutations
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: CreateUserData) => {
+      return await userService.createUser(data);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch users
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.users });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userActivities });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userRetention });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userRoleDistribution });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ userId, data }: { userId: string; data: UpdateUserData }) => {
+      return await userService.updateUser(userId, data);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch users
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.users });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userActivities });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userRetention });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userRoleDistribution });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      return await userService.deleteUser(userId);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch users
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.users });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userActivities });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userRetention });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.userRoleDistribution });
     },
   });
 }

@@ -5,6 +5,7 @@ const { TextArea } = Input;
 
 export type FieldType = 
   | "text" 
+  | "password"
   | "textarea" 
   | "select" 
   | "number" 
@@ -128,6 +129,9 @@ export default function GenericFormModal<T extends { id?: string }>({
     switch (field.type) {
       case "text":
         return <Input placeholder={field.placeholder} maxLength={field.maxLength} />;
+      
+      case "password":
+        return <Input.Password placeholder={field.placeholder} maxLength={field.maxLength} />;
       
       case "textarea":
         return (
