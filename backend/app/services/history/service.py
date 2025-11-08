@@ -4,7 +4,7 @@ Chat History Service - Facade pattern cho conversation và message operations
 import logging
 from typing import List, Dict, Optional, Any
 
-from .conversation import ConversationManager
+from .ConversationManager import ConversationManager
 from .message import MessageManager
 
 logger = logging.getLogger(__name__)
