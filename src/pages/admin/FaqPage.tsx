@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
-import { Col, Grid, Row, Space, Tag, Input, message } from "antd";
+import { useMemo, useState } from "react";
+import { Col, Grid, Row, Space, Tag, Input, App as AntdApp } from "antd";
 import { 
   HeaderCard,
   FaqStatsOverview,
@@ -14,6 +14,9 @@ import {
   useFaqCategories,
   useFaqCategoryDistribution,
   useFaqActivities,
+  useCreateFaq,
+  useUpdateFaq,
+  useDeleteFaq,
 } from "../../hooks/useAdminQueries";
 import type { FaqItem } from "../../data";
 
@@ -22,6 +25,7 @@ const { useBreakpoint } = Grid;
 export default function FaqPage() {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const { notification } = AntdApp.useApp();
 
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft" | "archived">("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
@@ -36,16 +40,14 @@ export default function FaqPage() {
   const { data: faqCategories = [], isLoading: categoriesLoading } = useFaqCategories();
   const { data: faqCategoryDistribution = [], isLoading: categoryDistributionLoading } = useFaqCategoryDistribution();
   const { data: latestFaqActivities = [], isLoading: activityLoading } = useFaqActivities();
+  
+  // Mutations
+  const createFaqMutation = useCreateFaq();
+  const updateFaqMutation = useUpdateFaq();
+  const deleteFaqMutation = useDeleteFaq();
 
-  // Local state for FAQ data (can be modified by user actions)
-  const [faqData, setFaqData] = useState<FaqItem[]>([]);
-
-  // Update local state when query data changes
-  useEffect(() => {
-    if (initialFaqData.length > 0) {
-      setFaqData(initialFaqData);
-    }
-  }, [initialFaqData]);
+  // Use FAQ data directly from API (no need for local state since we're using mutations)
+  const faqData = initialFaqData;
 
   const totals = useMemo(() => {
     return {
@@ -95,36 +97,68 @@ export default function FaqPage() {
   };
 
   // Handle save FAQ
-  const handleSaveFaq = (faq: Partial<FaqItem>) => {
-    const faqWithTags = { ...faq, tags: tempTags };
-    
-    if (editingFaq) {
-      // Update existing FAQ
-      setFaqData((prev) =>
-        prev.map((item) => (item.id === faq.id ? { ...item, ...faqWithTags } : item))
-      );
-    } else {
-      // Add new FAQ with additional fields
-      const newFaq = {
-        ...faqWithTags,
-        id: `faq-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        createdBy: "La Thanh Toàn",
-        views: 0,
-        helpful: 0,
-        notHelpful: 0,
-      } as FaqItem;
-      setFaqData((prev) => [newFaq, ...prev]);
+  const handleSaveFaq = async (faq: Partial<FaqItem>) => {
+    try {
+      const faqData = {
+        question: faq.question,
+        answer: faq.answer,
+        category: faq.category,
+        status: faq.status,
+        priority: faq.priority,
+        tags: tempTags,
+      };
+
+      if (editingFaq) {
+        // Update existing FAQ
+        await updateFaqMutation.mutateAsync({
+          faqId: editingFaq.id,
+          data: faqData,
+        });
+        notification.success({
+          message: 'Thành công',
+          description: 'Cập nhật FAQ thành công!',
+          placement: 'topRight',
+        });
+      } else {
+        // Create new FAQ
+        await createFaqMutation.mutateAsync(faqData);
+        notification.success({
+          message: 'Thành công',
+          description: 'Tạo FAQ thành công!',
+          placement: 'topRight',
+        });
+      }
+      
+      setEditModalVisible(false);
+      setTempTags([]);
+      setInputTag("");
+    } catch (error) {
+      console.error('Failed to save FAQ:', error);
+      notification.error({
+        message: 'Lỗi',
+        description: 'Có lỗi xảy ra khi lưu FAQ!',
+        placement: 'topRight',
+      });
     }
-    setEditModalVisible(false);
-    setTempTags([]);
-    setInputTag("");
   };
 
   // Handle delete FAQ
-  const handleDeleteFaq = (id: string) => {
-    setFaqData((prev) => prev.filter((item) => item.id !== id));
-    message.success("Đã xóa FAQ thành công!");
+  const handleDeleteFaq = async (id: string) => {
+    try {
+      await deleteFaqMutation.mutateAsync(id);
+      notification.success({
+        message: 'Thành công',
+        description: 'Đã xóa FAQ thành công!',
+        placement: 'topRight',
+      });
+    } catch (error) {
+      console.error('Failed to delete FAQ:', error);
+      notification.error({
+        message: 'Lỗi',
+        description: 'Có lỗi xảy ra khi xóa FAQ!',
+        placement: 'topRight',
+      });
+    }
   };
 
   // Close modal
@@ -191,6 +225,7 @@ export default function FaqPage() {
         title="FAQ"
         visible={editModalVisible}
         editItem={editingFaq}
+        showNotification={false}
         fields={[
           {
             name: "question",

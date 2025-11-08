@@ -1,4 +1,4 @@
-import { Card, Form, Input, Button, Space, Typography, Divider, Alert, Progress, message, theme } from "antd";
+import { Card, Form, Input, Button, Space, Typography, Divider, Alert, Progress, App as AntdApp, theme } from "antd";
 import { LockOutlined, SaveOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { getLibrarianSettingsColors, getPasswordStrengthColor, getPasswordStrengthText } from "./constants";
@@ -18,6 +18,7 @@ export default function LibrarianPasswordCard() {
   });
   const { token } = theme.useToken();
   const librarianColors = getLibrarianSettingsColors(token);
+  const { notification } = AntdApp.useApp();
 
   const checkPasswordStrength = (password: string) => {
     if (!password) {
@@ -60,7 +61,10 @@ export default function LibrarianPasswordCard() {
       const values = await form.validateFields();
       console.log("Password values:", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      message.success("Đổi mật khẩu thành công!");
+      notification.success({
+        message: "Đổi mật khẩu thành công!",
+        placement: "topRight",
+      });
       form.resetFields();
       setPasswordStrength(0);
       setSaving(false);

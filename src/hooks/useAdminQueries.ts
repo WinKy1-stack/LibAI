@@ -1,10 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
 import { bookService, type MarcRecord } from '../services/bookService';
+import { faqService, type FaqRecord } from '../services/faqService';
 import type { User } from '../types/auth';
 import type { AdminUser, UserRole } from '../data';
 import type { BookRecord } from '../data/mockDashboard';
+import type { FaqItem, FaqCategory, FaqCategoryDistribution, FaqActivity } from '../data';
 import {
   // Dashboard Data
   dashboardStatsData,
@@ -30,7 +32,6 @@ import {
   categoryPerformance,
   topMetrics,
   // FAQ Data
-  mockFaqItems,
   faqCategories,
   faqCategoryDistribution,
   latestFaqActivities,
@@ -643,48 +644,213 @@ export function useReportTopMetrics() {
   });
 }
 
+// Helper function to map FAQ record to FaqItem
+function mapFaqToFaqItem(record: FaqRecord): FaqItem {
+  const faqId = record._id || '';
+  
+  // Normalize dates
+  const createdAt = normalizeDate(record.created_at || record.updated_at);
+  const updatedAt = normalizeDate(record.updated_at || record.created_at);
+
+  return {
+    id: faqId,
+    question: record.question || '',
+    answer: record.answer || '',
+    category: record.category || 'other',
+    status: (record.status as 'published' | 'draft' | 'archived') || 'draft',
+    views: record.views || 0,
+    helpful: record.helpful || 0,
+    notHelpful: record.not_helpful || 0,
+    priority: record.priority || 3,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    createdBy: record.created_by || 'Unknown',
+    tags: record.tags || [],
+  };
+}
+
 // FAQ Queries
 export function useFaqs() {
-  return useQuery({
+  return useQuery<FaqItem[]>({
     queryKey: adminQueryKeys.faqs,
     queryFn: async () => {
-      await delay(600);
-      return mockFaqItems;
+      try {
+        // Fetch all FAQs (admin can see all statuses)
+        // Try to get all statuses first, if fails, will fallback to published
+        const response = await faqService.getFaqs({
+          status: 'all', // Get all statuses for admin
+        });
+        
+        // Map FAQ records to FaqItem format
+        return response.faqs.map(mapFaqToFaqItem);
+      } catch (error: unknown) {
+        // If 401 or other auth error, try to fetch only published
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { status?: number } };
+          if (axiosError.response?.status === 401) {
+            console.warn('Not authenticated or insufficient permissions, fetching only published FAQs');
+            try {
+              const publishedResponse = await faqService.getFaqs({
+                status: 'published',
+              });
+              return publishedResponse.faqs.map(mapFaqToFaqItem);
+            } catch (fallbackError) {
+              console.error('Failed to fetch published FAQs:', fallbackError);
+              return [];
+            }
+          }
+        }
+        console.error('Failed to fetch FAQs from API:', error);
+        return [];
+      }
     },
     staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useFaqCategories() {
-  return useQuery({
+  return useQuery<FaqCategory[]>({
     queryKey: adminQueryKeys.faqCategories,
     queryFn: async () => {
-      await delay(300);
-      return faqCategories;
+      try {
+        // Fetch FAQs to calculate categories
+        const response = await faqService.getFaqs({ status: 'all' });
+        
+        // Count FAQs by category
+        const categoryCounts = new Map<string, number>();
+        response.faqs.forEach(faq => {
+          const category = faq.category || 'other';
+          categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+        });
+
+        // Map to FaqCategory format
+        // Use predefined categories from mock data as base
+        const categories: FaqCategory[] = faqCategories.map(cat => ({
+          ...cat,
+          count: categoryCounts.get(cat.id) || 0,
+        }));
+
+        return categories;
+      } catch (error) {
+        console.error('Failed to fetch FAQ categories from API:', error);
+        return faqCategories;
+      }
     },
     staleTime: 10 * 60 * 1000,
   });
 }
 
 export function useFaqCategoryDistribution() {
-  return useQuery({
+  return useQuery<FaqCategoryDistribution[]>({
     queryKey: adminQueryKeys.faqCategoryDistribution,
     queryFn: async () => {
-      await delay(400);
-      return faqCategoryDistribution;
+      try {
+        // Fetch FAQs to calculate distribution
+        const response = await faqService.getFaqs({ status: 'all' });
+        
+        // Count FAQs by category
+        const categoryCounts = new Map<string, number>();
+        response.faqs.forEach(faq => {
+          const category = faq.category || 'other';
+          categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+        });
+
+        // Map to FaqCategoryDistribution format
+        const distribution: FaqCategoryDistribution[] = faqCategories.map(cat => ({
+          category: cat.id,
+          categoryName: cat.name,
+          icon: cat.icon,
+          count: categoryCounts.get(cat.id) || 0,
+        }));
+
+        return distribution;
+      } catch (error) {
+        console.error('Failed to fetch FAQ category distribution from API:', error);
+        return faqCategoryDistribution;
+      }
     },
     staleTime: 10 * 60 * 1000,
   });
 }
 
 export function useFaqActivities() {
-  return useQuery({
+  return useQuery<FaqActivity[]>({
     queryKey: adminQueryKeys.faqActivities,
     queryFn: async () => {
-      await delay(500);
-      return latestFaqActivities;
+      try {
+        // Fetch recent FAQs (sorted by updated_at desc)
+        const response = await faqService.getFaqs({ status: 'all' });
+        
+        // Map to FaqActivity format (last 10 recent activities)
+        const activities: FaqActivity[] = response.faqs
+          .slice(0, 10)
+          .map(faq => ({
+            id: faq._id || '',
+            question: faq.question || '',
+            action: 'updated', // Default action
+            timestamp: normalizeDate(faq.updated_at || faq.created_at),
+            category: faq.category || 'other',
+          }));
+
+        return activities;
+      } catch (error) {
+        console.error('Failed to fetch FAQ activities from API:', error);
+        return latestFaqActivities;
+      }
     },
     staleTime: 3 * 60 * 1000,
+  });
+}
+
+// FAQ Mutations
+export function useCreateFaq() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: Partial<FaqRecord>) => {
+      return await faqService.createFaq(data);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch FAQs
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqs });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqCategories });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqCategoryDistribution });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqActivities });
+    },
+  });
+}
+
+export function useUpdateFaq() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ faqId, data }: { faqId: string; data: Partial<FaqRecord> }) => {
+      return await faqService.updateFaq(faqId, data);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch FAQs
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqs });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqCategories });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqCategoryDistribution });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqActivities });
+    },
+  });
+}
+
+export function useDeleteFaq() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (faqId: string) => {
+      return await faqService.deleteFaq(faqId);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch FAQs
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqs });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqCategories });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqCategoryDistribution });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.faqActivities });
+    },
   });
 }
 

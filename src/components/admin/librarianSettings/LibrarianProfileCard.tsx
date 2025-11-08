@@ -1,4 +1,4 @@
-import { Card, Form, Input, Button, Space, Typography, Avatar, Upload, Row, Col, message, theme } from "antd";
+import { Card, Form, Input, Button, Space, Typography, Avatar, Upload, Row, Col, App as AntdApp, theme } from "antd";
 import { UserOutlined, SaveOutlined, CameraOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import type { UploadFile } from "antd";
@@ -14,6 +14,7 @@ export default function LibrarianProfileCard() {
   const [avatarUrl, setAvatarUrl] = useState(defaultLibrarianProfile.avatar);
   const { token } = theme.useToken();
   const librarianColors = getLibrarianSettingsColors(token);
+  const { notification } = AntdApp.useApp();
 
   const handleSave = async () => {
     try {
@@ -21,7 +22,10 @@ export default function LibrarianProfileCard() {
       const values = await form.validateFields();
       console.log("Profile values:", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      message.success("Cập nhật thông tin thành công!");
+      notification.success({
+        message: "Cập nhật thông tin thành công!",
+        placement: "topRight",
+      });
       setSaving(false);
     } catch {
       setSaving(false);

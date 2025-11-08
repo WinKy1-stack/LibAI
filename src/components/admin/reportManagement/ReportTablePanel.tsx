@@ -269,10 +269,7 @@ export function ReportTablePanel({
           columns={columns}
           dataSource={data}
           rowKey="id"
-          loading={{
-            spinning: loading,
-            indicator: <></>,
-          }}
+          loading={loading}
           pagination={{
             current: currentPage,
             pageSize,

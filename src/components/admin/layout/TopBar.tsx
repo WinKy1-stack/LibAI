@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import type { CSSProperties } from 'react';
-import { Button, Input, Badge, Row, Col, Switch, Space, Avatar, Typography, Dropdown, Grid, message, theme } from 'antd';
+import { Button, Input, Badge, Row, Col, Switch, Space, Avatar, Typography, Dropdown, Grid, App as AntdApp, theme } from 'antd';
 import type { MenuProps } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -50,12 +50,16 @@ export default function TopBar({ collapsed, onToggle, mode, setMode, user }: Top
   const screens = useBreakpoint();
   const navigate = useNavigate();
   const { token } = useToken();
+  const { notification } = AntdApp.useApp();
 
   // Logout handler - wrapped in useCallback
   const handleLogout = useCallback(async () => {
     try {
       await authService.logout();
-      message.success('Đăng xuất thành công!');
+      notification.success({
+        message: 'Đăng xuất thành công!',
+        placement: 'topRight',
+      });
       navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);

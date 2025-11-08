@@ -57,15 +57,26 @@ export default function LoginPage() {
         navigate('/');
       }
     } catch (err: unknown) {
-      console.error('Login error:', err);
+      // Log error for debugging (only in dev mode)
+      if (import.meta.env.DEV) {
+        console.error('Login error:', err);
+      }
+      
       let errorMessage = 'Đăng nhập thất bại. Vui lòng thử lại.';
       
       if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { error?: string; message?: string } } };
-        errorMessage = axiosError.response?.data?.error || 
-                      axiosError.response?.data?.message || 
-                      errorMessage;
-      } else if (err instanceof Error) {
+        const axiosError = err as { response?: { data?: { error?: string; message?: string }; status?: number } };
+        // Only show user-friendly error messages
+        if (axiosError.response?.data?.error) {
+          errorMessage = axiosError.response.data.error;
+        } else if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
+        } else if (axiosError.response?.status === 401) {
+          errorMessage = 'Tên đăng nhập hoặc mật khẩu không đúng';
+        } else if (axiosError.response?.status === 403) {
+          errorMessage = 'Tài khoản đã bị vô hiệu hóa';
+        }
+      } else if (err instanceof Error && err.message) {
         errorMessage = err.message;
       }
       
