@@ -1,9 +1,10 @@
 import type { ColumnsType } from "antd/es/table";
 import { Card, Table, Button, Typography, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
-import { dashboardBooks, type BookRecord } from "../../../data";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
+import { useDashboardBooks } from "../../../hooks/useAdminQueries";
+import type { BookRecord } from "../../../data/mockDashboard";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -11,14 +12,12 @@ const { useToken } = theme;
 export default function BooksTable() {
   const { token } = useToken();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const { data: books = [], isLoading } = useDashboardBooks();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, []);
+  // Sort by title and get last 5 (or just use the 5 from API)
+  const dashboardBooks: BookRecord[] = useMemo(() => {
+    return books;
+  }, [books]);
 
   const columns: ColumnsType<BookRecord> = [
     { 
@@ -74,10 +73,10 @@ export default function BooksTable() {
     >
       <Table
         size="middle"
-        rowKey="key"
+        rowKey="bid"
         dataSource={dashboardBooks}
         columns={columns}
-        loading={loading}
+        loading={isLoading}
         pagination={false}
         scroll={{ x: 560 }}
       />

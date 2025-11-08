@@ -25,7 +25,7 @@ export default function BooksManagementPage() {
   const [searchValue, setSearchValue] = useState("");
 
   // Use react-query hooks
-  const { data: adminBooks = [] } = useBooks();
+  const { data: adminBooks = [], isLoading: booksLoading } = useBooks();
   const { data: categoryDistribution = [] } = useBookCategories();
   const { data: latestBookActivities = [] } = useBookActivities();
   const { data: monthlyBorrowTrend = [] } = useBorrowTrend();
@@ -109,6 +109,7 @@ export default function BooksManagementPage() {
             categoryFilter={categoryFilter}
             searchValue={searchValue}
             categories={categories}
+            loading={booksLoading}
             onStatusChange={(value) => setStatusFilter(value)}
             onCategoryChange={(value) => setCategoryFilter(value)}
             onSearchChange={(value) => setSearchValue(value)}

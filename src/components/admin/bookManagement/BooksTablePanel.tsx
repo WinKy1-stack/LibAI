@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import type { ColumnsType } from "antd/es/table";
 import {
   Avatar,
@@ -32,6 +32,7 @@ interface BooksTablePanelProps {
   categoryFilter: "all" | string;
   searchValue: string;
   categories: string[];
+  loading?: boolean;
   onStatusChange: (value: "all" | BookStatus) => void;
   onCategoryChange: (value: "all" | string) => void;
   onSearchChange: (value: string) => void;
@@ -44,6 +45,7 @@ export function BooksTablePanel({
   categoryFilter,
   searchValue,
   categories,
+  loading = false,
   onStatusChange,
   onCategoryChange,
   onSearchChange,
@@ -51,14 +53,6 @@ export function BooksTablePanel({
 }: BooksTablePanelProps) {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const columns: ColumnsType<AdminBook> = useMemo(
     () => [
@@ -237,10 +231,7 @@ export function BooksTablePanel({
       <Table
         columns={columns}
         dataSource={data}
-        loading={{
-          spinning: loading,
-          indicator: <></>,
-        }}
+        loading={loading}
         pagination={{ pageSize: 5, showSizeChanger: false }}
         rowKey="id"
         scroll={{ x: 1200 }}

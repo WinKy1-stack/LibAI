@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
+import { bookService, type MarcRecord } from '../services/bookService';
 import type { User } from '../types/auth';
 import type { AdminUser, UserRole } from '../data';
+import type { BookRecord } from '../data/mockDashboard';
 import {
   // Dashboard Data
   dashboardStatsData,
@@ -12,7 +14,6 @@ import {
   userRetentionTrend,
   userRoleDistribution,
   // Books Management Data
-  adminBooks,
   categoryDistribution,
   latestBookActivities,
   monthlyBorrowTrend,
@@ -46,6 +47,8 @@ export const adminQueryKeys = {
   // Dashboard queries
   dashboardStats: ['admin', 'dashboard', 'stats'] as const,
   overdueBooks: ['admin', 'dashboard', 'overdueBooks'] as const,
+  dashboardBooks: ['admin', 'dashboard', 'books'] as const,
+  topChoices: ['admin', 'dashboard', 'topChoices'] as const,
   
   // User Management queries
   users: ['admin', 'users'] as const,
@@ -250,13 +253,246 @@ export function useUserRoleDistribution() {
   });
 }
 
+// Helper function to map MARC record to BookRecord
+function mapMarcToBookRecord(record: MarcRecord, index: number, availableCount: number = 0): BookRecord {
+  // Extract title
+  let title = 'Unknown Title';
+  if (typeof record.title === 'string') {
+    title = record.title;
+  } else if (record.title && typeof record.title === 'object' && 'main' in record.title) {
+    title = record.title.main || 'Unknown Title';
+    if (record.title.subtitle) {
+      title += `: ${record.title.subtitle}`;
+    }
+  } else if (record.normalized?.title) {
+    title = record.normalized.title;
+  }
+
+  // Extract author
+  let author = 'Unknown Author';
+  if (record.contributors && record.contributors.length > 0) {
+    const authorContributor = record.contributors.find(c => c.role === 'author' || !c.role);
+    author = authorContributor?.name || record.contributors[0]?.name || 'Unknown Author';
+  } else if (record.normalized?.authors && record.normalized.authors.length > 0) {
+    author = record.normalized.authors[0];
+  }
+
+  // Extract ISBN/ID
+  let bid = record._id || record.control_number || record.record_id || '';
+  if (record.identifiers?.isbn && record.identifiers.isbn.length > 0) {
+    bid = record.identifiers.isbn[0].value || bid;
+  } else if (record.normalized?.isbn && record.normalized.isbn.length > 0) {
+    bid = record.normalized.isbn[0];
+  }
+
+  return {
+    key: index + 1,
+    bid: bid,
+    title: title,
+    author: author,
+    stock: availableCount,
+  };
+}
+
+// Helper function to map MARC record + items data to AdminBook
+function mapMarcToAdminBook(
+  record: MarcRecord,
+  itemsByRecordId: Map<string, { total: number; available: number }>
+): import('../data').AdminBook {
+  const recordId = record._id || record.record_id || '';
+  
+  // Extract title
+  let title = 'Unknown Title';
+  if (typeof record.title === 'string') {
+    title = record.title;
+  } else if (record.title && typeof record.title === 'object' && 'main' in record.title) {
+    title = record.title.main || 'Unknown Title';
+    if (record.title.subtitle) {
+      title += `: ${record.title.subtitle}`;
+    }
+  } else if (record.normalized?.title) {
+    title = record.normalized.title;
+  }
+
+  // Extract author
+  let author = 'Unknown Author';
+  if (record.contributors && record.contributors.length > 0) {
+    const authorContributor = record.contributors.find(c => c.role === 'author' || !c.role);
+    author = authorContributor?.name || record.contributors[0]?.name || 'Unknown Author';
+  } else if (record.normalized?.authors && record.normalized.authors.length > 0) {
+    author = record.normalized.authors[0];
+  }
+
+  // Extract ISBN
+  let isbn = '';
+  if (record.identifiers?.isbn && record.identifiers.isbn.length > 0) {
+    isbn = record.identifiers.isbn[0].value || '';
+  } else if (record.normalized?.isbn && record.normalized.isbn.length > 0) {
+    isbn = record.normalized.isbn[0];
+  }
+
+  // Extract category/subject
+  let category = 'Khác';
+  if (record.normalized?.subjects && record.normalized.subjects.length > 0) {
+    category = record.normalized.subjects[0];
+  } else if (record.subjects && Array.isArray(record.subjects) && record.subjects.length > 0) {
+    const firstSubject = record.subjects[0];
+    if (typeof firstSubject === 'object' && 'term' in firstSubject) {
+      category = firstSubject.term || 'Khác';
+    } else if (typeof firstSubject === 'string') {
+      category = firstSubject;
+    }
+  }
+
+  // Extract published year
+  let publishedYear = new Date().getFullYear();
+  if (record.normalized?.year) {
+    publishedYear = record.normalized.year;
+  } else if (record.publication?.year) {
+    const year = parseInt(record.publication.year);
+    if (!isNaN(year)) {
+      publishedYear = year;
+    }
+  }
+
+  // Get items data from the map
+  const itemsData = itemsByRecordId.get(recordId) || { total: 0, available: 0 };
+  const totalCopies = itemsData.total;
+  const availableCopies = itemsData.available;
+  const borrowedCount = totalCopies - availableCopies;
+
+  // Determine status based on available copies
+  let status: 'available' | 'loaned' | 'reserved' | 'archived' = 'available';
+  if (availableCopies > 0) {
+    status = 'available';
+  } else if (borrowedCount > 0) {
+    status = 'loaned';
+  } else if (totalCopies === 0) {
+    status = 'archived';
+  }
+
+  const lastActivity = normalizeDate(record.updated_at || record.created_at);
+
+  return {
+    id: recordId || isbn || 'unknown',
+    title: title,
+    isbn: isbn,
+    author: author,
+    category: category,
+    publishedYear: publishedYear,
+    totalCopies: totalCopies,
+    availableCopies: availableCopies,
+    borrowedCount: borrowedCount,
+    reservedCount: 0, // Would need loans API to calculate
+    overdueCount: 0, // Would need loans API to calculate
+    status: status,
+    lastActivity: lastActivity,
+    format: 'hardcover' as const, // Default format
+    tags: record.normalized?.subjects?.slice(0, 3) || [],
+  };
+}
+
 // Books Management Queries
 export function useBooks() {
-  return useQuery({
+  return useQuery<import('../data').AdminBook[]>({
     queryKey: adminQueryKeys.books,
     queryFn: async () => {
-      await delay(600);
-      return adminBooks;
+      try {
+        // Fetch MARC records (limit to 50 for performance)
+        const response = await bookService.getMarcRecords({
+          page: 1,
+          limit: 50,
+        });
+        
+        // Get all record IDs
+        const recordIds = response.records
+          .map(r => r._id || r.record_id)
+          .filter((id): id is string => !!id);
+
+        // Fetch all items at once (batch processing)
+        // Group items by record_id and calculate counts
+        const itemsByRecordId = new Map<string, { total: number; available: number }>();
+        
+        // Initialize map with all record IDs
+        recordIds.forEach(id => {
+          itemsByRecordId.set(id, { total: 0, available: 0 });
+        });
+
+        // Fetch items in batches to avoid too many requests
+        // For each record, fetch items
+        await Promise.all(
+          recordIds.map(async (recordId) => {
+            try {
+              // Fetch all items for this record
+              const allItemsResponse = await bookService.getItemsByRecordId(recordId);
+              const total = allItemsResponse.items.length;
+              
+              // Count available items
+              const available = allItemsResponse.items.filter(
+                item => item.status === 'available'
+              ).length;
+
+              itemsByRecordId.set(recordId, { total, available });
+            } catch (error) {
+              console.warn(`Failed to fetch items for record ${recordId}:`, error);
+            }
+          })
+        );
+        
+        // Map each record to AdminBook format
+        const books = response.records.map((record) => 
+          mapMarcToAdminBook(record, itemsByRecordId)
+        );
+        
+        return books;
+      } catch (error) {
+        console.error('Failed to fetch books from API:', error);
+        // Fallback to empty array
+        return [];
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// Dashboard Books Query (for Dashboard page - last 5 books)
+export function useDashboardBooks() {
+  return useQuery<BookRecord[]>({
+    queryKey: adminQueryKeys.dashboardBooks,
+    queryFn: async () => {
+      try {
+        // Fetch MARC records (sorted by year desc, so newest first)
+        const response = await bookService.getMarcRecords({
+          page: 1,
+          limit: 5,
+        });
+        
+        // Fetch available items count for each record
+        const booksWithStock = await Promise.all(
+          response.records.map(async (record, index) => {
+            const recordId = record._id || record.record_id || '';
+            let availableCount = 0;
+            
+            if (recordId) {
+              try {
+                // Fetch available items for this record
+                const itemsResponse = await bookService.getAvailableItemsByRecordId(recordId);
+                availableCount = itemsResponse.items.length;
+              } catch (error) {
+                // If fetching items fails, continue with 0
+                console.warn(`Failed to fetch items for record ${recordId}:`, error);
+              }
+            }
+            
+            return mapMarcToBookRecord(record, index, availableCount);
+          })
+        );
+        
+        return booksWithStock;
+      } catch (error) {
+        console.error('Failed to fetch books from API:', error);
+        return [];
+      }
     },
     staleTime: 5 * 60 * 1000,
   });
