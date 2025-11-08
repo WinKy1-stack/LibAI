@@ -64,10 +64,12 @@ def create_app(config_class=Config):
     from app.routes.library import library_bp
     from app.routes.z3950_routes import z3950_bp
     from app.routes.users import users_bp
+    from app.routes.chat import chat_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(users_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
+    app.register_blueprint(chat_bp)     # Chat API
     app.register_blueprint(library_bp)  # New library system API
     app.register_blueprint(z3950_bp)    # Z39.50 search service
 

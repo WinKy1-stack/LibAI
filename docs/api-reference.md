@@ -63,8 +63,6 @@ Content-Type: application/json
 
 Tìm kiếm sách từ các thư viện quốc tế sử dụng giao thức Z39.50.
 
-📖 **[Xem tài liệu chi tiết](./z3950-api.md)**
-
 | Phương thức | Điểm cuối | Mô tả | Xác thực | Vai trò |
 | ------ | --------------------- | ------------------------- | ---- | ----------- |
 | GET | `/search/all` | Tìm kiếm tất cả nguồn (LOC, UW, OCLC). | Không | Công khai |
