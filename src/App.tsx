@@ -10,6 +10,7 @@ import ForbiddenPage from './pages/ForbiddenPage';
 import './App.css';
 
 const ChatHistoryPage = lazy(() => import('./pages/user/ChatHistoryPage'));
+const ProfilePage = lazy(() => import('./pages/user/ProfilePage'));
 const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
 const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'));
 const BooksManagementPage = lazy(() => import('./pages/admin/BooksManagementPage'));
@@ -63,6 +64,13 @@ function App() {
       <Route path="/user/chat" element={
         <ProtectedRoute allowedRoles={['admin']}>
           <UserLayout><ChatHistoryPage /></UserLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Profile page - PROTECTED - All authenticated users */}
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <UserLayout><ProfilePage /></UserLayout>
         </ProtectedRoute>
       } />
       
