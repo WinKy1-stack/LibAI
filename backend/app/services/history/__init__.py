@@ -5,7 +5,7 @@ from .service import ChatHistoryService, get_chat_history_service
 from .ConversationManager import ConversationManager
 from .message import MessageManager
 
-all = [
+__all__= [
 "ChatHistoryService",
 "get_chat_history_service",
 "ConversationManager",

@@ -14,7 +14,7 @@ interface ConversationSidebarProps {
   currentConversationId: string | null;
   onSelectConversation: (conversationId: string) => void;
   onNewConversation: () => void;
-  onConversationDeleted?: (conversationId: string) => void;  // ✅ Callback khi xóa
+  onConversationDeleted?: (conversationId: string) => void;
 }
 
 export default function ConversationSidebar({
@@ -31,9 +31,19 @@ export default function ConversationSidebar({
   const [lastDeletedId, setLastDeletedId] = useState<string | null>(null);
   const [isUndoVisible, setIsUndoVisible] = useState(false);
 
+  // Load conversations khi mount
   useEffect(() => {
     loadConversations(50, 0);
   }, [loadConversations]);
+
+  // ✅ Cleanup timers khi component unmount → tránh memory leak
+  useEffect(() => {
+    return () => {
+      Object.values(timersRef.current).forEach(timer => {
+        if (timer) window.clearTimeout(timer);
+      });
+    };
+  }, []);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -69,8 +79,15 @@ export default function ConversationSidebar({
         },
       });
       
+      // ✅ Validate response trước khi xử lý
       if (!res.ok) {
         throw new Error(`Delete failed: ${res.status}`);
+      }
+
+      // ✅ Check content-type nếu có body response
+      const contentType = res.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        await res.json(); // Parse nếu là JSON
       }
       
       // ✅ Callback để clear messages ở parent
@@ -124,24 +141,76 @@ export default function ConversationSidebar({
     }, 180);
   };
 
-  const undoDelete = (id: string, opts?: { silent?: boolean }) => {
+  // ✅ Undo delete với check existence
+  const undoDelete = async (id: string, opts?: { silent?: boolean }) => {
+    // Cleanup timer trước
     if (timersRef.current[id]) {
       window.clearTimeout(timersRef.current[id]);
       delete timersRef.current[id];
     }
-    setSoftDeletedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-    if (!opts?.silent) {
-      if (lastDeletedId === id) {
-        setIsUndoVisible(false);
-        setLastDeletedId(null);
+
+    // ✅ CRITICAL: Check conversation có tồn tại không trước khi undo
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      const res = await fetch(`/api/conversations/${id}/messages`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+      });
+      
+      if (res.ok) {
+        // ✅ Conversation vẫn tồn tại → có thể undo
+        setSoftDeletedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        
+        if (!opts?.silent) {
+          if (lastDeletedId === id) {
+            setIsUndoVisible(false);
+            setLastDeletedId(null);
+          }
+        }
+        
+        // Reload để khôi phục
+        loadConversations(50, 0);
+        console.log(`✅ Undo successful: conversation ${id} restored`);
+      } else {
+        // ❌ Conversation đã bị xóa → không thể undo
+        console.warn(`⚠️ Cannot undo: conversation ${id} no longer exists (status: ${res.status})`);
+        
+        if (!opts?.silent) {
+          if (lastDeletedId === id) {
+            setIsUndoVisible(false);
+            setLastDeletedId(null);
+          }
+        }
+        
+        // Vẫn reload để sync state
+        loadConversations(50, 0);
       }
+    } catch (err) {
+      console.error("❌ Error checking conversation existence:", err);
+      
+      // Fallback: vẫn thử undo để đảm bảo UX
+      setSoftDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      
+      if (!opts?.silent) {
+        if (lastDeletedId === id) {
+          setIsUndoVisible(false);
+          setLastDeletedId(null);
+        }
+      }
+      
+      loadConversations(50, 0);
     }
-    // ✅ Reload để khôi phục
-    loadConversations(50, 0);
   };
 
   return (
