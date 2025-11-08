@@ -42,7 +42,7 @@ LibAI là một ứng dụng giàu tính năng được thiết kế để hợp
 - React Router, Axios
 
 ### Backend
-- Flask (Python 3.9+)
+- Flask (Python 3.11+)
 - MongoDB (PyMongo, Flask-PyMongo)
 - Redis (Cache Layer)
 - JWT Authentication
