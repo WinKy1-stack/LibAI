@@ -97,27 +97,35 @@ def get_user_schema() -> Dict[str, Any]:
     }
 
 def get_marc_record_schema() -> Dict[str, Any]:
-    """Schema cho collection marc_records"""
+    """Schema cho collection marc_records (LibraryRecordLite format)"""
     return {
-        "control_number": "",  # unique
-        "leader": "",
-        "fields": {},  # MARC21 fields
-        "normalized": {
-            "isbn": [],
-            "title": "",
-            "authors": [],
-            "publisher": "",
-            "year": None,
-            "subjects": []
+        "record_id": "",  # UUID string
+        "title": {
+            "main": "",
+            "subtitle": None
         },
-        "raw_mrc_ref": "",  # GridFS reference
-        "source": MARCRecordSource.LOCAL.value
+        "contributors": [],  # [{"role": "", "name": ""}]
+        "subjects": [],  # [{"term": "", "subdivisions": []}]
+        "publication": {
+            "place": None,
+            "publisher": None,
+            "year": ""  # Format: "YYYY"
+        },
+        "identifiers": {
+            "isbn": []  # [{"value": ""}]
+        },
+        "languages": [],  # ["vi", "en"]
+        "format": [],  # ["book", "ebook"]
+        "holdings": []  # [{"location_code": "", "call_number": "", "status": ""}]
     }
 
 def get_item_schema() -> Dict[str, Any]:
-    """Schema cho collection items"""
+    """Schema cho collection items
+    Note: marc_record schema đã có trường 'holdings' tích hợp sẵn.
+    Collection 'items' này có thể được dùng cho quản lý chi tiết hơn hoặc deprecated.
+    """
     return {
-        "record_id": None,  # ObjectId ref to marc_records
+        "record_id": None,  # UUID string ref to marc_records.record_id (hoặc ObjectId nếu dùng _id)
         "barcode": "",  # unique
         "status": ItemStatus.AVAILABLE.value,
         "location": {
