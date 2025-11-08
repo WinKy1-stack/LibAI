@@ -24,14 +24,13 @@ from app.config import DevelopmentConfig
 app = create_app(DevelopmentConfig)
 
 
-# === Xử lý Ctrl+C (SIGINT) ===
-def signal_handler(sig, frame):
-    print('\n\nServer đang dừng lại...')
-    print('Tạm biệt huhu tui buồn quá 😢')
-    sys.exit(0)
-
-
-signal.signal(signal.SIGINT, signal_handler)
+# === Xử lý Ctrl+C (SIGINT) - Disabled for Windows compatibility ===
+# def signal_handler(sig, frame):
+#     print('\n\nServer đang dừng lại...')
+#     print('Tạm biệt huhu tui buồn quá 😢')
+#     sys.exit(0)
+# 
+# signal.signal(signal.SIGINT, signal_handler)
 
 
 # === Kiểm tra kết nối Gemini API ===

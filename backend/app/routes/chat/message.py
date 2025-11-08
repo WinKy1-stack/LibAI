@@ -63,13 +63,18 @@ def send_message(current_user):
     start_time = time.time()
     prompt_service = get_prompt_service()
     
+    # Lấy patron_id từ user profile nếu có
+    patron_id = current_user.get('koha_patron_id') or current_user.get('patron_id')
+    
     # Dùng method có session để lưu history conversation
     ai_response = prompt_service.generate_response_with_session(
         conversation_id=conversation_id,
         user_message=user_message,
         instruction_type='default',
         history_service=history_service,  # Truyền history_service để lưu/lấy từ DB
-        latency_ms=int((time.time() - start_time) * 1000)  # Tính latency
+        latency_ms=int((time.time() - start_time) * 1000),  # Tính latency
+        patron_id=patron_id,  # Truyền patron_id để lấy thông tin từ Koha
+        auto_inject_koha_context=True  # Tự động inject Koha context
     )
     latency_ms = int((time.time() - start_time) * 1000)
 

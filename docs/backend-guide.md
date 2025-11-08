@@ -31,6 +31,65 @@ Tài liệu này cung cấp một cái nhìn tổng quan về kiến trúc backe
     python run.py
     ```
 
+    ## 🔌 Tích Hợp Koha ILS
+
+    Hệ thống hỗ trợ lấy dữ liệu trực tiếp từ Koha thông qua REST API để phục vụ AI (trả lời câu hỏi, đề xuất sách) và giao diện frontend.
+
+    ### Biến môi trường cấu hình
+
+    Thêm các khóa sau vào `.env` (KHÔNG commit tài khoản thật):
+
+    ```bash
+    # Koha base URL (ví dụ staff client / OPAC)
+    KOHA_BASE_URL=http://45.118.146.109:8082
+
+    # Chế độ xác thực: api_key | basic
+    KOHA_AUTH_MODE=api_key
+
+    # Nếu dùng API key
+    KOHA_API_KEY=your-koha-api-key
+
+    # Nếu dùng basic auth (ít an toàn hơn - chỉ dùng nội bộ)
+    KOHA_USERNAME=admin
+    KOHA_PASSWORD=your-password
+    ```
+
+    Chỉ cấu hình một trong hai cơ chế (ưu tiên API key). Không để lộ mật khẩu/thông tin thật trong repo.
+
+    ### Endpoints
+
+    | Method | Endpoint | Mô tả |
+    |--------|----------|-------|
+    | GET | `/api/library/koha/search?query=python&limit=10` | Tìm kiếm biểu ghi (biblios) theo từ khóa Koha query syntax |
+    | GET | `/api/library/koha/biblio/<id>` | Lấy chi tiết một biểu ghi |
+
+    ### Ví dụ gọi thử với curl (tùy chọn)
+
+    ```bash
+    curl "http://localhost:5000/api/library/koha/search?query=title:AI" \
+        -H "X-Koha-Auth: $KOHA_API_KEY"
+    ```
+
+    ### Sử dụng trong AI Prompt Service
+
+    Bạn có thể inject lớp `KohaClient` từ `app.services.library.koha_client` để lấy dữ liệu mô tả sách rồi đưa vào ngữ cảnh cho model Gemini.
+
+    ```python
+    from app.services.library.koha_client import get_koha_client
+
+    client = get_koha_client()
+    results = client.search_biblios('data science', limit=5)
+    context_snippets = [r.get('title') for r in results['results']]
+    ```
+
+    ### Ghi chú bảo mật
+
+    - Luôn dùng API key thay vì Basic Auth nếu Koha hỗ trợ.
+    - Hạn chế đánh log đầy đủ nội dung trả về nếu chứa dữ liệu nhạy cảm.
+    - Có thể thêm tầng cache MongoDB cho kết quả Koha để giảm tải và tăng tốc.
+
+    ---
+
 ## 🗄️ Cơ Sở Dữ Liệu
 
 Backend sử dụng MongoDB và có thể được cấu hình để sử dụng một phiên bản đám mây (khuyến nghị) hoặc một phiên bản cục bộ. Cấu hình được quản lý trong tệp `backend/.env`.

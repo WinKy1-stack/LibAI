@@ -21,12 +21,13 @@ logger = logging.getLogger(__name__)
 
 # System prompts
 SYSTEM_INSTRUCTIONS = {
-    'default': """Bạn là LibAI Assistant - trợ lý thư viện thông minh, chuyên hỗ trợ độc giả.
+    'default': """Bạn là LibAI Assistant - trợ lý thư viện thông minh, kết nối trực tiếp với hệ thống Koha ILS để hỗ trợ độc giả.
 
 VAI TRÒ:
 - Lắng nghe và hiểu nhu cầu đọc sách của người dùng
-- Gợi ý sách phù hợp dựa trên sở thích, trình độ
-- Hỗ trợ tìm kiếm sách theo tác giả, thể loại, chủ đề
+- Gợi ý sách phù hợp từ kho sách thực tế trong thư viện Koha
+- Hỗ trợ tìm kiếm sách theo tác giả, thể loại, chủ đề trong Koha
+- Tra cứu thông tin mượn/trả, tình trạng sách thực tế
 - Tư vấn về nội dung, giá trị của sách
 - Hướng dẫn sử dụng dịch vụ thư viện
 
@@ -35,38 +36,49 @@ PHONG CÁCH:
 - Nhiệt tình chia sẻ về sách và kiến thức
 - Ngôn ngữ tự nhiên, không cứng nhắc
 - Tích cực khuyến khích thói quen đọc sách
+- Sử dụng dữ liệu thực từ Koha khi có sẵn trong context
 
 CÁC TÌNH HUỐNG XỬ LÝ:
 
 1. KHI NGƯỜI DÙNG TÌM SÁCH:
    - Xác nhận thể loại, chủ đề họ quan tâm
+   - Sử dụng thông tin từ KOHA (nếu có trong context) để đề xuất sách có sẵn thực tế
+   - Nêu rõ tình trạng sách: có sẵn, đang mượn, số lượng bản
    - Hỏi thêm về trình độ, mục đích đọc
    - Gợi ý 2-3 cuốn phù hợp với giải thích ngắn gọn
-   - Hỏi xem có cần thêm gợi ý không
 
 2. KHI NGƯỜI DÙNG HỎI VỀ SÁCH CỤ THỂ:
-   - Giới thiệu tóm tắt nội dung chính
+   - Sử dụng thông tin chi tiết từ Koha nếu có trong context
+   - Giới thiệu tóm tắt nội dung chính, tác giả, NXB, năm xuất bản
+   - Nêu tình trạng: có bao nhiêu bản, bao nhiêu bản có sẵn
    - Nêu điểm nổi bật, giá trị của sách
    - Đề xuất độc giả phù hợp
    - Gợi ý thêm sách tương tự nếu thích
 
-3. KHI NGƯỜI DÙNG HỎI VỀ TÁC GIẢ:
+3. KHI NGƯỜI DÙNG HỎI VỀ MƯỢN/TRẢ SÁCH:
+   - Sử dụng thông tin từ Koha về sách đang mượn (nếu có trong context)
+   - Thông báo số sách đang mượn, hạn trả, sách quá hạn
+   - Hướng dẫn cách mượn/trả sách
+   - Nhắc nhở về quy định thư viện
+
+4. KHI NGƯỜI DÙNG HỎI VỀ TÁC GIẢ:
    - Giới thiệu ngắn gọn về tác giả
-   - Liệt kê các tác phẩm tiêu biểu
+   - Liệt kê các tác phẩm có trong thư viện (dựa trên Koha context nếu có)
    - Nêu phong cách viết đặc trưng
    - Gợi ý sách nên đọc đầu tiên
 
-4. KHI NGƯỜI DÙNG CHƯA RÕ NHU CẦU:
-   - Đặt câu hỏi mở để hiểu sở thích
-   - Gợi ý các thể loại phổ biến
-   - Chia sẻ xu hướng sách đang được quan tâm
-   - Động viên khám phá thể loại mới
-
 5. VỀ DỊCH VỤ THƯ VIỆN:
-   - Hướng dẫn mượn/trả sách
+   - Sử dụng thông tin FAQ từ Koha nếu có trong context
+   - Hướng dẫn mượn/trả sách, gia hạn
    - Giải thích quy định thư viện
    - Hỗ trợ tra cứu thông tin
    - Giải đáp thắc mắc về tài khoản
+
+CÁCH SỬ DỤNG DỮ LIỆU TỪ KOHA:
+- Nếu context có thông tin từ Koha (bắt đầu bằng "KẾT QUẢ TÌM KIẾM", "THÔNG TIN BẠN ĐỌC", "THÔNG TIN CHI TIẾT SÁCH"...), hãy SỬ DỤNG dữ liệu đó
+- Đề cập cụ thể: tên sách, tác giả, NXB, năm xuất bản, tình trạng có sẵn
+- Nếu sách không có sẵn, thông báo rõ ràng và đề xuất giữ chỗ hoặc sách thay thế
+- Nếu không có dữ liệu Koha trong context, vẫn có thể tư vấn chung dựa trên kiến thức
 
 QUY TẮC ĐỊNH DẠNG:
 - Trả lời bằng đoạn văn tự nhiên
@@ -412,7 +424,9 @@ class PromptService:
         user_message: str,
         instruction_type: str = 'default',
         history_service = None,
-        latency_ms: int = 0
+        latency_ms: int = 0,
+        patron_id: Optional[str] = None,
+        auto_inject_koha_context: bool = True
     ) -> str:
         """
         Tạo response sử dụng chat session (có memory)
@@ -423,6 +437,8 @@ class PromptService:
             instruction_type: Loại instruction
             history_service: ChatHistoryService để lưu/lấy history (optional)
             latency_ms: Độ trễ của request (để lưu vào DB)
+            patron_id: ID bạn đọc để lấy thông tin từ Koha (optional)
+            auto_inject_koha_context: Tự động thêm context từ Koha khi phát hiện keywords
         
         Returns:
             Response text từ AI
@@ -430,6 +446,14 @@ class PromptService:
         try:
             # Validate input
             self.validator.validate_message(user_message)
+            
+            # Tự động inject Koha context nếu cần
+            enhanced_message = user_message
+            if auto_inject_koha_context:
+                koha_context = self._build_koha_context_from_message(user_message, patron_id)
+                if koha_context:
+                    enhanced_message = f"{user_message}\n\n[THÔNG TIN TỪ THƯ VIỆN KOHA]:\n{koha_context}"
+                    logger.debug("Injected Koha context: %d chars", len(koha_context))
             
             # Get or create chat session (với history từ DB nếu có)
             chat_session = self.get_or_create_chat_session(
@@ -440,18 +464,18 @@ class PromptService:
             
             # Send message through session (history tự động được lưu trong session memory)
             logger.debug("Sending message to chat session %s", conversation_id)
-            response_text = chat_session.send_message(user_message)
+            response_text = chat_session.send_message(enhanced_message)
             
             if not response_text or not response_text.strip():
                 logger.warning("Empty response text")
                 raise EmptyResponseError("AI trả về nội dung trống")
             
-            # Lưu vào database nếu có history_service
+            # Lưu vào database nếu có history_service (chỉ lưu message gốc, không lưu context)
             if history_service:
                 try:
                     history_service.save_chat_exchange(
                         conversation_id=conversation_id,
-                        user_message=user_message,
+                        user_message=user_message,  # Lưu message gốc
                         assistant_message=response_text,
                         latency_ms=latency_ms
                     )
@@ -468,6 +492,84 @@ class PromptService:
         except Exception as e:
             logger.error("Error in generate_response_with_session: %s", str(e), exc_info=True)
             raise GeminiAPIError(f"Lỗi khi gọi AI: {str(e)}") from e
+    
+    def _build_koha_context_from_message(self, user_message: str, patron_id: Optional[str] = None) -> str:
+        """
+        Tự động xây dựng Koha context dựa trên nội dung message
+        
+        Args:
+            user_message: Message từ user
+            patron_id: ID bạn đọc (optional)
+            
+        Returns:
+            Context string hoặc empty string
+        """
+        try:
+            from app.services.prompt.koha_context import (
+                build_koha_context_for_patron,
+                build_koha_context_for_books,
+                build_faq_context
+            )
+            
+            message_lower = user_message.lower()
+            context_parts = []
+            
+            # Keywords để phát hiện nhu cầu
+            search_keywords = ['tìm sách', 'tìm kiếm', 'có sách', 'sách về', 'gợi ý sách', 'recommend', 'search']
+            borrow_keywords = ['mượn', 'trả', 'đang mượn', 'checkout', 'borrow', 'return', 'quá hạn', 'overdue']
+            faq_keywords = ['làm sao', 'làm thế nào', 'hướng dẫn', 'quy định', 'how to', 'faq', 'câu hỏi']
+            
+            # 1. Thông tin bạn đọc (nếu hỏi về mượn/trả)
+            if patron_id and any(keyword in message_lower for keyword in borrow_keywords):
+                patron_context = build_koha_context_for_patron(patron_id)
+                if patron_context:
+                    context_parts.append(patron_context)
+            
+            # 2. Tìm kiếm sách (nếu có từ khóa tìm kiếm)
+            if any(keyword in message_lower for keyword in search_keywords):
+                # Extract search query - đơn giản lấy các từ sau keyword
+                search_query = self._extract_search_query(user_message)
+                if search_query and len(search_query) >= 3:
+                    books_context = build_koha_context_for_books(search_query, limit=5)
+                    if books_context:
+                        context_parts.append(books_context)
+            
+            # 3. FAQ (nếu hỏi về hướng dẫn/quy định)
+            if any(keyword in message_lower for keyword in faq_keywords):
+                faq_context = build_faq_context(limit=5)
+                if faq_context and 'Không có dữ liệu' not in faq_context:
+                    context_parts.append(faq_context)
+            
+            return "\n\n".join(context_parts) if context_parts else ""
+            
+        except Exception as e:
+            logger.warning(f"Failed to build Koha context: {e}")
+            return ""
+    
+    def _extract_search_query(self, message: str) -> str:
+        """
+        Trích xuất từ khóa tìm kiếm từ message
+        
+        Args:
+            message: User message
+            
+        Returns:
+            Search query string
+        """
+        # Đơn giản: lấy các từ có nghĩa, bỏ stop words
+        message_lower = message.lower()
+        
+        # Các từ để loại bỏ
+        stop_words = [
+            'tìm', 'tìm kiếm', 'sách', 'về', 'cho', 'tôi', 'mình', 'có', 'không',
+            'gợi ý', 'đề xuất', 'giúp', 'search', 'find', 'book', 'recommend'
+        ]
+        
+        # Split và filter
+        words = message_lower.split()
+        query_words = [w for w in words if w not in stop_words and len(w) > 2]
+        
+        return " ".join(query_words[:3])  # Lấy tối đa 3 từ khóa
     
     def generate_response(
         self,

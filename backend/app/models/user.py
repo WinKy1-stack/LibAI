@@ -26,6 +26,7 @@ class User(db.Model):
     phone = db.Column(db.String(20))
     address = db.Column(db.String(255))
     avatar = db.Column(db.String(255))
+    koha_patron_id = db.Column(db.String(50), index=True, comment='ID bạn đọc trong Koha ILS')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     is_active = db.Column(db.Boolean, default=True)
@@ -60,6 +61,7 @@ class User(db.Model):
             'phone': self.phone,
             'address': self.address,
             'avatar': self.avatar,
+            'koha_patron_id': self.koha_patron_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None,
