@@ -53,89 +53,46 @@ Content-Type: application/json
 | POST | `/marc-records` | Tạo một bản ghi MARC mới. | Có | Thủ thư+ |
 | PUT | `/marc-records/:id` | Cập nhật một bản ghi MARC. | Có | Thủ thư+ |
 | DELETE | `/marc-records/:id` | Xóa một bản ghi MARC. | Có | Quản trị viên |
+| GET | `/items` | Lấy tất cả các mục. | Có | Tất cả |
+| POST | `/items` | Tạo một mục mới. | Có | Thủ thư+ |
+| GET | `/loans` | Lấy tất cả các khoản mượn. | Có | Thủ thư+ |
+| POST | `/loans/checkout` | Mượn một cuốn sách. | Có | Thủ thư+ |
+| POST | `/loans/return` | Trả một cuốn sách. | Có | Thủ thư+ |
 
-### Trò chuyện (`/api/chat`)
+### Tìm kiếm Z39.50 (`/api/z3950`)
 
-| Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
-| ------ | ----------- | ------------------------ | ------------- |
-| POST | `/message` | Gửi tin nhắn đến chatbot. | Có |
-| POST | `/recommend` | Nhận đề xuất sách. | Có |
-| GET | `/history/:id` | Lấy lịch sử trò chuyện. | Có |
-| GET | `/conversations`| Lấy danh sách cuộc trò chuyện.| Có |
-| GET | `/stats` | Lấy thống kê trò chuyện. | Có |
-| GET | `/health` | Kiểm tra tình trạng dịch vụ. | Không |
+Tìm kiếm sách từ các thư viện quốc tế sử dụng giao thức Z39.50.
 
-**Ví dụ yêu cầu tin nhắn trò chuyện:**
+| Phương thức | Điểm cuối | Mô tả | Xác thực | Vai trò |
+| ------ | --------------------- | ------------------------- | ---- | ----------- |
+| GET | `/search/all` | Tìm kiếm tất cả nguồn (LOC, UW, OCLC). | Không | Công khai |
+| GET | `/search/{source}` | Tìm kiếm một nguồn cụ thể. | Không | Công khai |
+| GET | `/sources` | Lấy danh sách nguồn khả dụng. | Không | Công khai |
+| GET | `/health` | Kiểm tra trạng thái service. | Không | Công khai |
+| POST | `/cache/clear` | Xóa cache Z39.50. | Có | Thủ thư+ |
+| GET | `/cache/stats` | Xem thống kê cache. | Có | Thủ thư+ |
+
+**Ví dụ tìm kiếm:**
 
 ```bash
-POST /api/chat/message
-Content-Type: application/json
-Authorization: Bearer <your_jwt_token>
+# Tìm tất cả nguồn theo tiêu đề
+GET /api/z3950/search/all?q=machine%20learning&type=title&limit=5
 
-{
-  "message": "Tìm sách về Python cho người mới bắt đầu"
-}
+# Tìm theo ISBN
+GET /api/z3950/search/loc?q=978-0262035613&type=isbn
+
+# Tìm và lưu vào database
+GET /api/z3950/search/all?q=python&type=keyword&save=true
 ```
 
-**Ví dụ phản hồi tin nhắn trò chuyện:**
+**Query Parameters:**
+- `q` (bắt buộc): Từ khóa tìm kiếm
+- `type`: Loại tìm kiếm - `isbn`, `title`, `author`, `subject`, `keyword` (mặc định: `keyword`)
+- `limit`: Số kết quả tối đa (1-100, mặc định: 5)
+- `cache`: Sử dụng cache (`true`/`false`, mặc định: `true`)
+- `save`: Lưu kết quả mới vào DB (`true`/`false`, mặc định: `false`)
 
-```json
-{
-  "success": true,
-  "data": {
-    "message": "Tôi đề xuất cuốn 'Python Crash Course' của Eric Matthes.",
-    "conversation_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
-  },
-  "metadata": {
-    "latency_ms": 789
-  }
-}
-```
-**Ví dụ truy vấn dữ liệu:**
-1.Cài ứng dụng Yaz: https://www.indexdata.com/resources/software/yaz/
-  Phiên bản 3.31.0
-  Sau khi cài xong, kiểm tra trong Command Prompt:yaz-client
-  Kết quả trả về: Z>(Cài đặt thành công)
-  Nếu không vào PATH thêm file.bin
-2. Kiểm thử với Yaz: Mở Terminal:yaz-client z3950.loc.gov:7090/voyager
-  -find @attr 1=4 "python"
-  -show 1
-3.Chạy với dự án trong Visual Studio Code
-   #Di chuyển vào thư mục backend
-    cd backend
-    # Tạo và kích hoạt môi trường ảo
-    python -m venv venv311
-    # Windows: .\venv311\Scripts\Activate.ps1
-    # Linux/macOS: source venv311/bin/activate
-
-- Chạy ứng dụng: python run.py
-- Thử nghiệm truy vấn với những trường:
-- Tác giả: http://127.0.0.1:5000/search?keyword=Stephen%20Hawking&field=author
-- Tên sách: http://127.0.0.1:5000/search?keyword=Deep%20Learning&field=title
-- Chủ đề: http://127.0.0.1:5000/search?keyword=Artificial%20Intelligence&field=subject
-- IISBN: http://127.0.0.1:5000/search?keyword=9780262035613&field=isbn
-### Tìm kiếm 
-
-| Phương thức | Điểm cuối                             | Mô tả                                                            | Yêu cầu xác thực |
-| ----------- | ------------------------------------- | ---------------------------------------------------------------- | ---------------- |
-| **GET**     | `/search?keyword=...&field=any`       | Tìm kiếm tổng hợp toàn văn (tiêu đề, tác giả, chủ đề, mô tả...). | Không            |
-| **GET**     | `/search?keyword=...&field=title`     | Tìm theo **nhan đề** (245$a).                                    | Không            |
-| **GET**     | `/search?keyword=...&field=author`    | Tìm theo **tác giả** (100$a hoặc 700$a).                         | Không            |
-| **GET**     | `/search?keyword=...&field=subject`   | Tìm theo **chủ đề** (650$a).                                     | Không            |
-| **GET**     | `/search?keyword=...&field=isbn`      | Tìm theo **ISBN** (020$a).                                       | Không            |
-| **GET**     | `/search?keyword=...&field=publisher` | Tìm theo **nhà xuất bản** (260$b).                               | Không            |
-| **GET**     | `/search?keyword=...&field=date`      | Tìm theo **năm xuất bản** (260$c).                               | Không            |
-### DS Các trường(`field`)
-
-| Mã MARC | Tên trường                         | Tiểu trường | Ý nghĩa                             |   `field` |  Ví dụ                                |
-| ------- | ---------------------------------- | ----------- | ----------------------------------- | ----------| --------------------------------------- |
-| **245** | Title Statement                    | `$a`        | Nhan đề chính của tài liệu          | `title`   | `?keyword=Deep+Learning&field=title`    |
-| **245** | Title Statement                    | `$c`        | Trách nhiệm (tác giả trong nhan đề) | `any`     | `?keyword=Goodfellow&field=any`         |
-| **100** | Main Entry — Personal Name         | `$a`        | Tác giả chính                       | `author`  | `?keyword=Stephen+Hawking&field=author` |
-| **700** | Added Entry — Personal Name        | `$a`        | Tác giả phụ                         | `author`  | `?keyword=Yoshua+Bengio&field=author`   |
-| **260** | Publication, Distribution, etc.    | `$b`        | Nhà xuất bản                        | `publisher`| `?keyword=Pearson&field=publisher`     |
-| **260** | Publication, Distribution, etc.    | `$c`        | Năm xuất bản                        | `date`     | `?keyword=2023&field=date`             |
-| **650** | Subject Added Entry — Topical Term | `$a`        | Chủ đề / lĩnh vực                   | `subject`  | `?keyword=Artificial+Intelligence&field=subject` |
-| **520** | Summary, etc.                      | `$a`        | Tóm tắt hoặc mô tả nội dung         | `any`      | `?keyword=neural+network&field=any`    |
-| **504** | Bibliography, etc. Note            | `$a`        | Ghi chú tài liệu tham khảo          | `any`      | `?keyword=reference&field=any`         |
-| **020** | ISBN                               | `$a`        | Mã số sách chuẩn quốc tế            | `isbn`     | `?keyword=9780262035613&field=isbn`    |
+**Nguồn hỗ trợ:**
+- `loc` - Library of Congress (Thư viện Quốc hội Mỹ)
+- `uw` - UW-Madison (Đại học Wisconsin-Madison)
+- `oclc` - OCLC WorldCat (Yêu cầu xác thực, mặc định tắt)

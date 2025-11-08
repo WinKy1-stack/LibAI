@@ -25,18 +25,21 @@ def create_users_indexes():
 def create_marc_records_indexes():
     """Create indexes for marc_records collection"""
     print("📝 Creating indexes for 'marc_records'...")
-    
-    # Text search index
+
+    # Text search index for new schema
     MongoHelper.create_index('marc_records', [
-        ('normalized.title', 'text'),
-        ('normalized.authors', 'text'),
-        ('normalized.subjects', 'text')
+        ('title.main', 'text'),
+        ('title.subtitle', 'text'),
+        ('contributors.name', 'text'),
+        ('subjects.term', 'text')
     ])
-    
-    MongoHelper.create_index('marc_records', [('normalized.year', 1), ('normalized.publisher', 1)])
-    MongoHelper.create_index('marc_records', [('control_number', 1)], unique=True)
-    MongoHelper.create_index('marc_records', [('normalized.isbn', 1)])
-    
+
+    MongoHelper.create_index('marc_records', [('publication.year', 1), ('publication.publisher', 1)])
+    MongoHelper.create_index('marc_records', [('record_id', 1)], unique=True)
+    MongoHelper.create_index('marc_records', [('identifiers.isbn.value', 1)])
+    MongoHelper.create_index('marc_records', [('subjects.term', 1)])
+    MongoHelper.create_index('marc_records', [('contributors.name', 1)])
+
     print("  ✅ MARC records indexes created")
 
 def create_items_indexes():

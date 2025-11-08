@@ -9,7 +9,9 @@ LibAI là một ứng dụng giàu tính năng được thiết kế để hợp
 - **Giao diện thân thiện với người dùng** để tìm kiếm, mượn và quản lý sách.
 - **Bảng điều khiển quản trị** để quản lý người dùng, sách và xem thống kê.
 - **Xác thực dựa trên JWT** với kiểm soát truy cập dựa trên vai trò.
-- **Tích hợp Chatbot AI** để hỗ trợ người dùng.
+- **🆕 Tìm kiếm Z39.50** - Tìm kiếm sách từ các thư viện quốc tế (LOC, UW-Madison, OCLC).
+- **🆕 Redis Caching** - Cache thông minh cho hiệu suất tối ưu.
+- **🆕 Docker Support** - Triển khai dễ dàng với Docker Compose.
 
 ## 🚀 Bắt đầu
 
@@ -17,23 +19,42 @@ LibAI là một ứng dụng giàu tính năng được thiết kế để hợp
 
 ## 📖 Tài liệu
 
-Để hiểu sâu hơn về dự án, vui lòng tham khảo các tài liệu sau:
-
-- **[Hướng dẫn sử dụng](./docs/usage.md)**: Tìm hiểu cách sử dụng ứng dụng và các tài khoản thử nghiệm.
-- **[Hướng dẫn Frontend](./docs/frontend-guide.md)**: Tổng quan về kiến trúc frontend và các thành phần.
-- **[Hướng dẫn Backend](./docs/backend-guide.md)**: Tổng quan về kiến trúc backend và các API.
+### Cơ bản
+- **[Hướng dẫn Cài đặt](./docs/installation.md)**: Hướng dẫn chi tiết để thiết lập dự án.
+- **[Hướng dẫn sử dụng](./docs/usage.md)**: Tìm hiểu cách sử dụng ứng dụng và tài khoản thử nghiệm.
 - **[Cấu trúc dự án](./docs/project-structure.md)**: Tổng quan về cấu trúc thư mục của dự án.
 - **[Cấu trúc cơ sở dữ liệu](./docs/database-structure.md)**: Chi tiết về các bộ sưu tập MongoDB.
+
+### API & Tích hợp
 - **[Tham chiếu API](./docs/api-reference.md)**: Hướng dẫn về tất cả các điểm cuối API có sẵn.
+- **[🆕 Z39.50 API](./docs/z3950-api.md)**: Tìm kiếm sách từ thư viện quốc tế.
+- **[🆕 Docker Guide](./docs/docker-guide.md)**: Triển khai với Docker & Docker Compose.
+
+### Hỗ trợ
 - **[Xử lý sự cố](./docs/troubleshooting.md)**: Các giải pháp cho các sự cố thường gặp.
 - **[Hướng dẫn đóng góp](./docs/contributing.md)**: Tìm hiểu cách đóng góp cho dự án.
 
 ## 🎨 Ngăn xếp công nghệ
 
-- **Frontend**: React, TypeScript, Vite, Tailwind CSS, Ant Design
-- **Backend**: Flask, PyMongo, Flask-JWT-Extended, Gemini
-- **Cơ sở dữ liệu**: MongoDB (Cloud Atlas và Cục bộ)
+### Frontend
+- React 18, TypeScript, Vite
+- Tailwind CSS, Ant Design
+- React Router, Axios
 
-## 📝 Giấy phép
+### Backend
+- Flask (Python 3.11+)
+- MongoDB (PyMongo, Flask-PyMongo)
+- Redis (Cache Layer)
+- JWT Authentication
+- Z39.50 Integration (YAZ Toolkit)
 
-Dự án này được cấp phép theo Giấy phép MIT.
+### DevOps
+- Docker & Docker Compose
+- Gunicorn (Production Server)
+- Redis Cache
+- MongoDB Atlas (Cloud) / Local MongoDB
+
+### External APIs
+- Library of Congress (LOC) Z39.50
+- UW-Madison Z39.50
+- OCLC WorldCat Z39.50 (Optional)
