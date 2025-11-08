@@ -8,9 +8,9 @@ export interface DashboardStatsData {
 }
 
 export const dashboardStatsData: DashboardStatsData = {
-  totalVisitors: "1223",
-  booksIssued: "740",
-  overdueBooks: "22",
-  newMembers: "60",
+  totalVisitors: "-",
+  booksIssued: "-",
+  overdueBooks: "-",
+  newMembers: "-",
 };
 

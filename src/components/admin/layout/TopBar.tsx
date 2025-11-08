@@ -167,6 +167,7 @@ export default function TopBar({ collapsed, onToggle, mode, setMode, user }: Top
                 {/* Avatar - Responsive size */}
                 <Avatar
                   size={isMobile ? 32 : isSmallTablet ? 34 : 40}
+                  src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.email || 'user'}`}
                   icon={<UserOutlined />}
                 />
               </Space>

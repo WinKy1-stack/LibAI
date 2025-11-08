@@ -10,12 +10,12 @@ import {
 import { GenericFormModal } from "../../components/admin/common";
 import { categoryIcons } from "../../components/admin/faq/constants";
 import {
-  mockFaqItems,
-  faqCategories,
-  faqCategoryDistribution,
-  latestFaqActivities,
-  type FaqItem,
-} from "../../data";
+  useFaqs,
+  useFaqCategories,
+  useFaqCategoryDistribution,
+  useFaqActivities,
+} from "../../hooks/useAdminQueries";
+import type { FaqItem } from "../../data";
 
 const { useBreakpoint } = Grid;
 
@@ -26,28 +26,26 @@ export default function FaqPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft" | "archived">("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [searchValue, setSearchValue] = useState("");
-  const [faqData, setFaqData] = useState<FaqItem[]>(mockFaqItems);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
   const [tempTags, setTempTags] = useState<string[]>([]);
   const [inputTag, setInputTag] = useState("");
 
-  // Individual loading states with 10s timeout for testing
-  const [tableLoading, setTableLoading] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [activityLoading, setActivityLoading] = useState(true);
+  // Use react-query hooks
+  const { data: initialFaqData = [], isLoading: tableLoading } = useFaqs();
+  const { data: faqCategories = [], isLoading: categoriesLoading } = useFaqCategories();
+  const { data: faqCategoryDistribution = [], isLoading: categoryDistributionLoading } = useFaqCategoryDistribution();
+  const { data: latestFaqActivities = [], isLoading: activityLoading } = useFaqActivities();
 
+  // Local state for FAQ data (can be modified by user actions)
+  const [faqData, setFaqData] = useState<FaqItem[]>([]);
+
+  // Update local state when query data changes
   useEffect(() => {
-    const tableTimer = setTimeout(() => setTableLoading(false), 10000);
-    const categoriesTimer = setTimeout(() => setCategoriesLoading(false), 10000);
-    const activityTimer = setTimeout(() => setActivityLoading(false), 10000);
-
-    return () => {
-      clearTimeout(tableTimer);
-      clearTimeout(categoriesTimer);
-      clearTimeout(activityTimer);
-    };
-  }, []);
+    if (initialFaqData.length > 0) {
+      setFaqData(initialFaqData);
+    }
+  }, [initialFaqData]);
 
   const totals = useMemo(() => {
     return {
@@ -60,7 +58,7 @@ export default function FaqPage() {
 
   const categoriesForFilter = useMemo(
     () => faqCategories.map((cat) => ({ id: cat.id, name: cat.name })),
-    []
+    [faqCategories]
   );
 
   const filteredFaqs = useMemo(() => {
@@ -179,7 +177,7 @@ export default function FaqPage() {
               distribution={faqCategoryDistribution}
               totalFaqs={totals.totalQuestions}
               publishedFaqs={totals.publishedQuestions}
-              loading={categoriesLoading}
+              loading={categoriesLoading || categoryDistributionLoading}
             />
           </Col>
           <Col xs={24} lg={12}>

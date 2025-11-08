@@ -7,13 +7,12 @@ import { RetentionCard } from "../../components/admin/userManagement/RetentionCa
 import { RoleDistributionCard } from "../../components/admin/userManagement/RoleDistributionCard";
 import { ActivityCard } from "../../components/admin/userManagement/ActivityCard";
 import {
-  adminUsers,
-  latestUserActivities,
-  userRetentionTrend,
-  userRoleDistribution,
-  type UserRole,
-  type UserStatus,
-} from "../../data";
+  useUsers,
+  useUserActivities,
+  useUserRetention,
+  useUserRoleDistribution,
+} from "../../hooks/useAdminQueries";
+import type { UserRole, UserStatus } from "../../data";
 
 const { useBreakpoint } = Grid;
 
@@ -25,7 +24,22 @@ export default function UserManagementPage() {
   const [roleFilter, setRoleFilter] = useState<"all" | UserRole>("all");
   const [searchValue, setSearchValue] = useState("");
 
+  // Use react-query hooks
+  const { data: adminUsers = [], isLoading: usersLoading } = useUsers();
+  const { data: latestUserActivities = [] } = useUserActivities();
+  const { data: userRetentionTrend = [] } = useUserRetention();
+  const { data: userRoleDistribution = [] } = useUserRoleDistribution();
+
   const totals = useMemo(() => {
+    if (adminUsers.length === 0) {
+      return {
+        total: 0,
+        active: 0,
+        pending: 0,
+        flagged: 0,
+        completedAverage: 0,
+      };
+    }
     const active = adminUsers.filter((user) => user.status === "active").length;
     const pending = adminUsers.filter((user) => user.status === "pending").length;
     const flagged = adminUsers.filter((user) => user.status === "banned" || user.overdueBooks >= 3).length;
@@ -39,7 +53,7 @@ export default function UserManagementPage() {
       flagged,
       completedAverage,
     };
-  }, []);
+  }, [adminUsers]);
 
   const overviewTotals: UserTotals = {
     total: totals.total,
@@ -50,7 +64,7 @@ export default function UserManagementPage() {
 
   const totalRoleCount = useMemo(
     () => userRoleDistribution.reduce((accumulator, item) => accumulator + item.count, 0),
-    [],
+    [userRoleDistribution],
   );
 
   const filteredUsers = useMemo(() => {
@@ -68,7 +82,7 @@ export default function UserManagementPage() {
 
       return matchSearch && matchStatus && matchRole;
     });
-  }, [statusFilter, roleFilter, searchValue]);
+  }, [statusFilter, roleFilter, searchValue, adminUsers]);
 
   const retentionChange = useMemo(() => {
     if (userRetentionTrend.length < 2) {
@@ -82,7 +96,7 @@ export default function UserManagementPage() {
       active: last.active - previous.active,
       churn: last.churned - previous.churned,
     };
-  }, []);
+  }, [userRetentionTrend]);
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
@@ -101,6 +115,7 @@ export default function UserManagementPage() {
             onRoleChange={(value) => setRoleFilter(value)}
             onSearchChange={(value) => setSearchValue(value)}
             onSearchSubmit={(value) => setSearchValue(value)}
+            loading={usersLoading}
           />
 
           {/* Metrics Cards Row */}

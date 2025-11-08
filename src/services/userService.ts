@@ -1,69 +1,40 @@
-import { getDatabase } from '../utils/mongodb';
-import { ObjectId } from 'mongodb';
-import type { User } from '../types';
+import axios from 'axios';
+import type { User } from '../types/auth';
 
-/**
- * Service quản lý users trong MongoDB
- */
-export class UserService {
-  private collectionName = 'users';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-  /**
-   * Lấy tất cả users
-   */
-  async getAllUsers(): Promise<User[]> {
-    const db = await getDatabase();
-    const users = await db.collection<User>(this.collectionName).find({}).toArray();
-    return users;
-  }
+// Create axios instance
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-  /**
-   * Lấy user theo ID
-   */
-  async getUserById(id: string): Promise<User | null> {
-    const db = await getDatabase();
-    const user = await db.collection<User>(this.collectionName).findOne({ _id: new ObjectId(id) });
-    return user;
-  }
+// Add token to requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-  /**
-   * Tạo user mới
-   */
-  async createUser(userData: Omit<User, '_id'>): Promise<User> {
-    const db = await getDatabase();
-    const result = await db.collection(this.collectionName).insertOne({
-      ...userData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    return {
-      _id: result.insertedId.toString(),
-      ...userData,
-    };
-  }
-
-  /**
-   * Cập nhật user
-   */
-  async updateUser(id: string, updates: Partial<User>): Promise<boolean> {
-    const db = await getDatabase();
-    const result = await db.collection<User>(this.collectionName).updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { ...updates, updatedAt: new Date() } }
-    );
-    return result.modifiedCount > 0;
-  }
-
-  /**
-   * Xóa user
-   */
-  async deleteUser(id: string): Promise<boolean> {
-    const db = await getDatabase();
-    const result = await db.collection<User>(this.collectionName).deleteOne({ _id: new ObjectId(id) });
-    return result.deletedCount > 0;
-  }
+export interface UsersResponse {
+  success: boolean;
+  data: User[];
 }
 
-// Export singleton instance
-export const userService = new UserService();
+export const userService = {
+  // Get all users
+  getAllUsers: async (): Promise<User[]> => {
+    const response = await api.get<UsersResponse>('/users');
+    if (response.data.success) {
+      return response.data.data;
+    }
+    throw new Error('Failed to fetch users');
+  },
+};

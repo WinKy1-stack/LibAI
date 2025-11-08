@@ -77,10 +77,7 @@ export default function BooksTable() {
         rowKey="key"
         dataSource={dashboardBooks}
         columns={columns}
-        loading={{
-          spinning: loading,
-          indicator: <></>,
-        }}
+        loading={loading}
         pagination={false}
         scroll={{ x: 560 }}
       />

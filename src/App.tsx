@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ChatProvider } from './contexts/ChatContext';
 import { UserLayout } from './components/user/layout';
 import AdminLayout from './components/admin/layout/AdminLayout';
@@ -8,6 +9,18 @@ import { LoginPage, RegisterPage, ProtectedRoute, PublicRoute } from './componen
 import { authService } from './services/authService';
 import ForbiddenPage from './pages/ForbiddenPage';
 import './App.css';
+
+// Create a query client with default options
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache data for 10 minutes (formerly cacheTime in v4)
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      retry: 1, // Only retry once on error
+    },
+  },
+});
 
 const ChatHistoryPage = lazy(() => import('./pages/user/ChatHistoryPage'));
 const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
@@ -39,9 +52,10 @@ function UserLayoutWrapper() {
 
 function App() {
   return (
-    <ChatProvider>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
+    <QueryClientProvider client={queryClient}>
+      <ChatProvider>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Routes>
           {/* Public landing (can redirect if already logged in) */}
           <Route
             path="/"
@@ -119,8 +133,9 @@ function App() {
         element={<FallbackRedirect />}
       />
     </Routes>
-    </Suspense>
-    </ChatProvider>
+        </Suspense>
+      </ChatProvider>
+    </QueryClientProvider>
   );
 }
 

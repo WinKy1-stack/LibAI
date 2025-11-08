@@ -7,12 +7,12 @@ import { CategoryDistributionCard } from "../../components/admin/bookManagement/
 import { BorrowTrendCard } from "../../components/admin/bookManagement/BorrowTrendCard";
 import { ActivityCard } from "../../components/admin/bookManagement/ActivityCard";
 import {
-  adminBooks,
-  categoryDistribution,
-  latestBookActivities,
-  monthlyBorrowTrend,
-  type BookStatus,
-} from "../../data";
+  useBooks,
+  useBookCategories,
+  useBookActivities,
+  useBorrowTrend,
+} from "../../hooks/useAdminQueries";
+import type { BookStatus } from "../../data";
 
 const { useBreakpoint } = Grid;
 
@@ -24,7 +24,22 @@ export default function BooksManagementPage() {
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [searchValue, setSearchValue] = useState("");
 
+  // Use react-query hooks
+  const { data: adminBooks = [] } = useBooks();
+  const { data: categoryDistribution = [] } = useBookCategories();
+  const { data: latestBookActivities = [] } = useBookActivities();
+  const { data: monthlyBorrowTrend = [] } = useBorrowTrend();
+
   const totals = useMemo(() => {
+    if (adminBooks.length === 0) {
+      return {
+        titles: 0,
+        totalBooks: 0,
+        totalAvailable: 0,
+        totalLoaned: 0,
+        totalOverdue: 0,
+      };
+    }
     const totalBooks = adminBooks.reduce((accumulator, book) => accumulator + book.totalCopies, 0);
     const totalAvailable = adminBooks.reduce((accumulator, book) => accumulator + book.availableCopies, 0);
     const totalLoaned = adminBooks.reduce(
@@ -40,7 +55,7 @@ export default function BooksManagementPage() {
       totalLoaned,
       totalOverdue,
     };
-  }, []);
+  }, [adminBooks]);
 
   const overviewTotals: BookTotals = {
     titles: totals.titles,
@@ -49,7 +64,7 @@ export default function BooksManagementPage() {
     totalOverdue: totals.totalOverdue,
   };
 
-  const categories = useMemo(() => categoryDistribution.map((item) => item.category), []);
+  const categories = useMemo(() => categoryDistribution.map((item) => item.category), [categoryDistribution]);
 
   const filteredBooks = useMemo(() => {
     const normalized = searchValue.trim().toLowerCase();
@@ -66,7 +81,7 @@ export default function BooksManagementPage() {
 
       return matchSearch && matchStatus && matchCategory;
     });
-  }, [categoryFilter, statusFilter, searchValue]);
+  }, [categoryFilter, statusFilter, searchValue, adminBooks]);
 
   const borrowChange = useMemo(() => {
     if (monthlyBorrowTrend.length < 2) {
@@ -78,7 +93,7 @@ export default function BooksManagementPage() {
       borrowed: last.borrowed - prev.borrowed,
       returned: last.returned - prev.returned,
     };
-  }, []);
+  }, [monthlyBorrowTrend]);
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>

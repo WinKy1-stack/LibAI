@@ -49,13 +49,13 @@ export default function OverdueBookTable({
       ),
     },
     {
-      title: "Book ID",
+      title: "Mã sách",
       dataIndex: "bookId",
       width: 140,
       responsive: ["lg"],
     },
     {
-      title: "Title",
+      title: "Tựa sách",
       dataIndex: "title",
       ellipsis: true,
       render: (title: string) => (
@@ -63,14 +63,14 @@ export default function OverdueBookTable({
       ),
     },
     {
-      title: "Author",
+      title: "Tác giả",
       dataIndex: "author",
       width: 180,
       responsive: ["xl"],
       ellipsis: { showTitle: true },
     },
     {
-      title: "Overdue",
+      title: "Quá hạn",
       dataIndex: "overdueDays",
       width: 100,
       align: "center",
@@ -79,14 +79,14 @@ export default function OverdueBookTable({
       ),
     },
     {
-      title: "Status",
+      title: "Trạng thái",
       dataIndex: "status",
       width: 150,
       align: "center",
       render: (status) => <StatusTag status={status} />,
     },
     {
-      title: "Fine",
+      title: "Phạt",
       dataIndex: "fine",
       width: 120,
       align: "right",
@@ -97,7 +97,7 @@ export default function OverdueBookTable({
       ),
     },
     {
-      title: "Action",
+      title: "Hành động",
       key: "action",
       width: 80,
       align: "center",
@@ -113,10 +113,7 @@ export default function OverdueBookTable({
       rowKey="key"
       dataSource={dataSource}
       columns={columns}
-      loading={{
-        spinning: loading,
-        indicator: <></>,
-      }}
+      loading={loading}
       scroll={{ x: 1200 }}
       pagination={{
         current: currentPage,

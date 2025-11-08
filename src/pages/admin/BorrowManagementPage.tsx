@@ -1,4 +1,3 @@
-import { useState, useEffect, useMemo } from "react";
 import { Row, Col, Space } from "antd";
 import { HeaderCard } from "../../components/admin/borrowManagement/HeaderCard";
 import { StatsOverview } from "../../components/admin/borrowManagement/StatsOverview";
@@ -7,38 +6,18 @@ import { StatusDistributionCard } from "../../components/admin/borrowManagement/
 import { RecentActivityCard } from "../../components/admin/borrowManagement/RecentActivityCard";
 import { BorrowsTablePanel } from "../../components/admin/borrowManagement/BorrowsTablePanel";
 import {
-  borrowRecords,
-  borrowTrendData,
-  statusDistribution,
-  latestBorrowActivities,
-} from "../../data/mockBorrows";
+  useBorrows,
+  useBorrowTrendData,
+  useBorrowStatus,
+  useBorrowActivities,
+} from "../../hooks/useAdminQueries";
 
 export const BorrowManagementPage = () => {
-  const [trendLoading, setTrendLoading] = useState(true);
-  const [statusLoading, setStatusLoading] = useState(true);
-  const [activityLoading, setActivityLoading] = useState(true);
-  const [tableLoading, setTableLoading] = useState(true);
-
-  // Simulate loading data with 10s timeout for testing
-  useEffect(() => {
-    const trendTimer = setTimeout(() => setTrendLoading(false), 10000);
-    const statusTimer = setTimeout(() => setStatusLoading(false), 10000);
-    const activityTimer = setTimeout(() => setActivityLoading(false), 10000);
-    const tableTimer = setTimeout(() => setTableLoading(false), 10000);
-
-    return () => {
-      clearTimeout(trendTimer);
-      clearTimeout(statusTimer);
-      clearTimeout(activityTimer);
-      clearTimeout(tableTimer);
-    };
-  }, []);
-
-  // Memoize data to avoid unnecessary re-renders
-  const borrows = useMemo(() => borrowRecords, []);
-  const trendData = useMemo(() => borrowTrendData, []);
-  const statusData = useMemo(() => statusDistribution, []);
-  const activities = useMemo(() => latestBorrowActivities, []);
+  // Use react-query hooks
+  const { data: borrows = [], isLoading: tableLoading } = useBorrows();
+  const { data: trendData = [], isLoading: trendLoading } = useBorrowTrendData();
+  const { data: statusData = [], isLoading: statusLoading } = useBorrowStatus();
+  const { data: activities = [], isLoading: activityLoading } = useBorrowActivities();
 
   return (
     <div

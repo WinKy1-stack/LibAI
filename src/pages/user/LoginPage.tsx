@@ -39,7 +39,7 @@ export default function LoginPage() {
       const userData = {
         id: responseUser.id || responseUser.user_id || '',
         email: responseUser.email || '',
-        name: responseUser.name || responseUser.full_name || formData.username || '',
+        name: responseUser.name || '',
         role: responseUser.role || 'reader',
         student_id: responseUser.student_id,
         major: responseUser.major,
