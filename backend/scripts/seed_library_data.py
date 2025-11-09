@@ -82,13 +82,38 @@ def seed_users():
     return user_ids
 
 def seed_marc_records():
-    """Seed sample MARC records (LibraryRecordLite format)"""
+    """Seed sample MARC records (MARC21 Book Record format)"""
     print("\n📚 Seeding MARC records...")
 
     import uuid
+    from datetime import datetime, timezone
+    from app.models.mongodb_schemas import MARCRecordSource
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
     records = [
         {
             "record_id": str(uuid.uuid4()),
+            "leader": "01359nam a2200301 a 4500",
+            "control_number": "MARC001",
+            "agency_code": "NTT",
+            "updated_at": now,
+            "created_at": now,
+            "source": MARCRecordSource.LOCAL.value,
+            "rights": {
+                "access": "",
+                "format": []
+            },
+            "fixed_fields": {
+                "date_entered": "240101",
+                "type_of_record": "a",
+                "language": "vie",
+                "publication_year": "2022"
+            },
+            "identifiers": {
+                "isbn": ["978-6040000001"],
+                "other": []
+            },
             "title": {
                 "main": "Nhập môn Cơ sở dữ liệu",
                 "subtitle": "Lý thuyết & thực hành"
@@ -96,26 +121,65 @@ def seed_marc_records():
             "contributors": [
                 {"role": "author", "name": "Nguyễn Văn X"}
             ],
-            "subjects": [
-                {"term": "Cơ sở dữ liệu", "subdivisions": []},
-                {"term": "SQL", "subdivisions": []}
-            ],
+            "edition": "",
             "publication": {
-                "place": "Hà Nội",
                 "publisher": "NXB Giáo Dục",
+                "place": "Hà Nội",
                 "year": "2022"
             },
-            "identifiers": {
-                "isbn": [{"value": "978-6040000001"}]
+            "physical_description": {
+                "extent": "350 trang",
+                "size": "24 cm",
+                "illustration": "minh họa"
             },
-            "languages": ["vi"],
-            "format": ["book"],
+            "notes": [
+                "Sách giáo trình đại học"
+            ],
+            "subjects": [
+                "Cơ sở dữ liệu",
+                "SQL"
+            ],
+            "classification": {
+                "ddc": "005.75",
+                "lcc": ""
+            },
             "holdings": [
-                {"location_code": "Main Library", "call_number": "001.1/NH", "status": "available"}
-            ]
+                {
+                    "location": "Main Library",
+                    "call_number": "001.1/NH",
+                    "copies": 5,
+                    "available": 3
+                }
+            ],
+            "access": {
+                "online_url": "",
+                "restrictions": ""
+            },
+            "format": ["book"],
+            "image_url": ""
         },
         {
             "record_id": str(uuid.uuid4()),
+            "leader": "01359nam a2200301 a 4500",
+            "control_number": "MARC002",
+            "agency_code": "NTT",
+            "updated_at": now,
+            "created_at": now,
+            "source": MARCRecordSource.LOCAL.value,
+            "rights": {
+                "access": "",
+                "format": []
+            },
+            "fixed_fields": {
+                "date_entered": "240101",
+                "type_of_record": "a",
+                "language": "vie",
+                "publication_year": "2023"
+            },
+            "identifiers": {
+                "isbn": ["978-6040000002"],
+                "other": []
+            },
             "title": {
                 "main": "Machine Learning cơ bản",
                 "subtitle": "Python & Scikit-learn"
@@ -123,27 +187,66 @@ def seed_marc_records():
             "contributors": [
                 {"role": "author", "name": "Vũ Hữu Tiệp"}
             ],
-            "subjects": [
-                {"term": "Machine Learning", "subdivisions": []},
-                {"term": "Python", "subdivisions": []},
-                {"term": "AI", "subdivisions": []}
-            ],
+            "edition": "1",
             "publication": {
-                "place": "TP.HCM",
                 "publisher": "NXB Trẻ",
+                "place": "TP.HCM",
                 "year": "2023"
             },
-            "identifiers": {
-                "isbn": [{"value": "978-6040000002"}]
+            "physical_description": {
+                "extent": "420 trang",
+                "size": "25 cm",
+                "illustration": "minh họa, bảng biểu"
             },
-            "languages": ["vi"],
-            "format": ["book"],
+            "notes": [
+                "Sách tham khảo cho sinh viên ngành Khoa học Máy tính"
+            ],
+            "subjects": [
+                "Machine Learning",
+                "Python",
+                "AI"
+            ],
+            "classification": {
+                "ddc": "006.31",
+                "lcc": ""
+            },
             "holdings": [
-                {"location_code": "Science Library", "call_number": "002.1/ML", "status": "available"}
-            ]
+                {
+                    "location": "Science Library",
+                    "call_number": "002.1/ML",
+                    "copies": 3,
+                    "available": 2
+                }
+            ],
+            "access": {
+                "online_url": "",
+                "restrictions": ""
+            },
+            "format": ["book"],
+            "image_url": ""
         },
         {
             "record_id": str(uuid.uuid4()),
+            "leader": "01359nam a2200301 a 4500",
+            "control_number": "MARC003",
+            "agency_code": "NTT",
+            "updated_at": now,
+            "created_at": now,
+            "source": MARCRecordSource.LOCAL.value,
+            "rights": {
+                "access": "",
+                "format": []
+            },
+            "fixed_fields": {
+                "date_entered": "240101",
+                "type_of_record": "a",
+                "language": "vie",
+                "publication_year": "2024"
+            },
+            "identifiers": {
+                "isbn": ["978-6040000003"],
+                "other": []
+            },
             "title": {
                 "main": "Lập trình Web hiện đại",
                 "subtitle": "React & Node.js"
@@ -151,27 +254,66 @@ def seed_marc_records():
             "contributors": [
                 {"role": "author", "name": "Trần Minh Y"}
             ],
-            "subjects": [
-                {"term": "Web Development", "subdivisions": []},
-                {"term": "React", "subdivisions": []},
-                {"term": "JavaScript", "subdivisions": []}
-            ],
+            "edition": "2",
             "publication": {
-                "place": "Hà Nội",
                 "publisher": "NXB Bách Khoa",
+                "place": "Hà Nội",
                 "year": "2024"
             },
-            "identifiers": {
-                "isbn": [{"value": "978-6040000003"}]
+            "physical_description": {
+                "extent": "580 trang",
+                "size": "26 cm",
+                "illustration": "minh họa"
             },
-            "languages": ["vi"],
-            "format": ["book"],
+            "notes": [
+                "Sách hướng dẫn lập trình web fullstack"
+            ],
+            "subjects": [
+                "Web Development",
+                "React",
+                "JavaScript"
+            ],
+            "classification": {
+                "ddc": "005.276",
+                "lcc": ""
+            },
             "holdings": [
-                {"location_code": "IT Library", "call_number": "003.1/WEB", "status": "available"}
-            ]
+                {
+                    "location": "IT Library",
+                    "call_number": "003.1/WEB",
+                    "copies": 4,
+                    "available": 4
+                }
+            ],
+            "access": {
+                "online_url": "",
+                "restrictions": ""
+            },
+            "format": ["book"],
+            "image_url": ""
         },
         {
             "record_id": str(uuid.uuid4()),
+            "leader": "01359nam a2200301 a 4500",
+            "control_number": "MARC004",
+            "agency_code": "NTT",
+            "updated_at": now,
+            "created_at": now,
+            "source": MARCRecordSource.LOCAL.value,
+            "rights": {
+                "access": "",
+                "format": []
+            },
+            "fixed_fields": {
+                "date_entered": "240101",
+                "type_of_record": "a",
+                "language": "vie",
+                "publication_year": "2023"
+            },
+            "identifiers": {
+                "isbn": ["978-6040000004"],
+                "other": []
+            },
             "title": {
                 "main": "Deep Learning từ cơ bản đến nâng cao",
                 "subtitle": None
@@ -179,27 +321,66 @@ def seed_marc_records():
             "contributors": [
                 {"role": "author", "name": "Lê Hoàng Z"}
             ],
-            "subjects": [
-                {"term": "Deep Learning", "subdivisions": []},
-                {"term": "Neural Networks", "subdivisions": []},
-                {"term": "AI", "subdivisions": []}
-            ],
+            "edition": "1",
             "publication": {
-                "place": "Hà Nội",
                 "publisher": "NXB Đại Học Quốc Gia",
+                "place": "Hà Nội",
                 "year": "2023"
             },
-            "identifiers": {
-                "isbn": [{"value": "978-6040000004"}]
+            "physical_description": {
+                "extent": "650 trang",
+                "size": "27 cm",
+                "illustration": "minh họa, sơ đồ"
             },
-            "languages": ["vi"],
-            "format": ["book"],
+            "notes": [
+                "Sách chuyên sâu về Deep Learning và Neural Networks"
+            ],
+            "subjects": [
+                "Deep Learning",
+                "Neural Networks",
+                "AI"
+            ],
+            "classification": {
+                "ddc": "006.32",
+                "lcc": ""
+            },
             "holdings": [
-                {"location_code": "Science Library", "call_number": "004.1/DL", "status": "available"}
-            ]
+                {
+                    "location": "Science Library",
+                    "call_number": "004.1/DL",
+                    "copies": 2,
+                    "available": 1
+                }
+            ],
+            "access": {
+                "online_url": "",
+                "restrictions": ""
+            },
+            "format": ["book"],
+            "image_url": ""
         },
         {
             "record_id": str(uuid.uuid4()),
+            "leader": "01359nam a2200301 a 4500",
+            "control_number": "MARC005",
+            "agency_code": "NTT",
+            "updated_at": now,
+            "created_at": now,
+            "source": MARCRecordSource.LOCAL.value,
+            "rights": {
+                "access": "",
+                "format": []
+            },
+            "fixed_fields": {
+                "date_entered": "240101",
+                "type_of_record": "a",
+                "language": "vie",
+                "publication_year": "2022"
+            },
+            "identifiers": {
+                "isbn": ["978-6040000005"],
+                "other": []
+            },
             "title": {
                 "main": "Cấu trúc dữ liệu và Giải thuật",
                 "subtitle": "C++ Implementation"
@@ -207,26 +388,54 @@ def seed_marc_records():
             "contributors": [
                 {"role": "author", "name": "Phạm Thị K"}
             ],
-            "subjects": [
-                {"term": "Data Structures", "subdivisions": []},
-                {"term": "Algorithms", "subdivisions": []},
-                {"term": "C++", "subdivisions": []}
-            ],
+            "edition": "3",
             "publication": {
-                "place": "TP.HCM",
                 "publisher": "NXB Thống Kê",
+                "place": "TP.HCM",
                 "year": "2022"
             },
-            "identifiers": {
-                "isbn": [{"value": "978-6040000005"}]
+            "physical_description": {
+                "extent": "520 trang",
+                "size": "24 cm",
+                "illustration": "minh họa"
             },
-            "languages": ["vi"],
-            "format": ["book"],
+            "notes": [
+                "Sách giáo trình về cấu trúc dữ liệu và giải thuật"
+            ],
+            "subjects": [
+                "Data Structures",
+                "Algorithms",
+                "C++"
+            ],
+            "classification": {
+                "ddc": "005.133",
+                "lcc": ""
+            },
             "holdings": [
-                {"location_code": "IT Library", "call_number": "005.1/DSA", "status": "available"}
-            ]
+                {
+                    "location": "IT Library",
+                    "call_number": "005.1/DSA",
+                    "copies": 6,
+                    "available": 5
+                }
+            ],
+            "access": {
+                "online_url": "",
+                "restrictions": ""
+            },
+            "format": ["book"],
+            "image_url": ""
         }
     ]
+    
+    # Enrich with Google Books API if available
+    from app.services.z3950.z3950_service import Z3950Service
+    for record in records:
+        try:
+            record = Z3950Service._enrich_with_google_books(record)
+        except Exception as e:
+            # Continue without Google Books data if there's an error
+            pass
     
     MongoHelper.delete_many('marc_21', {})
     record_ids = MongoHelper.insert_many('marc_21', records)

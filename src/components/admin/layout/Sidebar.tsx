@@ -92,8 +92,8 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
 
   // Filter menu items based on user role
   const menuItems = useMemo(() => {
-    if (!user) return allMenuItems;
-    return allMenuItems.filter(item => item.roles.includes(user.role));
+    if (!user || !user.role) return allMenuItems;
+    return allMenuItems.filter(item => item.roles.includes(user.role!));
   }, [user]);
 
   const selectedKey = useMemo(() => {

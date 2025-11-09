@@ -15,9 +15,11 @@ async function exampleUsage() {
 
     // 2. Tạo user mới
     const newUser = await userService.createUser({
+      username: 'testuser',
       email: 'test@example.com',
+      password: 'testpassword123',
       name: 'Test User',
-      role: 'user',
+      role: 'reader',
     });
     console.log('✅ User mới:', newUser);
 
@@ -26,25 +28,22 @@ async function exampleUsage() {
     console.log('📋 Tất cả users:', allUsers);
 
     // 4. Lấy user theo ID
-    if (newUser._id) {
-      const userId = typeof newUser._id === 'string' ? newUser._id : newUser._id.toString();
-      const foundUser = await userService.getUserById(userId);
+    if (newUser.id) {
+      const foundUser = await userService.getUserById(newUser.id);
       console.log('🔍 Tìm user:', foundUser);
     }
 
     // 5. Cập nhật user
-    if (newUser._id) {
-      const userId = typeof newUser._id === 'string' ? newUser._id : newUser._id.toString();
-      await userService.updateUser(userId, {
+    if (newUser.id) {
+      await userService.updateUser(newUser.id, {
         name: 'Updated Name',
       });
       console.log('✏️ Đã cập nhật user');
     }
 
     // 6. Xóa user
-    if (newUser._id) {
-      const userId = typeof newUser._id === 'string' ? newUser._id : newUser._id.toString();
-      await userService.deleteUser(userId);
+    if (newUser.id) {
+      await userService.deleteUser(newUser.id);
       console.log('🗑️ Đã xóa user');
     }
 

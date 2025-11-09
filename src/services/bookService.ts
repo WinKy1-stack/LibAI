@@ -24,14 +24,62 @@ api.interceptors.request.use(
 
 export interface MarcRecord {
   _id?: string;
-  control_number?: string;
   record_id?: string;
+  leader?: string;
+  control_number?: string;
+  agency_code?: string;
+  updated_at?: string;
+  created_at?: string;
+  source?: string;
+  rights?: {
+    access?: string;
+    format?: string[];
+  };
+  fixed_fields?: {
+    date_entered?: string;
+    type_of_record?: string;
+    language?: string;
+    publication_year?: string;
+  };
+  identifiers?: {
+    isbn?: string[];  // Array of ISBN strings
+    other?: string[];
+  };
   title?: {
     main?: string;
     subtitle?: string;
   } | string;
   contributors?: Array<{ role?: string; name?: string }>;
-  subjects?: Array<{ term?: string; subdivisions?: string[] } | string>;
+  edition?: string;
+  publication?: {
+    publisher?: string;
+    place?: string;
+    year?: string;
+  };
+  physical_description?: {
+    extent?: string;
+    size?: string;
+    illustration?: string;
+  };
+  notes?: string[];
+  subjects?: string[];  // Array of subject strings
+  classification?: {
+    ddc?: string;
+    lcc?: string;
+  };
+  holdings?: Array<{
+    location?: string;
+    call_number?: string;
+    copies?: number;
+    available?: number;
+  }>;
+  access?: {
+    online_url?: string;
+    restrictions?: string;
+  };
+  format?: string[];
+  image_url?: string;
+  // Legacy support - will be removed in future
   normalized?: {
     title?: string;
     authors?: string[];
@@ -40,16 +88,6 @@ export interface MarcRecord {
     year?: number;
     subjects?: string[];
   };
-  publication?: {
-    year?: string;
-    publisher?: string;
-    place?: string;
-  };
-  identifiers?: {
-    isbn?: Array<{ value?: string }>;
-  };
-  created_at?: string | Date | { $date?: string };
-  updated_at?: string | Date | { $date?: string };
 }
 
 export interface MarcRecordsResponse {
@@ -64,7 +102,13 @@ export interface Item {
   _id?: string;
   record_id?: string;
   status?: string;
-  [key: string]: any;
+  barcode?: string;
+  location?: {
+    branch?: string;
+    shelf?: string;
+  };
+  call_number?: string;
+  updated_at?: string;
 }
 
 export interface ItemsResponse {

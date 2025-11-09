@@ -256,7 +256,7 @@ export function useUserRoleDistribution() {
 
 // Helper function to map MARC record to BookRecord
 function mapMarcToBookRecord(record: MarcRecord, index: number, availableCount: number = 0): BookRecord {
-  // Extract title
+  // Extract title (new schema)
   let title = 'Unknown Title';
   if (typeof record.title === 'string') {
     title = record.title;
@@ -265,24 +265,37 @@ function mapMarcToBookRecord(record: MarcRecord, index: number, availableCount: 
     if (record.title.subtitle) {
       title += `: ${record.title.subtitle}`;
     }
-  } else if (record.normalized?.title) {
+  }
+  // Legacy support for normalized
+  if (title === 'Unknown Title' && record.normalized?.title) {
     title = record.normalized.title;
   }
 
-  // Extract author
+  // Extract author (new schema)
   let author = 'Unknown Author';
   if (record.contributors && record.contributors.length > 0) {
     const authorContributor = record.contributors.find(c => c.role === 'author' || !c.role);
     author = authorContributor?.name || record.contributors[0]?.name || 'Unknown Author';
-  } else if (record.normalized?.authors && record.normalized.authors.length > 0) {
+  }
+  // Legacy support for normalized
+  if (author === 'Unknown Author' && record.normalized?.authors && record.normalized.authors.length > 0) {
     author = record.normalized.authors[0];
   }
 
-  // Extract ISBN/ID
+  // Extract ISBN/ID (new schema: identifiers.isbn is array of strings)
   let bid = record._id || record.control_number || record.record_id || '';
   if (record.identifiers?.isbn && record.identifiers.isbn.length > 0) {
-    bid = record.identifiers.isbn[0].value || bid;
-  } else if (record.normalized?.isbn && record.normalized.isbn.length > 0) {
+    // New schema: isbn is array of strings
+    const firstIsbn = record.identifiers.isbn[0];
+    if (typeof firstIsbn === 'string') {
+      bid = firstIsbn;
+    } else if (firstIsbn && typeof firstIsbn === 'object' && 'value' in firstIsbn) {
+      // Legacy support for object format { value: string }
+      bid = (firstIsbn as { value?: string }).value || bid;
+    }
+  }
+  // Legacy support for normalized
+  if (!bid && record.normalized?.isbn && record.normalized.isbn.length > 0) {
     bid = record.normalized.isbn[0];
   }
 
@@ -302,7 +315,7 @@ function mapMarcToAdminBook(
 ): import('../data').AdminBook {
   const recordId = record._id || record.record_id || '';
   
-  // Extract title
+  // Extract title (new schema)
   let title = 'Unknown Title';
   if (typeof record.title === 'string') {
     title = record.title;
@@ -311,55 +324,85 @@ function mapMarcToAdminBook(
     if (record.title.subtitle) {
       title += `: ${record.title.subtitle}`;
     }
-  } else if (record.normalized?.title) {
+  }
+  // Legacy support for normalized
+  if (title === 'Unknown Title' && record.normalized?.title) {
     title = record.normalized.title;
   }
 
-  // Extract author
+  // Extract author (new schema)
   let author = 'Unknown Author';
   if (record.contributors && record.contributors.length > 0) {
     const authorContributor = record.contributors.find(c => c.role === 'author' || !c.role);
     author = authorContributor?.name || record.contributors[0]?.name || 'Unknown Author';
-  } else if (record.normalized?.authors && record.normalized.authors.length > 0) {
+  }
+  // Legacy support for normalized
+  if (author === 'Unknown Author' && record.normalized?.authors && record.normalized.authors.length > 0) {
     author = record.normalized.authors[0];
   }
 
-  // Extract ISBN
+  // Extract ISBN (new schema: identifiers.isbn is array of strings)
   let isbn = '';
   if (record.identifiers?.isbn && record.identifiers.isbn.length > 0) {
-    isbn = record.identifiers.isbn[0].value || '';
-  } else if (record.normalized?.isbn && record.normalized.isbn.length > 0) {
+    // New schema: isbn is array of strings
+    const firstIsbn = record.identifiers.isbn[0];
+    if (typeof firstIsbn === 'string') {
+      isbn = firstIsbn;
+    } else if (firstIsbn && typeof firstIsbn === 'object' && 'value' in firstIsbn) {
+      // Legacy support for object format { value: string }
+      isbn = (firstIsbn as { value?: string }).value || '';
+    }
+  }
+  // Legacy support for normalized
+  if (!isbn && record.normalized?.isbn && record.normalized.isbn.length > 0) {
     isbn = record.normalized.isbn[0];
   }
 
-  // Extract category/subject
+  // Extract category/subject (new schema: subjects is array of strings)
   let category = 'Khác';
-  if (record.normalized?.subjects && record.normalized.subjects.length > 0) {
-    category = record.normalized.subjects[0];
-  } else if (record.subjects && Array.isArray(record.subjects) && record.subjects.length > 0) {
+  if (record.subjects && Array.isArray(record.subjects) && record.subjects.length > 0) {
     const firstSubject = record.subjects[0];
-    if (typeof firstSubject === 'object' && 'term' in firstSubject) {
-      category = firstSubject.term || 'Khác';
-    } else if (typeof firstSubject === 'string') {
+    // New schema: subjects is array of strings
+    if (typeof firstSubject === 'string') {
       category = firstSubject;
+    } else if (firstSubject && typeof firstSubject === 'object' && 'term' in firstSubject) {
+      // Legacy support for object format { term: string }
+      category = (firstSubject as { term?: string }).term || 'Khác';
     }
   }
+  // Legacy support for normalized
+  if (category === 'Khác' && record.normalized?.subjects && record.normalized.subjects.length > 0) {
+    category = record.normalized.subjects[0];
+  }
 
-  // Extract published year
+  // Extract published year (new schema: publication.year is string)
   let publishedYear = new Date().getFullYear();
-  if (record.normalized?.year) {
-    publishedYear = record.normalized.year;
-  } else if (record.publication?.year) {
+  if (record.publication?.year) {
     const year = parseInt(record.publication.year);
     if (!isNaN(year)) {
       publishedYear = year;
     }
   }
+  // Legacy support for normalized
+  if (publishedYear === new Date().getFullYear() && record.normalized?.year) {
+    publishedYear = record.normalized.year;
+  }
 
-  // Get items data from the map
-  const itemsData = itemsByRecordId.get(recordId) || { total: 0, available: 0 };
-  const totalCopies = itemsData.total;
-  const availableCopies = itemsData.available;
+  // Get items data - prefer holdings from record (new schema), fallback to items API
+  let totalCopies = 0;
+  let availableCopies = 0;
+  
+  // New schema: check holdings in record first
+  if (record.holdings && record.holdings.length > 0) {
+    totalCopies = record.holdings.reduce((sum, h) => sum + (h.copies || 0), 0);
+    availableCopies = record.holdings.reduce((sum, h) => sum + (h.available || 0), 0);
+  } else {
+    // Fallback to items API data
+    const itemsData = itemsByRecordId.get(recordId) || { total: 0, available: 0 };
+    totalCopies = itemsData.total;
+    availableCopies = itemsData.available;
+  }
+  
   const borrowedCount = totalCopies - availableCopies;
 
   // Determine status based on available copies
@@ -373,6 +416,9 @@ function mapMarcToAdminBook(
   }
 
   const lastActivity = normalizeDate(record.updated_at || record.created_at);
+
+  // Extract cover image (new schema: image_url from Google Books API)
+  const cover = record.image_url || undefined;
 
   return {
     id: recordId || isbn || 'unknown',
@@ -388,8 +434,11 @@ function mapMarcToAdminBook(
     overdueCount: 0, // Would need loans API to calculate
     status: status,
     lastActivity: lastActivity,
-    format: 'hardcover' as const, // Default format
-    tags: record.normalized?.subjects?.slice(0, 3) || [],
+    format: (record.format && record.format.length > 0 ? record.format[0] : 'hardcover') as 'hardcover' | 'paperback' | 'ebook',
+    cover: cover, // Image URL from Google Books API
+    tags: (record.subjects && Array.isArray(record.subjects) 
+      ? record.subjects.slice(0, 3).filter((s): s is string => typeof s === 'string')
+      : record.normalized?.subjects?.slice(0, 3)) || [],
   };
 }
 
@@ -414,15 +463,31 @@ export function useBooks() {
         // Group items by record_id and calculate counts
         const itemsByRecordId = new Map<string, { total: number; available: number }>();
         
-        // Initialize map with all record IDs
+        // Initialize map with all record IDs, but prefer holdings from records (new schema)
         recordIds.forEach(id => {
           itemsByRecordId.set(id, { total: 0, available: 0 });
         });
 
-        // Fetch items in batches to avoid too many requests
-        // For each record, fetch items
+        // First, extract holdings from records (new schema)
+        response.records.forEach(record => {
+          const recordId = record._id || record.record_id;
+          if (recordId && record.holdings && record.holdings.length > 0) {
+            const total = record.holdings.reduce((sum, h) => sum + (h.copies || 0), 0);
+            const available = record.holdings.reduce((sum, h) => sum + (h.available || 0), 0);
+            itemsByRecordId.set(recordId, { total, available });
+          }
+        });
+
+        // Fetch items in batches for records that don't have holdings (fallback)
+        const recordsWithoutHoldings = response.records.filter(
+          record => !record.holdings || record.holdings.length === 0
+        );
+        
         await Promise.all(
-          recordIds.map(async (recordId) => {
+          recordsWithoutHoldings.map(async (record) => {
+            const recordId = record._id || record.record_id;
+            if (!recordId) return;
+            
             try {
               // Fetch all items for this record
               const allItemsResponse = await bookService.getItemsByRecordId(recordId);
@@ -468,20 +533,26 @@ export function useDashboardBooks() {
           limit: 5,
         });
         
-        // Fetch available items count for each record
+        // Get available count for each record - prefer holdings from record (new schema)
         const booksWithStock = await Promise.all(
           response.records.map(async (record, index) => {
-            const recordId = record._id || record.record_id || '';
             let availableCount = 0;
             
-            if (recordId) {
-              try {
-                // Fetch available items for this record
-                const itemsResponse = await bookService.getAvailableItemsByRecordId(recordId);
-                availableCount = itemsResponse.items.length;
-              } catch (error) {
-                // If fetching items fails, continue with 0
-                console.warn(`Failed to fetch items for record ${recordId}:`, error);
+            // New schema: check holdings in record first
+            if (record.holdings && record.holdings.length > 0) {
+              availableCount = record.holdings.reduce((sum, h) => sum + (h.available || 0), 0);
+            } else {
+              // Fallback to items API
+              const recordId = record._id || record.record_id || '';
+              if (recordId) {
+                try {
+                  // Fetch available items for this record
+                  const itemsResponse = await bookService.getAvailableItemsByRecordId(recordId);
+                  availableCount = itemsResponse.items.length;
+                } catch (error) {
+                  // If fetching items fails, continue with 0
+                  console.warn(`Failed to fetch items for record ${recordId}:`, error);
+                }
               }
             }
             
