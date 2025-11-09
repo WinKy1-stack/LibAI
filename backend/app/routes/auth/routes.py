@@ -10,9 +10,16 @@ from flask_jwt_extended import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson import ObjectId
+from bson.errors import InvalidId
+from pymongo import ReturnDocument
 from app.utils.mongo_helper import MongoHelper
 from app.models.mongodb_schemas import UserRole, UserStatus
-from app.utils.validators import validate_email, validate_password
+from app.utils.validators import (
+    validate_email, 
+    validate_password, 
+    validate_object_id,
+    validate_name
+)
 from datetime import datetime, timezone
 from app.exceptions import ValidationError, AuthenticationError, NotFoundError
 
@@ -187,66 +194,100 @@ def get_current_user():
 def update_profile():
     """Cập nhật thông tin profile - MongoDB"""
     current_user_id = get_jwt_identity()
-    user = MongoHelper.find_one('users', {'_id': ObjectId(current_user_id)})
-
+    
+    # Validate ObjectId
+    is_valid, object_id, error_msg = validate_object_id(current_user_id)
+    if not is_valid:
+        raise ValidationError(error_msg)
+    
+    user = MongoHelper.find_one('users', {'_id': object_id})
     if not user:
         raise NotFoundError('Không tìm thấy người dùng')
 
     data = request.get_json()
+    if not data:
+        raise ValidationError('Không có dữ liệu')
     
-    # Các trường được phép cập nhật
     update_fields = {}
     
+    # Validate and update name
     if 'name' in data:
-        name = data['name'].strip()
+        name = data['name'].strip() if data['name'] else ''
         if name:
+            is_valid_name, name_error = validate_name(name)
+            if not is_valid_name:
+                raise ValidationError(name_error)
             update_fields['name'] = name
     
-    if 'major' in data:
-        update_fields['major'] = data['major'].strip()
-    
+    # Validate and update email
     if 'email' in data:
-        new_email = data['email'].strip()
+        new_email = data['email'].strip() if data['email'] else ''
         if new_email and new_email != user.get('email'):
-            # Validate email
             if not validate_email(new_email):
                 raise ValidationError('Email không hợp lệ')
-            # Check if email already exists
-            existing_user = MongoHelper.find_one('users', {'email': new_email})
+            
+            # Check email duplicate - CRITICAL FIX
+            existing_user = MongoHelper.find_one('users', {
+                'email': new_email,
+                '_id': {'$ne': object_id}
+            })
             if existing_user:
                 raise ValidationError('Email đã được sử dụng')
+            
             update_fields['email'] = new_email
     
-    if 'student_id' in data:
-        new_student_id = data['student_id'].strip()
-        if new_student_id and new_student_id != user.get('student_id'):
-            # Check if student_id already exists
-            existing_user = MongoHelper.find_one('users', {'student_id': new_student_id})
-            if existing_user:
-                raise ValidationError('Mã sinh viên đã được sử dụng')
-            update_fields['student_id'] = new_student_id
-    
-    # Update preferences if provided
-    if 'preferences' in data:
+    # Update preferences
+    if 'preferences' in data and isinstance(data['preferences'], dict):
         preferences = user.get('preferences', {})
         if 'lang' in data['preferences']:
-            preferences['lang'] = data['preferences']['lang']
+            lang = data['preferences']['lang']
+            if lang in ['vi', 'en']:
+                preferences['lang'] = lang
         if 'theme' in data['preferences']:
-            preferences['theme'] = data['preferences']['theme']
+            theme = data['preferences']['theme']
+            if theme in ['light', 'dark']:
+                preferences['theme'] = theme
         update_fields['preferences'] = preferences
+    
+    # Block locked fields
+    if 'student_id' in data:
+        new_student_id = data['student_id'].strip() if data['student_id'] else ''
+        if new_student_id and new_student_id != user.get('student_id'):
+            raise ValidationError('Không thể thay đổi mã sinh viên')
+    
+    if 'major' in data:
+        new_major = data['major'].strip() if data['major'] else ''
+        if new_major != user.get('major', ''):
+            raise ValidationError('Không thể thay đổi chuyên ngành')
+    
+    if 'role' in data and data['role'] != user.get('role'):
+        raise ValidationError('Không thể thay đổi quyền hạn')
+    
+    if 'status' in data and data['status'] != user.get('status'):
+        raise ValidationError('Không thể thay đổi trạng thái tài khoản')
     
     if not update_fields:
         raise ValidationError('Không có thông tin để cập nhật')
     
-    # Update in MongoDB
-    MongoHelper.update_one(
-        'users',
-        {'_id': user['_id']},
-        {'$set': update_fields}
-    )
-    
-    # Get updated user
-    updated_user = MongoHelper.find_one('users', {'_id': user['_id']})
+    # Atomic update operation
+    try:
+        updated_user = MongoHelper.find_one_and_update(
+            'users',
+            {'_id': object_id},
+            {'$set': update_fields},
+            return_document=ReturnDocument.AFTER
+        )
+        
+        if not updated_user:
+            raise NotFoundError('Không tìm thấy người dùng để cập nhật')
+        
+    except Exception as e:
+        if 'duplicate key error' in str(e).lower() or 'E11000' in str(e):
+            if 'email' in str(e):
+                raise ValidationError('Email đã được sử dụng')
+            else:
+                raise ValidationError('Dữ liệu trùng lặp')
+        raise
     
     return jsonify({
         'message': 'Cập nhật thông tin thành công',
@@ -266,31 +307,42 @@ def update_profile():
 def change_password():
     """Đổi mật khẩu - MongoDB"""
     current_user_id = get_jwt_identity()
-    user = MongoHelper.find_one('users', {'_id': ObjectId(current_user_id)})
-
+    
+    # Validate ObjectId
+    is_valid, object_id, error_msg = validate_object_id(current_user_id)
+    if not is_valid:
+        raise ValidationError(error_msg)
+    
+    user = MongoHelper.find_one('users', {'_id': object_id})
     if not user:
         raise NotFoundError('Không tìm thấy người dùng')
 
     data = request.get_json()
+    if not data:
+        raise ValidationError('Không có dữ liệu')
+    
     old_password = data.get('old_password', '')
     new_password = data.get('new_password', '')
 
     if not old_password or not new_password:
         raise ValidationError('Thiếu thông tin mật khẩu')
+    
+    if len(old_password) > 200 or len(new_password) > 200:
+        raise ValidationError('Mật khẩu quá dài')
 
-    # Verify old password
     if not check_password_hash(user.get('password_hash', ''), old_password):
         raise AuthenticationError('Mật khẩu cũ không đúng')
 
-    # Validate new password
     password_valid, password_msg = validate_password(new_password)
     if not password_valid:
         raise ValidationError(password_msg)
+    
+    if check_password_hash(user.get('password_hash', ''), new_password):
+        raise ValidationError('Mật khẩu mới phải khác mật khẩu cũ')
 
-    # Update password in MongoDB
     MongoHelper.update_one(
         'users',
-        {'_id': user['_id']},
+        {'_id': object_id},
         {'$set': {'password_hash': generate_password_hash(new_password)}}
     )
 

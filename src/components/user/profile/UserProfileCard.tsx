@@ -5,7 +5,16 @@ import {
 } from "@heroicons/react/24/outline";
 import type { User } from "../../../types/auth";
 import ProfileNavigation from "./ProfileNavigation";
-import { ROLE_LABELS, ROLE_BADGE_STYLES, STATUS_LABELS, STATUS_COLORS, AVATAR_SERVICE_URL } from "./constants";
+import { 
+  ROLE_LABELS, 
+  ROLE_BADGE_STYLES, 
+  STATUS_LABELS, 
+  STATUS_COLORS, 
+  AVATAR_SERVICE_URL 
+} from "./constants";
+
+type UserRole = keyof typeof ROLE_LABELS;
+type UserStatus = keyof typeof STATUS_LABELS;
 
 interface UserProfileCardProps {
   user: User;
@@ -18,6 +27,17 @@ export default function UserProfileCard({
   activeSection,
   onSectionChange,
 }: UserProfileCardProps) {
+  const getUserRole = (): UserRole => {
+    return (user.role in ROLE_LABELS) ? user.role as UserRole : 'reader';
+  };
+
+  const getUserStatus = (): UserStatus => {
+    return (user.status && user.status in STATUS_LABELS) ? user.status as UserStatus : 'active';
+  };
+
+  const role = getUserRole();
+  const status = getUserStatus();
+
   return (
     <div className="bg-background-secondary rounded-2xl p-4 sm:p-6 shadow-lg border border-border-primary/30">
       {/* Avatar */}
@@ -37,8 +57,8 @@ export default function UserProfileCard({
         <p className="text-xs sm:text-sm text-text-secondary mt-1 text-center truncate max-w-full px-2">
           {user.email}
         </p>
-        <span className={`mt-3 px-3 py-1 rounded-full text-xs font-semibold ${ROLE_BADGE_STYLES[user.role]}`}>
-          {ROLE_LABELS[user.role]}
+        <span className={`mt-3 px-3 py-1 rounded-full text-xs font-semibold ${ROLE_BADGE_STYLES[role]}`}>
+          {ROLE_LABELS[role]}
         </span>
       </div>
 
@@ -69,13 +89,9 @@ export default function UserProfileCard({
           <div className="flex-1 min-w-0">
             <p className="text-xs">Trạng thái</p>
             <p className="text-xs sm:text-sm font-semibold text-text-primary">
-              {user.status && STATUS_LABELS[user.status as keyof typeof STATUS_LABELS] ? (
-                <span className={STATUS_COLORS[user.status as keyof typeof STATUS_COLORS]}>
-                  {STATUS_LABELS[user.status as keyof typeof STATUS_LABELS]}
-                </span>
-              ) : (
-                "N/A"
-              )}
+              <span className={STATUS_COLORS[status]}>
+                {STATUS_LABELS[status]}
+              </span>
             </p>
           </div>
         </div>

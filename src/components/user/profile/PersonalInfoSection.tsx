@@ -42,7 +42,10 @@ export default function PersonalInfoSection({
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5">
+      <form onSubmit={(e) => {
+        console.log('Form onSubmit triggered');
+        onSubmit(e);
+      }} className="space-y-4 sm:space-y-5">
         {/* Name */}
         <div>
           <label className="flex items-center gap-2 text-xs sm:text-sm font-medium text-text-primary mb-2">
@@ -94,7 +97,7 @@ export default function PersonalInfoSection({
             type="text"
             value={profileForm.student_id}
             disabled={true}
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl bg-background-primary border border-border-primary/30 text-text-primary placeholder-text-secondary opacity-60 cursor-not-allowed transition-all duration-200"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl bg-background-primary border border-border-primary/30 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 opacity-60 cursor-not-allowed"
             placeholder="Nhập mã sinh viên"
             readOnly
           />
@@ -113,7 +116,7 @@ export default function PersonalInfoSection({
             type="text"
             value={profileForm.major}
             disabled={true}
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl bg-background-primary border border-border-primary/30 text-text-primary placeholder-text-secondary opacity-60 cursor-not-allowed transition-all duration-200"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl bg-background-primary border border-border-primary/30 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200 opacity-60 cursor-not-allowed"
             placeholder="Nhập chuyên ngành"
             readOnly
           />
@@ -124,7 +127,12 @@ export default function PersonalInfoSection({
           {!isEditingProfile ? (
             <button
               type="button"
-              onClick={onEdit}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Edit button clicked');
+                onEdit();
+              }}
               className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
             >
               <PencilSquareIcon className="w-4 h-4 sm:w-5 sm:h-5" />

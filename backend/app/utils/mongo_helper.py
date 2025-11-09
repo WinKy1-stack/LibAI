@@ -4,6 +4,7 @@ MongoDB Utilities
 from app import mongo
 from bson import ObjectId
 from datetime import datetime, timezone
+from pymongo import ReturnDocument
 
 class MongoHelper:
     """Helper class để làm việc với MongoDB"""
@@ -85,6 +86,43 @@ class MongoHelper:
         update['$set']['updated_at'] = datetime.now(timezone.utc)
         result = collection.update_one(query, update)
         return result.modified_count
+    
+    @staticmethod
+    def find_one_and_update(collection_name, query, update, return_document=ReturnDocument.AFTER, upsert=False):
+        """
+        Atomic find và update operation - returns updated document
+        Đây là atomic operation, tránh race condition
+        
+        Args:
+            collection_name: Tên collection
+            query: Query filter
+            update: Update operations
+            return_document: BEFORE hoặc AFTER update (default: AFTER)
+            upsert: Tạo document mới nếu không tìm thấy (default: False)
+            
+        Returns:
+            Updated document hoặc None nếu không tìm thấy
+        """
+        collection = MongoHelper.get_collection(collection_name)
+        if '_id' in query and isinstance(query['_id'], str):
+            query['_id'] = ObjectId(query['_id'])
+        
+        if '$set' not in update:
+            update = {'$set': update}
+        
+        update['$set']['updated_at'] = datetime.now(timezone.utc)
+        
+        doc = collection.find_one_and_update(
+            query,
+            update,
+            return_document=return_document,
+            upsert=upsert
+        )
+        
+        if doc and '_id' in doc:
+            doc['_id'] = str(doc['_id'])
+        
+        return doc
     
     @staticmethod
     def update_many(collection_name, query, update):
