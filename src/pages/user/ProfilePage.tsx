@@ -67,7 +67,6 @@ export default function ProfilePage() {
   }, [navigate]);
 
   const handleEditProfile = () => {
-    console.log('handleEditProfile called');
     setMessage(null);
     setIsEditingProfile(true);
   };
@@ -89,15 +88,30 @@ export default function ProfilePage() {
     e.preventDefault();
     
     if (!isEditingProfile) {
-      console.warn('Form submitted when not in edit mode');
       return;
     }
     
     if (loading) {
       return;
     }
-    
-    console.log('Starting profile update...', profileForm);
+
+    // Frontend validation
+    if (profileForm.name.length > 100) {
+      setMessage({ type: "error", text: "Tên không được vượt quá 100 ký tự" });
+      return;
+    }
+
+    if (profileForm.email.length > 255) {
+      setMessage({ type: "error", text: "Email không được vượt quá 255 ký tự" });
+      return;
+    }
+
+    // Check for dangerous characters
+    if (/<|>/.test(profileForm.name)) {
+      setMessage({ type: "error", text: "Tên chứa ký tự không hợp lệ" });
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
 
@@ -127,14 +141,27 @@ export default function ProfilePage() {
     setLoading(true);
     setMessage(null);
 
+    // Validate password length limits
+    if (passwordForm.old_password.length > 200) {
+      setMessage({ type: "error", text: "Mật khẩu cũ quá dài (tối đa 200 ký tự)" });
+      setLoading(false);
+      return;
+    }
+
+    if (passwordForm.new_password.length > 200) {
+      setMessage({ type: "error", text: "Mật khẩu mới quá dài (tối đa 200 ký tự)" });
+      setLoading(false);
+      return;
+    }
+
     if (passwordForm.new_password !== confirmPassword) {
       setMessage({ type: "error", text: "Mật khẩu xác nhận không khớp" });
       setLoading(false);
       return;
     }
 
-    if (passwordForm.new_password.length < 6) {
-      setMessage({ type: "error", text: "Mật khẩu mới phải có ít nhất 6 ký tự" });
+    if (passwordForm.new_password.length < 8) {
+      setMessage({ type: "error", text: "Mật khẩu mới phải có ít nhất 8 ký tự" });
       setLoading(false);
       return;
     }

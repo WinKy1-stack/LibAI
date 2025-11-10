@@ -52,11 +52,6 @@ def register():
     if not password_valid:
         raise ValidationError(password_msg)
 
-    # Kiểm tra email đã tồn tại trong MongoDB
-    existing_user = MongoHelper.find_one('users', {'email': email})
-    if existing_user:
-        raise ValidationError('Email đã được sử dụng')
-
     # Tạo user mới trong MongoDB
     new_user = {
         'email': email,
@@ -71,7 +66,17 @@ def register():
         'last_login': None
     }
 
-    user_id = MongoHelper.insert_one('users', new_user)
+    try:
+        user_id = MongoHelper.insert_one('users', new_user)
+    except Exception as e:
+        if 'duplicate key error' in str(e).lower() or 'E11000' in str(e):
+            if 'email' in str(e):
+                raise ValidationError('Email đã được sử dụng')
+            elif 'student_id' in str(e):
+                raise ValidationError('Tên đăng nhập đã được sử dụng')
+            else:
+                raise ValidationError('Dữ liệu trùng lặp')
+        raise
 
     # Return user data
     new_user['_id'] = str(user_id)
@@ -225,20 +230,11 @@ def update_profile():
         if new_email and new_email != user.get('email'):
             if not validate_email(new_email):
                 raise ValidationError('Email không hợp lệ')
-            
-            # Check email duplicate - CRITICAL FIX
-            existing_user = MongoHelper.find_one('users', {
-                'email': new_email,
-                '_id': {'$ne': object_id}
-            })
-            if existing_user:
-                raise ValidationError('Email đã được sử dụng')
-            
             update_fields['email'] = new_email
     
     # Update preferences
     if 'preferences' in data and isinstance(data['preferences'], dict):
-        preferences = user.get('preferences', {})
+        preferences = dict(user.get('preferences', {}))
         if 'lang' in data['preferences']:
             lang = data['preferences']['lang']
             if lang in ['vi', 'en']:
@@ -252,12 +248,14 @@ def update_profile():
     # Block locked fields
     if 'student_id' in data:
         new_student_id = data['student_id'].strip() if data['student_id'] else ''
-        if new_student_id and new_student_id != user.get('student_id'):
+        current_student_id = user.get('student_id', '') or ''
+        if new_student_id and new_student_id != current_student_id:
             raise ValidationError('Không thể thay đổi mã sinh viên')
     
     if 'major' in data:
         new_major = data['major'].strip() if data['major'] else ''
-        if new_major != user.get('major', ''):
+        current_major = user.get('major', '') or ''
+        if new_major != current_major:
             raise ValidationError('Không thể thay đổi chuyên ngành')
     
     if 'role' in data and data['role'] != user.get('role'):
@@ -269,7 +267,7 @@ def update_profile():
     if not update_fields:
         raise ValidationError('Không có thông tin để cập nhật')
     
-    # Atomic update operation
+    # Update user
     try:
         updated_user = MongoHelper.find_one_and_update(
             'users',
@@ -277,10 +275,6 @@ def update_profile():
             {'$set': update_fields},
             return_document=ReturnDocument.AFTER
         )
-        
-        if not updated_user:
-            raise NotFoundError('Không tìm thấy người dùng để cập nhật')
-        
     except Exception as e:
         if 'duplicate key error' in str(e).lower() or 'E11000' in str(e):
             if 'email' in str(e):
@@ -288,6 +282,9 @@ def update_profile():
             else:
                 raise ValidationError('Dữ liệu trùng lặp')
         raise
+    
+    if not updated_user:
+        raise NotFoundError('Không tìm thấy người dùng để cập nhật')
     
     return jsonify({
         'message': 'Cập nhật thông tin thành công',

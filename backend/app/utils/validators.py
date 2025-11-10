@@ -114,7 +114,7 @@ def validate_name(name):
     if len(name) > 100:
         return False, 'Tên không được vượt quá 100 ký tự'
     
-    dangerous_chars = ['<', '>', '{', '}', '$', '\\', '|']
+    dangerous_chars = ['<', '>']
     if any(char in name for char in dangerous_chars):
         return False, 'Tên chứa ký tự không hợp lệ'
     
@@ -155,7 +155,7 @@ def validate_major(major):
     if len(major) > 100:
         return False, 'Chuyên ngành không được vượt quá 100 ký tự'
     
-    dangerous_chars = ['<', '>', '{', '}', '$', '\\', '|']
+    dangerous_chars = ['<', '>']
     if any(char in major for char in dangerous_chars):
         return False, 'Chuyên ngành chứa ký tự không hợp lệ'
     

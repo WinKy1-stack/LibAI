@@ -42,10 +42,7 @@ export default function PersonalInfoSection({
         </p>
       </div>
 
-      <form onSubmit={(e) => {
-        console.log('Form onSubmit triggered');
-        onSubmit(e);
-      }} className="space-y-4 sm:space-y-5">
+      <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5">
         {/* Name */}
         <div>
           <label className="flex items-center gap-2 text-xs sm:text-sm font-medium text-text-primary mb-2">
@@ -130,7 +127,6 @@ export default function PersonalInfoSection({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Edit button clicked');
                 onEdit();
               }}
               className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
