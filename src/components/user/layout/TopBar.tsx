@@ -23,9 +23,10 @@ export default function TopBar() {
   useEffect(() => {
     setUser(authService.getStoredUser());
 
-    // Listen for user updates
     const handleUserUpdate = (event: CustomEvent) => {
-      setUser(event.detail);
+      if (event.detail && typeof event.detail === 'object' && event.detail.id) {
+        setUser(event.detail);
+      }
     };
 
     window.addEventListener('user-updated', handleUserUpdate as EventListener);

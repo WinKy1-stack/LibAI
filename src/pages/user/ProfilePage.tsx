@@ -66,13 +66,9 @@ export default function ProfilePage() {
     setIsEditingProfile(false);
   }, [navigate]);
 
-  useEffect(() => {
-    if (isEditingProfile) {
-      setMessage(null);
-    }
-  }, [isEditingProfile]);
-
   const handleEditProfile = () => {
+    console.log('handleEditProfile called');
+    setMessage(null);
     setIsEditingProfile(true);
   };
 
@@ -91,6 +87,17 @@ export default function ProfilePage() {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isEditingProfile) {
+      console.warn('Form submitted when not in edit mode');
+      return;
+    }
+    
+    if (loading) {
+      return;
+    }
+    
+    console.log('Starting profile update...', profileForm);
     setLoading(true);
     setMessage(null);
 
@@ -158,8 +165,65 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-text-secondary">Đang tải...</div>
+      <div className="min-h-screen bg-background-primary pt-16 sm:pt-20 pb-8 sm:pb-12 px-3 sm:px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-6 sm:mb-8 animate-pulse">
+            <div className="h-8 sm:h-9 bg-background-secondary rounded-lg w-48 mb-2"></div>
+            <div className="h-4 sm:h-5 bg-background-secondary rounded-lg w-64"></div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="lg:col-span-1">
+              <div className="bg-background-secondary rounded-2xl p-4 sm:p-6 shadow-lg border border-border-primary/30 animate-pulse">
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-background-primary mb-4"></div>
+                  <div className="h-6 bg-background-primary rounded-lg w-32 mb-2"></div>
+                  <div className="h-4 bg-background-primary rounded-lg w-40 mb-3"></div>
+                  <div className="h-6 bg-background-primary rounded-full w-24"></div>
+                </div>
+
+                <div className="space-y-3 pt-6 border-t border-border-primary/30">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-background-primary rounded-lg"></div>
+                      <div className="flex-1">
+                        <div className="h-3 bg-background-primary rounded w-20 mb-2"></div>
+                        <div className="h-5 bg-background-primary rounded w-12"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-border-primary/30 space-y-2">
+                  <div className="h-10 bg-background-primary rounded-xl"></div>
+                  <div className="h-10 bg-background-primary rounded-xl"></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2">
+              <div className="bg-background-secondary rounded-2xl p-4 sm:p-6 shadow-lg border border-border-primary/30 animate-pulse">
+                <div className="mb-6">
+                  <div className="h-6 bg-background-primary rounded-lg w-40 mb-2"></div>
+                  <div className="h-4 bg-background-primary rounded-lg w-56"></div>
+                </div>
+
+                <div className="space-y-4 sm:space-y-5">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i}>
+                      <div className="h-5 bg-background-primary rounded w-24 mb-2"></div>
+                      <div className="h-12 bg-background-primary rounded-xl"></div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6">
+                  <div className="h-12 bg-background-primary rounded-xl w-full sm:w-40"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
