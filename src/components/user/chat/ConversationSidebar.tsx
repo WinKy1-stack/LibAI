@@ -177,10 +177,8 @@ export default function ConversationSidebar({
         
         // Reload để khôi phục
         loadConversations(50, 0);
-        console.log(`✅ Undo successful: conversation ${id} restored`);
       } else {
         // ❌ Conversation đã bị xóa → không thể undo
-        console.warn(`⚠️ Cannot undo: conversation ${id} no longer exists (status: ${res.status})`);
         
         if (!opts?.silent) {
           if (lastDeletedId === id) {

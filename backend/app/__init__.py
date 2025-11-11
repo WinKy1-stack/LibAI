@@ -21,6 +21,9 @@ def create_app(config_class=Config):
     """
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # Set request size limit (16 MB)
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
 
     # Log MongoDB URI (ẩn password)
     mongo_uri = app.config.get('MONGO_URI', 'NOT SET')
@@ -96,6 +99,16 @@ def create_app(config_class=Config):
                 'status': 'error',
                 'message': f'MongoDB connection failed: {str(e)}'
             }, 500
+
+    # Request size limit handler
+    @app.errorhandler(413)
+    def handle_request_too_large(error):
+        response = jsonify({
+            'success': False,
+            'message': 'Dữ liệu gửi lên quá lớn (tối đa 16MB)'
+        })
+        response.status_code = 413
+        return response
 
     # Error handlers
     from app.exceptions import ApiError
