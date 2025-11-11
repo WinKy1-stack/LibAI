@@ -478,32 +478,45 @@ export function useBooks() {
           }
         });
 
-        // Fetch items in batches for records that don't have holdings (fallback)
+        // Fetch items for records that don't have holdings (fallback)
+        // TODO: Optimize with batch API endpoint: POST /api/books/items/batch with body: { record_ids: string[] }
+        // This would eliminate N+1 query problem by fetching all items in one request
         const recordsWithoutHoldings = response.records.filter(
           record => !record.holdings || record.holdings.length === 0
         );
         
-        await Promise.all(
-          recordsWithoutHoldings.map(async (record) => {
-            const recordId = record._id || record.record_id;
-            if (!recordId) return;
-            
-            try {
-              // Fetch all items for this record
-              const allItemsResponse = await bookService.getItemsByRecordId(recordId);
-              const total = allItemsResponse.items.length;
+        // Temporary optimization: Process in smaller batches to limit concurrent requests
+        const BATCH_SIZE = 5; // Process 5 records at a time
+        const recordBatches: typeof recordsWithoutHoldings[] = [];
+        
+        for (let i = 0; i < recordsWithoutHoldings.length; i += BATCH_SIZE) {
+          recordBatches.push(recordsWithoutHoldings.slice(i, i + BATCH_SIZE));
+        }
+        
+        // Process each batch sequentially to avoid overwhelming the server
+        for (const batch of recordBatches) {
+          await Promise.all(
+            batch.map(async (record) => {
+              const recordId = record._id || record.record_id;
+              if (!recordId) return;
               
-              // Count available items
-              const available = allItemsResponse.items.filter(
-                item => item.status === 'available'
-              ).length;
+              try {
+                // Fetch all items for this record
+                const allItemsResponse = await bookService.getItemsByRecordId(recordId);
+                const total = allItemsResponse.items.length;
+                
+                // Count available items
+                const available = allItemsResponse.items.filter(
+                  item => item.status === 'available'
+                ).length;
 
-              itemsByRecordId.set(recordId, { total, available });
-            } catch (error) {
-              console.warn(`Failed to fetch items for record ${recordId}:`, error);
-            }
-          })
-        );
+                itemsByRecordId.set(recordId, { total, available });
+              } catch (error) {
+                console.warn(`Failed to fetch items for record ${recordId}:`, error);
+              }
+            })
+          );
+        }
         
         // Map each record to AdminBook format
         const books = response.records.map((record) => 
