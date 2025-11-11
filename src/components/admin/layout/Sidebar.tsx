@@ -8,6 +8,7 @@ import {
   BarChartOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '/logo.png';
@@ -69,6 +70,12 @@ const allMenuItems = [
     label: "Settings",
     roles: ['admin'] // Only admin
   },
+    {
+    key: "/user/home",
+    icon: <LogoutOutlined />,
+    label: "ChatBot",
+    roles: ['admin', 'librarian', 'reader'] // Available for all
+  },
 ];
 
 export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
@@ -92,8 +99,8 @@ export default function Sidebar({ collapsed, onCollapse, mode }: SidebarProps) {
 
   // Filter menu items based on user role
   const menuItems = useMemo(() => {
-    if (!user) return allMenuItems;
-    return allMenuItems.filter(item => item.roles.includes(user.role));
+    if (!user || !user.role) return allMenuItems;
+    return allMenuItems.filter(item => item.roles.includes(user.role!));
   }, [user]);
 
   const selectedKey = useMemo(() => {

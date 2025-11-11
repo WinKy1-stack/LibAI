@@ -9,9 +9,10 @@ const { Title, Text } = Typography;
 
 interface HeaderCardProps {
   isMobile: boolean;
+  onAddUser?: () => void;
 }
 
-export function HeaderCard({ isMobile }: HeaderCardProps) {
+export function HeaderCard({ isMobile, onAddUser }: HeaderCardProps) {
   return (
     <Card
       style={{ background: "transparent", boxShadow: "none" }}
@@ -50,6 +51,7 @@ export function HeaderCard({ isMobile }: HeaderCardProps) {
               icon={<UserAddOutlined />}
               size={isMobile ? "middle" : "large"}
               style={{ borderRadius: 10 }}
+              onClick={onAddUser}
             >
               Thêm người dùng
             </Button>

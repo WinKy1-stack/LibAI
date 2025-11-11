@@ -30,8 +30,15 @@ class LOCWorker(Z3950Worker):
         logger.info(f"Searching Library of Congress for: {query}")
         results = super().search(query, query_type, limit)
 
-        # Add LOC-specific metadata
+        # Add LOC-specific URL to access field if control_number is available
         for record in results:
-            record['source']['url'] = f"https://lccn.loc.gov/{record.get('record_id', '')}"
+            control_number = record.get('control_number', '')
+            if control_number:
+                # Update access.online_url with LOC URL if not already set
+                access = record.get('access') or {}
+                if not access.get('online_url'):
+                    access['online_url'] = f"https://lccn.loc.gov/{control_number}"
+                    access['restrictions'] = access.get('restrictions', '')
+                    record['access'] = access
 
         return results

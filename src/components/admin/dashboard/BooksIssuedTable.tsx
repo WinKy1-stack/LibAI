@@ -111,10 +111,7 @@ export default function BooksIssuedTable() {
         rowKey="key"
         dataSource={bookIssuedData}
         columns={columns}
-        loading={{
-          spinning: loading,
-          indicator: <></>,
-        }}
+        loading={loading}
         pagination={false}
         scroll={{ x: 600 }}
       />

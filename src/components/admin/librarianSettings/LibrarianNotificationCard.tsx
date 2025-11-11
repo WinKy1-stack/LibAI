@@ -1,4 +1,4 @@
-import { Card, Form, Switch, Button, Space, Typography, Divider, Select, message, theme } from "antd";
+import { Card, Form, Switch, Button, Space, Typography, Divider, Select, App as AntdApp, theme } from "antd";
 import { SaveOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { defaultLibrarianNotifications, notificationFrequencyOptions } from "../../../data";
@@ -11,6 +11,7 @@ export default function LibrarianNotificationCard() {
   const [saving, setSaving] = useState(false);
   const { token } = theme.useToken();
   const librarianColors = getLibrarianSettingsColors(token);
+  const { notification } = AntdApp.useApp();
 
   const handleSave = async () => {
     try {
@@ -18,7 +19,10 @@ export default function LibrarianNotificationCard() {
       const values = await form.validateFields();
       console.log("Notification values:", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      message.success("Cập nhật thông báo thành công!");
+      notification.success({
+        message: "Cập nhật thông báo thành công!",
+        placement: "topRight",
+      });
       setSaving(false);
     } catch {
       setSaving(false);

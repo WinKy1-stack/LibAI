@@ -270,10 +270,7 @@ export function FaqTablePanel({
       <Table
         columns={columns}
         dataSource={data}
-        loading={{
-          spinning: loading,
-          indicator: <></>,
-        }}
+        loading={loading}
         pagination={{ pageSize: 5, showSizeChanger: false }}
         rowKey="id"
         scroll={{ x: 1200 }}

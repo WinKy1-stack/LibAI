@@ -3,16 +3,17 @@ import { Col, Grid, Row, Space } from "antd";
 import { HeaderCard } from "../../components/admin/bookManagement/HeaderCard";
 import { StatsOverview, type BookTotals } from "../../components/admin/bookManagement/StatsOverview";
 import { BooksTablePanel } from "../../components/admin/bookManagement/BooksTablePanel";
+import { BookDetailModal } from "../../components/admin/bookManagement/BookDetailModal";
 import { CategoryDistributionCard } from "../../components/admin/bookManagement/CategoryDistributionCard";
 import { BorrowTrendCard } from "../../components/admin/bookManagement/BorrowTrendCard";
 import { ActivityCard } from "../../components/admin/bookManagement/ActivityCard";
 import {
-  adminBooks,
-  categoryDistribution,
-  latestBookActivities,
-  monthlyBorrowTrend,
-  type BookStatus,
-} from "../../data";
+  useBooks,
+  useBookCategories,
+  useBookActivities,
+  useBorrowTrend,
+} from "../../hooks/useAdminQueries";
+import type { AdminBook, BookStatus } from "../../data";
 
 const { useBreakpoint } = Grid;
 
@@ -23,8 +24,25 @@ export default function BooksManagementPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | BookStatus>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [searchValue, setSearchValue] = useState("");
+  const [selectedBook, setSelectedBook] = useState<AdminBook | null>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+
+  // Use react-query hooks
+  const { data: adminBooks = [], isLoading: booksLoading } = useBooks();
+  const { data: categoryDistribution = [] } = useBookCategories();
+  const { data: latestBookActivities = [] } = useBookActivities();
+  const { data: monthlyBorrowTrend = [] } = useBorrowTrend();
 
   const totals = useMemo(() => {
+    if (adminBooks.length === 0) {
+      return {
+        titles: 0,
+        totalBooks: 0,
+        totalAvailable: 0,
+        totalLoaned: 0,
+        totalOverdue: 0,
+      };
+    }
     const totalBooks = adminBooks.reduce((accumulator, book) => accumulator + book.totalCopies, 0);
     const totalAvailable = adminBooks.reduce((accumulator, book) => accumulator + book.availableCopies, 0);
     const totalLoaned = adminBooks.reduce(
@@ -40,7 +58,7 @@ export default function BooksManagementPage() {
       totalLoaned,
       totalOverdue,
     };
-  }, []);
+  }, [adminBooks]);
 
   const overviewTotals: BookTotals = {
     titles: totals.titles,
@@ -49,7 +67,7 @@ export default function BooksManagementPage() {
     totalOverdue: totals.totalOverdue,
   };
 
-  const categories = useMemo(() => categoryDistribution.map((item) => item.category), []);
+  const categories = useMemo(() => categoryDistribution.map((item) => item.category), [categoryDistribution]);
 
   const filteredBooks = useMemo(() => {
     const normalized = searchValue.trim().toLowerCase();
@@ -66,7 +84,7 @@ export default function BooksManagementPage() {
 
       return matchSearch && matchStatus && matchCategory;
     });
-  }, [categoryFilter, statusFilter, searchValue]);
+  }, [categoryFilter, statusFilter, searchValue, adminBooks]);
 
   const borrowChange = useMemo(() => {
     if (monthlyBorrowTrend.length < 2) {
@@ -78,7 +96,12 @@ export default function BooksManagementPage() {
       borrowed: last.borrowed - prev.borrowed,
       returned: last.returned - prev.returned,
     };
-  }, []);
+  }, [monthlyBorrowTrend]);
+
+  const handleBookClick = (book: AdminBook) => {
+    setSelectedBook(book);
+    setDetailModalVisible(true);
+  };
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
@@ -94,10 +117,12 @@ export default function BooksManagementPage() {
             categoryFilter={categoryFilter}
             searchValue={searchValue}
             categories={categories}
+            loading={booksLoading}
             onStatusChange={(value) => setStatusFilter(value)}
             onCategoryChange={(value) => setCategoryFilter(value)}
             onSearchChange={(value) => setSearchValue(value)}
             onSearchSubmit={(value) => setSearchValue(value)}
+            onBookClick={handleBookClick}
           />
 
           {/* Metrics Cards Row - 50/50 */}
@@ -117,6 +142,16 @@ export default function BooksManagementPage() {
           {/* Activity Card - Full Width */}
           <ActivityCard activities={latestBookActivities} />
         </Space>
+
+        {/* Book Detail Modal */}
+        <BookDetailModal
+          visible={detailModalVisible}
+          book={selectedBook}
+          onClose={() => {
+            setDetailModalVisible(false);
+            setSelectedBook(null);
+          }}
+        />
     </div>
   );
 }

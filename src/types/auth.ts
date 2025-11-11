@@ -14,15 +14,15 @@ export interface LoginData {
 }
 
 export interface User {
-  id: string;
-  email: string;
+  id?: string;
+  email?: string;
   name: string;
-  role: 'admin' | 'librarian' | 'reader';
+  role?: 'admin' | 'librarian' | 'reader';
   student_id?: string;
   major?: string;
   status?: string;
-  created_at?: string;
-  last_login?: string;
+  created_at?: string | Date | { $date?: string };
+  last_login?: string | Date | { $date?: string };
 }
 
 // API response user object may have alternative field names

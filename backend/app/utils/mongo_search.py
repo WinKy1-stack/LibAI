@@ -3,27 +3,33 @@ from app.config import Config
 
 
 def search_in_mongo(keyword: str, field: str = "any"):
-    """Tìm kiếm trong MongoDB theo cấu trúc MARCJSON."""
+    """Tìm kiếm trong MongoDB theo cấu trúc MARC21 Book Record format."""
     client = MongoClient(Config.MONGO_URI)
     db = client[Config.MONGO_DBNAME]
     collection = db[Config.COLLECTION_MARC_RECORDS]  # Uses marc_21
     field_map = {
         "any": [
-            "fields.245.a", "fields.245.b",  # title
-            "fields.100.a", "fields.700.a",  # author
-            "fields.650.a",                  # subject
-            "fields.260.b",                  # publisher
+            "title.main", "title.subtitle",  # title
+            "contributors.name",              # author/contributors
+            "subjects",                       # subject (array)
+            "publication.publisher",          # publisher
+            "publication.place",              # place
         ],
-        "title": ["fields.245.a", "fields.245.b"],
-        "author": ["fields.100.a", "fields.700.a"],
-        "subject": ["fields.650.a"],
-        "publisher": ["fields.260.b"],
-        "date": ["fields.260.c"]
+        "title": ["title.main", "title.subtitle"],
+        "author": ["contributors.name"],
+        "subject": ["subjects"],
+        "publisher": ["publication.publisher"],
+        "date": ["publication.year"],
+        "isbn": ["identifiers.isbn"]
     }
 
     query_conditions = []
-    for f in field_map.get(field, ["fields.245.a"]):
-        query_conditions.append({f: {"$regex": keyword, "$options": "i"}})
+    for f in field_map.get(field, ["title.main"]):
+        # For array fields like subjects, use $in or $elemMatch
+        if f == "subjects" or f == "identifiers.isbn" or f == "contributors.name":
+            query_conditions.append({f: {"$regex": keyword, "$options": "i"}})
+        else:
+            query_conditions.append({f: {"$regex": keyword, "$options": "i"}})
 
     mongo_query = {"$or": query_conditions}
 

@@ -31,14 +31,36 @@ def create_marc_records_indexes():
         ('title.main', 'text'),
         ('title.subtitle', 'text'),
         ('contributors.name', 'text'),
-        ('subjects.term', 'text')
+        ('subjects', 'text')
     ])
 
-    MongoHelper.create_index('marc_21', [('publication.year', 1), ('publication.publisher', 1)])
+    # Unique indexes
     MongoHelper.create_index('marc_21', [('record_id', 1)], unique=True)
-    MongoHelper.create_index('marc_21', [('identifiers.isbn.value', 1)])
-    MongoHelper.create_index('marc_21', [('subjects.term', 1)])
+    MongoHelper.create_index('marc_21', [('control_number', 1)], unique=True, sparse=True)
+    
+    # Identifier indexes (ISBN is now array of strings)
+    MongoHelper.create_index('marc_21', [('identifiers.isbn', 1)])
+    
+    # Publication indexes
+    MongoHelper.create_index('marc_21', [('publication.year', 1), ('publication.publisher', 1)])
+    
+    # Subject and contributor indexes
+    MongoHelper.create_index('marc_21', [('subjects', 1)])
     MongoHelper.create_index('marc_21', [('contributors.name', 1)])
+    MongoHelper.create_index('marc_21', [('contributors.role', 1)])
+    
+    # Source and date indexes
+    MongoHelper.create_index('marc_21', [('source', 1)])
+    MongoHelper.create_index('marc_21', [('created_at', -1)])
+    MongoHelper.create_index('marc_21', [('updated_at', -1)])
+    
+    # Fixed fields indexes
+    MongoHelper.create_index('marc_21', [('fixed_fields.language', 1)])
+    MongoHelper.create_index('marc_21', [('fixed_fields.publication_year', 1)])
+    
+    # Classification indexes
+    MongoHelper.create_index('marc_21', [('classification.ddc', 1)])
+    MongoHelper.create_index('marc_21', [('classification.lcc', 1)])
 
     print("  ✅ MARC records indexes created")
 

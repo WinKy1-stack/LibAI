@@ -30,8 +30,12 @@ class UWWorker(Z3950Worker):
         logger.info(f"Searching UW-Madison for: {query}")
         results = super().search(query, query_type, limit)
 
-        # Add UW-specific metadata
+        # Add UW-specific URL to access field if not already set
         for record in results:
-            record['source']['url'] = "https://search.library.wisc.edu"
+            access = record.get('access') or {}
+            if not access.get('online_url'):
+                access['online_url'] = "https://search.library.wisc.edu"
+                access['restrictions'] = access.get('restrictions', '')
+                record['access'] = access
 
         return results

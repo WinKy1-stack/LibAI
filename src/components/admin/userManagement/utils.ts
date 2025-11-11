@@ -18,7 +18,26 @@ export function getStatusBadge(status: UserStatus): { color: string; icon: React
   }
 }
 
-export function formatDate(value: string): string {
+export function formatDate(value: string | Date | { $date?: string } | undefined | null): string {
+  if (!value) {
+    return "—";
+  }
+
+  // Handle MongoDB date format {$date: "..."}
+  if (typeof value === 'object' && '$date' in value && value.$date) {
+    value = value.$date;
+  }
+
+  // If it's already a Date object, convert to string
+  if (value instanceof Date) {
+    value = value.toISOString();
+  }
+
+  // If it's not a string, try to convert
+  if (typeof value !== 'string') {
+    return "—";
+  }
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return value;

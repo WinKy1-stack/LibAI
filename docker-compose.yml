@@ -22,7 +22,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - FLASK_ENV=production
+      - FLASK_ENV=development
       - MONGO_URI=mongodb://mongo:27017/library_chatbox
       - REDIS_HOST=redis
       - REDIS_PORT=6379

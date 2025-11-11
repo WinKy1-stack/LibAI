@@ -97,26 +97,58 @@ def get_user_schema() -> Dict[str, Any]:
     }
 
 def get_marc_record_schema() -> Dict[str, Any]:
-    """Schema cho collection marc_21 (LibraryRecordLite format)"""
+    """Schema cho collection marc_21 (MARC21 Book Record format)"""
     return {
         "record_id": "",  # UUID string
-        "title": {
-            "main": "",
-            "subtitle": None
+        "leader": "",  # MARC21 leader (24 characters)
+        "control_number": "",  # MARC control number (001)
+        "agency_code": "",  # Agency that created the record
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "source": MARCRecordSource.LOCAL.value,  # local, z3950, oai
+        "rights": {
+            "access": "",  # Access rights
+            "format": []  # Format restrictions
         },
-        "contributors": [],  # [{"role": "", "name": ""}]
-        "subjects": [],  # [{"term": "", "subdivisions": []}]
-        "publication": {
-            "place": None,
-            "publisher": None,
-            "year": ""  # Format: "YYYY"
+        "fixed_fields": {
+            "date_entered": "",  # Date entered on file (008 pos 00-05)
+            "type_of_record": "",  # Type of record (008 pos 06)
+            "language": "",  # Language code (008 pos 35-37)
+            "publication_year": ""  # Publication year (008 pos 07-10)
         },
         "identifiers": {
-            "isbn": []  # [{"value": ""}]
+            "isbn": [],  # Array of ISBN strings
+            "other": []  # Other identifiers (ISSN, etc.)
         },
-        "languages": [],  # ["vi", "en"]
-        "format": [],  # ["book", "ebook"]
-        "holdings": []  # [{"location_code": "", "call_number": "", "status": ""}]
+        "title": {
+            "main": "",  # Main title (245$a)
+            "subtitle": None  # Subtitle (245$b)
+        },
+        "contributors": [],  # [{"role": "", "name": ""}]
+        "edition": "",  # Edition statement (250$a)
+        "publication": {
+            "publisher": "",  # Publisher (260$b or 264$b)
+            "place": "",  # Place of publication (260$a or 264$a)
+            "year": ""  # Publication year (260$c or 264$c)
+        },
+        "physical_description": {
+            "extent": "",  # Extent (300$a)
+            "size": "",  # Dimensions (300$c)
+            "illustration": ""  # Illustrations (300$b)
+        },
+        "notes": [],  # Array of note strings (500, 520, etc.)
+        "subjects": [],  # Array of subject strings (650, 651, etc.)
+        "classification": {
+            "ddc": "",  # Dewey Decimal Classification (082)
+            "lcc": ""  # Library of Congress Classification (050)
+        },
+        "holdings": [],  # [{"location": "", "call_number": "", "copies": 0, "available": 0}]
+        "access": {
+            "online_url": "",  # Online access URL (856$u)
+            "restrictions": ""  # Access restrictions
+        },
+        "format": [],  # ["book", "ebook", etc.]
+        "image_url": ""  # Book cover image URL from Google Books API
     }
 
 def get_item_schema() -> Dict[str, Any]:

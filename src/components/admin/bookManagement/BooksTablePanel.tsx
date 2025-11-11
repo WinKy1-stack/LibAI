@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import type { ColumnsType } from "antd/es/table";
 import {
   Avatar,
@@ -13,6 +13,7 @@ import {
   Typography,
   Grid,
   theme,
+  Image,
 } from "antd";
 import { 
   BookOutlined,
@@ -32,10 +33,12 @@ interface BooksTablePanelProps {
   categoryFilter: "all" | string;
   searchValue: string;
   categories: string[];
+  loading?: boolean;
   onStatusChange: (value: "all" | BookStatus) => void;
   onCategoryChange: (value: "all" | string) => void;
   onSearchChange: (value: string) => void;
   onSearchSubmit: (value: string) => void;
+  onBookClick?: (book: AdminBook) => void;
 }
 
 export function BooksTablePanel({
@@ -44,21 +47,15 @@ export function BooksTablePanel({
   categoryFilter,
   searchValue,
   categories,
+  loading = false,
   onStatusChange,
   onCategoryChange,
   onSearchChange,
   onSearchSubmit,
+  onBookClick,
 }: BooksTablePanelProps) {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const columns: ColumnsType<AdminBook> = useMemo(
     () => [
@@ -68,15 +65,31 @@ export function BooksTablePanel({
         key: "title",
         render: (_, record) => (
           <Space align="start" size={12}>
-            <Avatar
-              shape="square"
-              size={48}
-              src={record.cover}
-              style={{ backgroundColor: token.colorPrimary, color: "#fff" }}
-              icon={!record.cover ? <BookOutlined /> : undefined}
-            >
-              {!record.cover ? record.title.charAt(0) : null}
-            </Avatar>
+            {record.cover ? (
+              <Image
+                src={record.cover}
+                alt={record.title}
+                width={48}
+                height={48}
+                style={{ 
+                  objectFit: 'cover', 
+                  borderRadius: 4,
+                  cursor: 'pointer'
+                }}
+                preview={{
+                  mask: <div style={{ fontSize: 12 }}>Xem</div>,
+                }}
+              />
+            ) : (
+              <Avatar
+                shape="square"
+                size={48}
+                style={{ backgroundColor: token.colorPrimary, color: "#fff" }}
+                icon={<BookOutlined />}
+              >
+                {record.title.charAt(0)}
+              </Avatar>
+            )}
             <Space direction="vertical" size={2}>
               <Text strong ellipsis={{ tooltip: record.title }}>{record.title}</Text>
               <Text type="secondary" ellipsis={{ tooltip: `${record.author} · ${record.publishedYear}` }}>
@@ -157,9 +170,14 @@ export function BooksTablePanel({
         title: "",
         key: "actions",
         fixed: "right" as const,
-        render: () => (
+        render: (_, record) => (
           <Space direction="vertical" size={0}>
-            <Button type="link" size="small" icon={<InfoCircleOutlined />}>
+            <Button 
+              type="link" 
+              size="small" 
+              icon={<InfoCircleOutlined />}
+              onClick={() => onBookClick?.(record)}
+            >
               Chi tiết
             </Button>
             <Button type="link" size="small" icon={<InboxOutlined />}>
@@ -170,7 +188,7 @@ export function BooksTablePanel({
         width: screens.md ? 120 : 60,
       },
     ],
-    [token.colorPrimary, screens.md],
+    [token.colorPrimary, screens.md, onBookClick],
   );
 
   return (
@@ -237,10 +255,7 @@ export function BooksTablePanel({
       <Table
         columns={columns}
         dataSource={data}
-        loading={{
-          spinning: loading,
-          indicator: <></>,
-        }}
+        loading={loading}
         pagination={{ pageSize: 5, showSizeChanger: false }}
         rowKey="id"
         scroll={{ x: 1200 }}
