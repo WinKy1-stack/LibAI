@@ -3,6 +3,7 @@ import { Col, Grid, Row, Space } from "antd";
 import { HeaderCard } from "../../components/admin/bookManagement/HeaderCard";
 import { StatsOverview, type BookTotals } from "../../components/admin/bookManagement/StatsOverview";
 import { BooksTablePanel } from "../../components/admin/bookManagement/BooksTablePanel";
+import { BookDetailModal } from "../../components/admin/bookManagement/BookDetailModal";
 import { CategoryDistributionCard } from "../../components/admin/bookManagement/CategoryDistributionCard";
 import { BorrowTrendCard } from "../../components/admin/bookManagement/BorrowTrendCard";
 import { ActivityCard } from "../../components/admin/bookManagement/ActivityCard";
@@ -12,7 +13,7 @@ import {
   useBookActivities,
   useBorrowTrend,
 } from "../../hooks/useAdminQueries";
-import type { BookStatus } from "../../data";
+import type { AdminBook, BookStatus } from "../../data";
 
 const { useBreakpoint } = Grid;
 
@@ -23,6 +24,8 @@ export default function BooksManagementPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | BookStatus>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [searchValue, setSearchValue] = useState("");
+  const [selectedBook, setSelectedBook] = useState<AdminBook | null>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
 
   // Use react-query hooks
   const { data: adminBooks = [], isLoading: booksLoading } = useBooks();
@@ -95,6 +98,11 @@ export default function BooksManagementPage() {
     };
   }, [monthlyBorrowTrend]);
 
+  const handleBookClick = (book: AdminBook) => {
+    setSelectedBook(book);
+    setDetailModalVisible(true);
+  };
+
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
@@ -114,6 +122,7 @@ export default function BooksManagementPage() {
             onCategoryChange={(value) => setCategoryFilter(value)}
             onSearchChange={(value) => setSearchValue(value)}
             onSearchSubmit={(value) => setSearchValue(value)}
+            onBookClick={handleBookClick}
           />
 
           {/* Metrics Cards Row - 50/50 */}
@@ -133,6 +142,16 @@ export default function BooksManagementPage() {
           {/* Activity Card - Full Width */}
           <ActivityCard activities={latestBookActivities} />
         </Space>
+
+        {/* Book Detail Modal */}
+        <BookDetailModal
+          visible={detailModalVisible}
+          book={selectedBook}
+          onClose={() => {
+            setDetailModalVisible(false);
+            setSelectedBook(null);
+          }}
+        />
     </div>
   );
 }

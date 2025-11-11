@@ -8,6 +8,7 @@ import {
   BarChartOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logoImg from '/logo.png';
@@ -68,6 +69,12 @@ const allMenuItems = [
     icon: <SettingOutlined />,
     label: "Settings",
     roles: ['admin'] // Only admin
+  },
+    {
+    key: "/user/home",
+    icon: <LogoutOutlined />,
+    label: "ChatBot",
+    roles: ['admin', 'librarian', 'reader'] // Available for all
   },
 ];
 
