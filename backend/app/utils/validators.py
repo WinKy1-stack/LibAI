@@ -2,6 +2,8 @@
 Validators - Các hàm validate dữ liệu
 """
 import re
+from bson import ObjectId
+from bson.errors import InvalidId
 
 def validate_email(email):
     """Validate email format"""
@@ -78,4 +80,83 @@ def validate_user_data(data):
     if not password_valid:
         return False, password_msg
 
+    return True, None
+
+def validate_object_id(id_string):
+    """
+    Validate MongoDB ObjectId
+    Returns: (is_valid, ObjectId or None, error_message)
+    """
+    if not id_string:
+        return False, None, 'ID không được để trống'
+    
+    try:
+        object_id = ObjectId(id_string)
+        return True, object_id, None
+    except (InvalidId, TypeError, ValueError):
+        return False, None, 'ID không hợp lệ'
+
+def validate_name(name):
+    """
+    Validate tên người dùng
+    - 2-100 ký tự
+    - Không chứa ký tự đặc biệt nguy hiểm
+    Returns: (is_valid, error_message)
+    """
+    if not name or not name.strip():
+        return False, 'Tên không được để trống'
+    
+    name = name.strip()
+    
+    if len(name) < 2:
+        return False, 'Tên phải có ít nhất 2 ký tự'
+    
+    if len(name) > 100:
+        return False, 'Tên không được vượt quá 100 ký tự'
+    
+    dangerous_chars = ['<', '>']
+    if any(char in name for char in dangerous_chars):
+        return False, 'Tên chứa ký tự không hợp lệ'
+    
+    return True, None
+
+def validate_student_id(student_id):
+    """
+    Validate mã sinh viên
+    - 3-20 ký tự
+    - Chỉ chứa chữ, số, dấu gạch ngang và gạch dưới
+    Returns: (is_valid, error_message)
+    """
+    if not student_id or not student_id.strip():
+        return False, 'Mã sinh viên không được để trống'
+    
+    student_id = student_id.strip()
+    
+    if len(student_id) < 3 or len(student_id) > 20:
+        return False, 'Mã sinh viên phải từ 3-20 ký tự'
+    
+    if not re.match(r'^[a-zA-Z0-9_-]+$', student_id):
+        return False, 'Mã sinh viên chỉ được chứa chữ, số, dấu gạch ngang và gạch dưới'
+    
+    return True, None
+
+def validate_major(major):
+    """
+    Validate chuyên ngành
+    - Tối đa 100 ký tự
+    - Không chứa ký tự đặc biệt nguy hiểm
+    Returns: (is_valid, error_message)
+    """
+    if not major:
+        return True, None
+    
+    major = major.strip()
+    
+    if len(major) > 100:
+        return False, 'Chuyên ngành không được vượt quá 100 ký tự'
+    
+    dangerous_chars = ['<', '>']
+    if any(char in major for char in dangerous_chars):
+        return False, 'Chuyên ngành chứa ký tự không hợp lệ'
+    
     return True, None

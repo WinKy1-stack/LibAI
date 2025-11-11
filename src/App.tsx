@@ -24,6 +24,7 @@ const queryClient = new QueryClient({
 });
 
 const ChatHistoryPage = lazy(() => import('./pages/user/ChatHistoryPage'));
+const ProfilePage = lazy(() => import('./pages/user/ProfilePage'));
 const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
 const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'));
 const BooksManagementPage = lazy(() => import('./pages/admin/BooksManagementPage'));
@@ -58,83 +59,90 @@ function App() {
         <ChatProvider>
           <Suspense fallback={<div>Loading...</div>}>
             <Routes>
-            {/* Public landing (can redirect if already logged in) */}
-            <Route
-              path="/"
-              element={
-            <PublicRoute>
-              <UserLayoutWrapper />
-            </PublicRoute>
-          }
-        >
-          <Route index element={<UserHomePage />} />
-        </Route>
-        
-        {/* User home route - PUBLIC - Ai cũng vào được */}
-        <Route path="/user/home" element={<UserLayoutWrapper />}>
-          <Route index element={<UserHomePage />} />
-        </Route>
+              {/* Public landing (can redirect if already logged in) */}
+              <Route
+                path="/"
+                element={
+                  <PublicRoute>
+                    <UserLayoutWrapper />
+                  </PublicRoute>
+                }
+              >
+                <Route index element={<UserHomePage />} />
+              </Route>
+              
+              {/* User home route - PUBLIC - Ai cũng vào được */}
+              <Route path="/user/home" element={<UserLayoutWrapper />}>
+                <Route index element={<UserHomePage />} />
+              </Route>
 
-        {/* User chat history route - PROTECTED - CHỈ ADMIN */}
-        <Route path="/user/chat" element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <UserLayout><ChatHistoryPage /></UserLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Login page - PUBLIC - Tự động redirect nếu đã đăng nhập */}
-        <Route path="/login" element={
-          <PublicRoute>
-            <UserLayout><LoginPage /></UserLayout>
-          </PublicRoute>
-        } />
-        
-        {/* Register page - PUBLIC - Tự động redirect nếu đã đăng nhập */}
-        <Route path="/signup" element={
-          <PublicRoute>
-            <UserLayout><RegisterPage /></UserLayout>
-          </PublicRoute>
-        } />
+              {/* User chat history route - PROTECTED - CHỈ ADMIN */}
+              <Route path="/user/chat" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <UserLayout><ChatHistoryPage /></UserLayout>
+                </ProtectedRoute>
+              } />
 
-        {/* 403 Forbidden page */}
-        <Route path="/403" element={<ForbiddenPage />} />
+              {/* Profile page - PROTECTED - All authenticated users */}
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <UserLayout><ProfilePage /></UserLayout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Login page - PUBLIC - Tự động redirect nếu đã đăng nhập */}
+              <Route path="/login" element={
+                <PublicRoute>
+                  <UserLayout><LoginPage /></UserLayout>
+                </PublicRoute>
+              } />
+              
+              {/* Register page - PUBLIC - Tự động redirect nếu đã đăng nhập */}
+              <Route path="/signup" element={
+                <PublicRoute>
+                  <UserLayout><RegisterPage /></UserLayout>
+                </PublicRoute>
+              } />
 
-        {/* Admin routes - PROTECTED - Chỉ admin & librarian */}
-        <Route path="/admin" element={
-          <ProtectedRoute allowedRoles={['admin', 'librarian']}>
-            <AdminLayoutWrapper />
-          </ProtectedRoute>
-        }>
-          {/* Routes cho cả admin và librarian */}
-          <Route index element={<DashboardPage />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="books" element={<BooksManagementPage />} />
-          <Route path="borrows" element={<BorrowManagementPage />} />
-          <Route path="reports" element={<ReportPage />} />
-          <Route path="faq" element={<FaqPage />} />
+              {/* 403 Forbidden page */}
+              <Route path="/403" element={<ForbiddenPage />} />
 
-          {/* Routes CHỈ ADMIN - Nested Protection */}
-          <Route path="users" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <UserManagementPage />
-            </ProtectedRoute>
-          } />
-          <Route path="settings" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <SettingsPage />
-            </ProtectedRoute>
-          } />
+              {/* Admin routes - PROTECTED - Chỉ admin & librarian */}
+              <Route path="/admin" element={
+                <ProtectedRoute allowedRoles={['admin', 'librarian']}>
+                  <AdminLayoutWrapper />
+                </ProtectedRoute>
+              }>
+                {/* Routes cho cả admin và librarian */}
+                <Route index element={<DashboardPage />} />
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="books" element={<BooksManagementPage />} />
+                <Route path="borrows" element={<BorrowManagementPage />} />
+                <Route path="reports" element={<ReportPage />} />
+                <Route path="faq" element={<FaqPage />} />
 
-          {/* Librarian settings - có thể cả hai hoặc chỉ librarian */}
-          <Route path="librarian" element={<LibrarianSettingsPage />} />
-        </Route>
+                {/* Routes CHỈ ADMIN - Nested Protection */}
+                <Route path="users" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <UserManagementPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="settings" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                } />
 
-        {/* Fallback for unknown routes */}
-        <Route
-          path="*"
-          element={<FallbackRedirect />}
-        />
-      </Routes>
+                {/* Librarian settings - có thể cả hai hoặc chỉ librarian */}
+                <Route path="librarian" element={<LibrarianSettingsPage />} />
+              </Route>
+
+              {/* Fallback for unknown routes */}
+              <Route
+                path="*"
+                element={<FallbackRedirect />}
+              />
+            </Routes>
           </Suspense>
         </ChatProvider>
       </AntdApp>
