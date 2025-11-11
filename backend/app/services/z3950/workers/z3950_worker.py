@@ -228,6 +228,135 @@ quit
 
         return records
 
+    def _extract_leader(self, line_stripped: str) -> Optional[str]:
+        """
+        Extract leader from a line
+        
+        Args:
+            line_stripped: Stripped line text
+            
+        Returns:
+            Leader string (24 chars) or None
+        """
+        # Check if this looks like a leader (24 characters, starts with digits)
+        # Leader format: "01245cam  22003731  4500" (24 chars)
+        if len(line_stripped) >= 20 and re.match(r'^\d', line_stripped):
+            return line_stripped[:24].ljust(24, ' ')
+        
+        # Also check for "Leader:" prefix (some servers use this)
+        if line_stripped.startswith('Leader:'):
+            leader_match = re.search(r'Leader:\s*(.+)', line_stripped)
+            if leader_match:
+                return leader_match.group(1).strip()[:24].ljust(24, ' ')
+        
+        return None
+
+    def _parse_control_field(self, tag: str, data: str) -> Optional[Any]:
+        """
+        Parse control field (001-009)
+        
+        Args:
+            tag: Field tag
+            data: Field data
+            
+        Returns:
+            pymarc.Field object or None
+        """
+        from pymarc import Field
+        
+        if data:  # Only add if data exists
+            return Field(tag=tag, data=data)
+        return None
+
+    def _parse_indicators(self, rest: str) -> tuple:
+        """
+        Parse indicators and data from field rest
+        
+        Args:
+            rest: Rest of field after tag
+            
+        Returns:
+            Tuple of (ind1, ind2, data)
+        """
+        # Format: "14 $a Title $b Subtitle"
+        # Indicators are 1-2 characters, might have spaces
+        indicator_match = re.match(r'^([\d\s]{1,2})\s+(.+)$', rest)
+        
+        if indicator_match:
+            indicators_str = indicator_match.group(1).strip()
+            data = indicator_match.group(2).strip()
+            
+            # Parse indicators (can be 1 or 2 characters)
+            ind1 = indicators_str[0] if len(indicators_str) > 0 else ' '
+            ind2 = indicators_str[1] if len(indicators_str) > 1 else ' '
+            return ind1, ind2, data
+        
+        # No indicators, use defaults
+        return ' ', ' ', rest
+
+    def _parse_subfields(self, data: str) -> List[Any]:
+        """
+        Parse subfields from data string
+        
+        Args:
+            data: Subfield data (e.g., "$a Title $b Subtitle")
+            
+        Returns:
+            List of pymarc.Subfield objects
+        """
+        from pymarc import Subfield
+        
+        subfields = []
+        if not data or not isinstance(data, str):
+            return subfields
+        
+        # Parse subfields - format: "$a value $b value"
+        subfield_parts = re.findall(r'\$([a-z0-9])\s*([^\$]*)', data)
+        
+        if subfield_parts:
+            for code, value in subfield_parts:
+                if value:
+                    value_clean = value.strip()
+                    if value_clean:  # Only add non-empty subfields
+                        subfields.append(Subfield(code=code, value=value_clean))
+        
+        return subfields
+
+    def _parse_data_field(self, tag: str, rest: str) -> Optional[Any]:
+        """
+        Parse data field (010-999)
+        
+        Args:
+            tag: Field tag
+            rest: Rest of field after tag
+            
+        Returns:
+            pymarc.Field object or None
+        """
+        from pymarc import Field
+        
+        if not rest or not isinstance(rest, str):
+            return None
+        
+        rest = rest.strip()
+        
+        # Parse indicators and data
+        ind1, ind2, data = self._parse_indicators(rest)
+        
+        # Parse subfields
+        subfields = self._parse_subfields(data)
+        
+        if not subfields:
+            # No subfields found - likely a parsing error
+            logger.debug(f"No subfields found for field {tag} with data: {data[:50] if data else ''}")
+            return None
+        
+        return Field(
+            tag=tag,
+            indicators=[ind1, ind2],
+            subfields=subfields
+        )
+
     def _parse_marc_from_text(self, text: str) -> Optional[Any]:
         """
         Parse MARC record from yaz-client text output
@@ -246,7 +375,7 @@ quit
             pymarc.Record object or None
         """
         try:
-            from pymarc import Record, Field, Subfield
+            from pymarc import Record
 
             # Check if text is valid
             if not text or not isinstance(text, str):
@@ -256,119 +385,50 @@ quit
             record = Record()
             lines = text.split('\n')
             
-            # Find record marker and extract leader
-            # Leader is the first line after "[voyager]Record type: USmarc" or "Record type:"
-            # It's a 24-character line (no prefix "Leader:")
+            # State tracking
             leader_line = None
             in_record = False
-            processed_lines = []
             
-            for i, line in enumerate(lines):
+            for line in lines:
                 line_stripped = line.strip()
                 if not line_stripped:
-                    processed_lines.append(line)
                     continue
                 
                 # Check for record marker (case-insensitive)
                 if re.search(r'Record type:', line_stripped, re.IGNORECASE):
                     in_record = True
-                    # Next non-empty line should be the leader
                     continue
                 
-                # If we're in a record and haven't found leader yet
+                # Extract leader if not found yet
                 if in_record and leader_line is None:
-                    # Check if this looks like a leader (24 characters, starts with digits)
-                    # Leader format: "01245cam  22003731  4500" (24 chars)
-                    if len(line_stripped) >= 20 and re.match(r'^\d', line_stripped):
-                        leader_line = line_stripped[:24].ljust(24, ' ')
+                    leader_line = self._extract_leader(line_stripped)
+                    if leader_line:
                         record.leader = leader_line
                         logger.debug(f"Found leader: '{leader_line}'")
                         continue
-                    # Also check for "Leader:" prefix (some servers use this)
-                    elif line_stripped.startswith('Leader:'):
-                        leader_match = re.search(r'Leader:\s*(.+)', line_stripped)
-                        if leader_match:
-                            leader_line = leader_match.group(1).strip()[:24].ljust(24, ' ')
-                            record.leader = leader_line
-                            logger.debug(f"Found leader with prefix: '{leader_line}'")
-                            continue
                 
-                # Now process fields
                 # Skip lines that don't look like MARC fields
                 if not re.match(r'^\d{3}', line_stripped):
                     continue
                 
-                # Parse MARC field: "001 2165697" or "245 14 $a Title" or "008 721219t19581953nyu..."
-                # Format: TAG [INDICATORS] DATA
+                # Parse MARC field: "001 2165697" or "245 14 $a Title"
                 field_match = re.match(r'^(\d{3})\s+(.+)$', line_stripped)
-                
                 if not field_match:
                     continue
                 
                 tag = field_match.group(1)
                 rest = field_match.group(2)
                 
-                # Check if rest is valid
-                if not rest or not isinstance(rest, str):
-                    continue
-                
-                rest = rest.strip()
-                
-                # Control fields (001-009) - no indicators, just data
+                # Parse control fields (001-009)
                 if tag.startswith('00') and len(tag) == 3:
-                    # For control fields, use Field with data parameter
-                    # Format: Field(tag='001', data='2165697')
-                    if rest:  # Only add if data exists
-                        record.add_field(Field(tag=tag, data=rest))
+                    field = self._parse_control_field(tag, rest)
+                    if field:
+                        record.add_field(field)
                     continue
                 
-                # Data fields (010-999) - have indicators and subfields
-                # Format: "245 14 $a Title $b Subtitle"
-                # Indicators are 1-2 characters, might have spaces
-                # Split indicators from data
-                indicator_match = re.match(r'^([\d\s]{1,2})\s+(.+)$', rest)
-                
-                if indicator_match:
-                    indicators_str = indicator_match.group(1).strip()
-                    data = indicator_match.group(2).strip()
-                    
-                    # Parse indicators (can be 1 or 2 characters)
-                    ind1 = indicators_str[0] if len(indicators_str) > 0 else ' '
-                    ind2 = indicators_str[1] if len(indicators_str) > 1 else ' '
-                else:
-                    # No indicators, use defaults
-                    ind1 = ' '
-                    ind2 = ' '
-                    data = rest
-                
-                # Parse subfields - format: "$a value $b value"
-                subfields = []
-                if data and isinstance(data, str):
-                    subfield_parts = re.findall(r'\$([a-z0-9])\s*([^\$]*)', data)
-                    
-                    if subfield_parts:
-                        for code, value in subfield_parts:
-                            if value:
-                                value_clean = value.strip()
-                                if value_clean:  # Only add non-empty subfields
-                                    subfields.append(Subfield(code=code, value=value_clean))
-                    
-                    # If no subfields found but we have data, might be a field without $ indicators
-                    # This shouldn't happen in standard MARC, but handle it
-                    if not subfields and data:
-                        # Skip - this is likely a parsing error
-                        logger.debug(f"No subfields found for field {tag} with data: {data[:50]}")
-                        continue
-                else:
-                    # Skip if data is invalid
-                    continue
-                
-                if subfields:
-                    field = Field(
-                        tag=tag,
-                        indicators=[ind1, ind2],
-                        subfields=subfields
-                    )
+                # Parse data fields (010-999)
+                field = self._parse_data_field(tag, rest)
+                if field:
                     record.add_field(field)
 
             # Return record if it has fields or a valid leader

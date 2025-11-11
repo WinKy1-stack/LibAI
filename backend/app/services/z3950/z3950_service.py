@@ -421,15 +421,16 @@ class Z3950Service:
         for source_key, records in z3950_results.items():
             raw_results[source_key] = records
 
-        # Flatten results (exclude local from all_records for save logic)
+        # Flatten results (exclude local from z3950_records for save logic)
         all_records = []
         z3950_records = []
         for source_key, records in raw_results.items():
-            if source_key == 'local':
-                # Local records are already in DB, don't need to save
-                all_records.extend(records)
-            else:
-                all_records.extend(records)
+            # Add all records to all_records for total count
+            all_records.extend(records)
+            
+            # Only add Z39.50 records to z3950_records for saving
+            # Local records are already in DB, don't need to save
+            if source_key != 'local':
                 z3950_records.extend(records)
 
         stats = {
