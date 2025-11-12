@@ -1,6 +1,3 @@
-"""
-Utility Functions
-"""
 from app.utils.validators import validate_user_data, validate_email
 from app.utils.decorators import (
     token_required,
