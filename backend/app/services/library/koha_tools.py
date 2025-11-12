@@ -1,10 +1,9 @@
 """AI-facing Koha tools
 
 This module exposes simple functions the AI / prompt service can call to fetch
-useful library data from Koha and from local FAQ collection.
+useful library data from Koha.
 
 Functions:
-- get_faqs_for_ai(limit=10)
 - search_books_ai(query, limit=10, offset=0)
 - get_book_detail_ai(biblio_id)
 - get_item_availability_ai(biblio_id)
@@ -12,33 +11,36 @@ Functions:
 - get_patron_checkouts_ai(patron_id)
 - get_patron_holds_ai(patron_id)
 
+For FAQ functions, see: app.services.library.faq_tools
+
 These functions return JSON-serializable dicts suitable for inclusion in prompts
 or for returning to a frontend.
 """
 from typing import List, Dict, Any, Optional
-from app.utils.mongo_helper import MongoHelper
 from app.services.library.koha_client import get_koha_client
 import logging
 
 logger = logging.getLogger(__name__)
 
-# ---------- FAQ ----------
-def get_faqs_for_ai(limit: int = 10) -> Dict[str, Any]:
-    """Return recent FAQ entries from local MongoDB (collection 'faq').
+# Import FAQ tools from separate module
+from .faq_tools import (
+    get_faqs_for_ai,
+    search_faqs_by_keyword,
+    get_faq_by_category
+)
 
-    Each faq returned contains: question, answer, tags, updated_at
-    """
-    faqs = MongoHelper.find_many('faq', query={}, sort=[('updated_at', -1)], limit=limit)
-    simplified = []
-    for f in faqs:
-        simplified.append({
-            'id': str(f.get('_id')),
-            'question': f.get('question') or f.get('q') or f.get('title'),
-            'answer': f.get('answer') or f.get('a') or f.get('content'),
-            'tags': f.get('tags', []),
-            'updated_at': f.get('updated_at')
-        })
-    return {'source': 'local_faq', 'count': len(simplified), 'faqs': simplified}
+# Re-export for backward compatibility
+__all__ = [
+    'get_faqs_for_ai',
+    'search_faqs_by_keyword', 
+    'get_faq_by_category',
+    'search_books_ai',
+    'get_book_detail_ai',
+    'get_item_availability_ai',
+    'get_patron_info_ai',
+    'get_patron_checkouts_ai',
+    'get_patron_holds_ai'
+]
 
 # ---------- Book search / detail ----------
 

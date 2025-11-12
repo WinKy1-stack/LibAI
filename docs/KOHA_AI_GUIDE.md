@@ -29,18 +29,20 @@ KOHA_API_PASSWORD=Idt882013!
 
 ## 13 AI Tools
 
-### Sách
+### 📚 Sách (koha_tools.py)
 1. `search_books_ai(query)` - Tìm sách 6 trường
 2. `get_book_detail_ai(biblio_id)` - Chi tiết sách
 3. `get_item_availability_ai(biblio_id)` - Tình trạng
 
-### Bạn Đọc
+### 👤 Bạn Đọc (koha_tools.py)
 4. `get_patron_info_ai(patron_id)` - Thông tin
 5. `get_patron_checkouts_ai(patron_id)` - Đang mượn
 6. `get_patron_holds_ai(patron_id)` - Đặt trước
 
-### FAQ
-7. `get_faqs_for_ai(limit)` - Câu hỏi thường gặp
+### ❓ FAQ (faq_tools.py - Riêng biệt)
+7. `get_faqs_for_ai(limit)` - Lấy FAQ mới nhất
+8. `search_faqs_by_keyword(keyword)` - Tìm FAQ theo keyword
+9. `get_faq_by_category(category)` - Lấy FAQ theo category
 
 ---
 
@@ -87,14 +89,25 @@ if has_faq_keyword:
 def send_message():
     ai_response = prompt_service.generate_response(...)
 
-# Sau: Async (non-block)
+# Sau: Async (non-block) với timeout & error handling
 async def send_message():
-    ai_response = await asyncio.to_thread(
-        prompt_service.generate_response, ...
-    )
+    try:
+        ai_response = await asyncio.wait_for(
+            asyncio.to_thread(
+                prompt_service.generate_response, ...
+            ),
+            timeout=30.0  # 30s timeout
+        )
+    except asyncio.TimeoutError:
+        raise ApiError("AI đang xử lý quá lâu", 503)
+    except Exception as e:
+        raise ApiError("Lỗi xử lý tin nhắn", 500)
 ```
 
-**Lợi ích:** Server không bị block, xử lý song song
+**Lợi ích:**
+- ✅ Server không bị block, xử lý song song
+- ✅ Timeout protection (30s)
+- ✅ Error handling đầy đủ
 
 ---
 

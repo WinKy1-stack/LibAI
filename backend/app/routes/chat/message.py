@@ -67,17 +67,31 @@ async def send_message(current_user):
     # Lấy patron_id từ user profile nếu có
     patron_id = current_user.get('koha_patron_id') or current_user.get('patron_id')
     
-    # Dùng method có session để lưu history conversation (ASYNC)
-    ai_response = await asyncio.to_thread(
-        prompt_service.generate_response_with_session,
-        conversation_id=conversation_id,
-        user_message=user_message,
-        instruction_type='default',
-        history_service=history_service,  # Truyền history_service để lưu/lấy từ DB
-        latency_ms=int((time.time() - start_time) * 1000),  # Tính latency
-        patron_id=patron_id,  # Truyền patron_id để lấy thông tin từ Koha
-        auto_inject_koha_context=True  # Tự động inject Koha context
-    )
+    # Dùng method có session để lưu history conversation (ASYNC với timeout & error handling)
+    try:
+        ai_response = await asyncio.wait_for(
+            asyncio.to_thread(
+                prompt_service.generate_response_with_session,
+                conversation_id=conversation_id,
+                user_message=user_message,
+                instruction_type='default',
+                history_service=history_service,  # Truyền history_service để lưu/lấy từ DB
+                latency_ms=int((time.time() - start_time) * 1000),  # Tính latency
+                patron_id=patron_id,  # Truyền patron_id để lấy thông tin từ Koha
+                auto_inject_koha_context=True  # Tự động inject Koha context
+            ),
+            timeout=30.0  # 30 seconds timeout
+        )
+    except asyncio.TimeoutError:
+        logger.error("AI response timeout for user %s after 30s", current_user['id'])
+        raise ApiError("AI đang xử lý quá lâu, vui lòng thử lại", status_code=503)
+    except GeminiAPIError as e:
+        logger.exception("Gemini API error for user %s: %s", current_user['id'], str(e))
+        raise ApiError(f"Lỗi AI: {str(e)}", status_code=502)
+    except Exception as e:
+        logger.exception("Unexpected error during AI generation for user %s", current_user['id'])
+        raise ApiError("Lỗi xử lý tin nhắn, vui lòng thử lại", status_code=500)
+    
     latency_ms = int((time.time() - start_time) * 1000)
 
     # Lưu vào database đã được thực hiện bên trong generate_response_with_session()
@@ -122,15 +136,30 @@ async def send_message_guest():
 
     logger.info("Guest sent message: %s...", user_message[:50])
 
-    # Generate response with timing (KHÔNG LƯU DB) - ASYNC
+    # Generate response with timing (KHÔNG LƯU DB) - ASYNC với timeout & error handling
     start_time = time.time()
     prompt_service = get_prompt_service()
-    ai_response = await asyncio.to_thread(
-        prompt_service.generate_response,
-        user_message=user_message,
-        chat_history=chat_history,
-        context=context
-    )
+    
+    try:
+        ai_response = await asyncio.wait_for(
+            asyncio.to_thread(
+                prompt_service.generate_response,
+                user_message=user_message,
+                chat_history=chat_history,
+                context=context
+            ),
+            timeout=30.0  # 30 seconds timeout
+        )
+    except asyncio.TimeoutError:
+        logger.error("AI response timeout for guest after 30s")
+        raise ApiError("AI đang xử lý quá lâu, vui lòng thử lại", status_code=503)
+    except GeminiAPIError as e:
+        logger.exception("Gemini API error for guest: %s", str(e))
+        raise ApiError(f"Lỗi AI: {str(e)}", status_code=502)
+    except Exception as e:
+        logger.exception("Unexpected error during AI generation for guest")
+        raise ApiError("Lỗi xử lý tin nhắn, vui lòng thử lại", status_code=500)
+    
     latency_ms = int((time.time() - start_time) * 1000)
 
     response_data = build_success_response(

@@ -212,7 +212,8 @@ def build_faq_context(limit: int = 10) -> str:
         Context string cho AI
     """
     try:
-        from app.services.library.koha_tools import get_faqs_for_ai
+        # Import from dedicated FAQ tools module
+        from app.services.library.faq_tools import get_faqs_for_ai
         
         faqs = get_faqs_for_ai(limit=limit)
         
