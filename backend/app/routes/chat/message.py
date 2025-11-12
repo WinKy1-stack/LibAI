@@ -1,8 +1,9 @@
 """
-Message Route - Xử lý chat message với AI
+Message Route - Xử lý chat message với AI (ASYNC)
 """
 import logging
 import time
+import asyncio
 from flask import Blueprint, jsonify
 
 from app.services.prompt import get_prompt_service
@@ -21,7 +22,7 @@ message_bp = Blueprint('chat_message', __name__)
 
 @message_bp.route('/message', methods=['POST'])
 @token_required
-def send_message(current_user):
+async def send_message(current_user):
     """
     Gửi tin nhắn và nhận phản hồi từ AI (CÓ ĐĂNG NHẬP - LƯU LỊCH SỬ)
     
@@ -66,8 +67,9 @@ def send_message(current_user):
     # Lấy patron_id từ user profile nếu có
     patron_id = current_user.get('koha_patron_id') or current_user.get('patron_id')
     
-    # Dùng method có session để lưu history conversation
-    ai_response = prompt_service.generate_response_with_session(
+    # Dùng method có session để lưu history conversation (ASYNC)
+    ai_response = await asyncio.to_thread(
+        prompt_service.generate_response_with_session,
         conversation_id=conversation_id,
         user_message=user_message,
         instruction_type='default',
@@ -100,9 +102,9 @@ def send_message(current_user):
 
 
 @message_bp.route('/message/guest', methods=['POST'])
-def send_message_guest():
+async def send_message_guest():
     """
-    Gửi tin nhắn KHÔNG CẦN ĐĂNG NHẬP (KHÔNG LƯU LỊCH SỬ)
+    Gửi tin nhắn KHÔNG CẦN ĐĂNG NHẬP (KHÔNG LƯU LỊCH SỬ) - ASYNC
     
     Request Body:
         {
@@ -120,10 +122,11 @@ def send_message_guest():
 
     logger.info("Guest sent message: %s...", user_message[:50])
 
-    # Generate response with timing (KHÔNG LƯU DB)
+    # Generate response with timing (KHÔNG LƯU DB) - ASYNC
     start_time = time.time()
     prompt_service = get_prompt_service()
-    ai_response = prompt_service.generate_response(
+    ai_response = await asyncio.to_thread(
+        prompt_service.generate_response,
         user_message=user_message,
         chat_history=chat_history,
         context=context
