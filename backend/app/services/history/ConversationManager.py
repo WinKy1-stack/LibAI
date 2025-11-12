@@ -85,7 +85,8 @@ class ConversationManager:
                 conv_oid = _to_oid(conv.get("_id"))
                 if isinstance(conv_oid, ObjectId):
                     conv_ids.append(conv_oid)
-
+            else:
+                logger.warning(f"Invalid conversation _id format: {conv.get('_id')}")
             message_counts: Dict[str, int] = {}
             if conv_ids:
                 pipeline = [

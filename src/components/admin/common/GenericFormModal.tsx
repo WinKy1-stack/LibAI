@@ -1,10 +1,11 @@
-import { Modal, Form, Input, Select, InputNumber, DatePicker, Row, Col, message } from "antd";
+import { Modal, Form, Input, Select, InputNumber, DatePicker, Row, Col, App as AntdApp } from "antd";
 import { useState, useEffect, type ReactNode } from "react";
 
 const { TextArea } = Input;
 
 export type FieldType = 
   | "text" 
+  | "password"
   | "textarea" 
   | "select" 
   | "number" 
@@ -36,6 +37,7 @@ interface GenericFormModalProps<T = Record<string, unknown>> {
   onSave: (item: Partial<T>) => void;
   initialValues?: Record<string, unknown>;
   width?: number;
+  showNotification?: boolean; // Allow parent to control notification
 }
 
 export default function GenericFormModal<T extends { id?: string }>({
@@ -47,17 +49,28 @@ export default function GenericFormModal<T extends { id?: string }>({
   onSave,
   initialValues = {},
   width = 800,
+  showNotification = true,
 }: GenericFormModalProps<T>) {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const { notification } = AntdApp.useApp();
 
   useEffect(() => {
-    if (editItem) {
-      form.setFieldsValue(editItem);
+    if (visible) {
+      if (editItem) {
+        form.setFieldsValue(editItem);
+      } else {
+        form.resetFields();
+        // Set initial values if provided
+        if (Object.keys(initialValues).length > 0) {
+          form.setFieldsValue(initialValues);
+        }
+      }
     } else {
+      // Reset form when modal is closed
       form.resetFields();
     }
-  }, [editItem, form]);
+  }, [editItem, form, visible, initialValues]);
 
   const handleSave = async () => {
     try {
@@ -77,7 +90,12 @@ export default function GenericFormModal<T extends { id?: string }>({
       }
 
       onSave(updatedItem);
-      message.success(editItem ? "Cập nhật thành công!" : "Thêm mới thành công!");
+      if (showNotification) {
+        notification.success({
+          message: editItem ? "Cập nhật thành công!" : "Thêm mới thành công!",
+          placement: "topRight",
+        });
+      }
       onClose();
     } catch (error) {
       console.error("Validation failed:", error);
@@ -111,6 +129,9 @@ export default function GenericFormModal<T extends { id?: string }>({
     switch (field.type) {
       case "text":
         return <Input placeholder={field.placeholder} maxLength={field.maxLength} />;
+      
+      case "password":
+        return <Input.Password placeholder={field.placeholder} maxLength={field.maxLength} />;
       
       case "textarea":
         return (

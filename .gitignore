@@ -117,6 +117,14 @@ $RECYCLE.BIN/
 .directory
 
 # ===========================================
+# Docker
+# ===========================================
+
+# Docker volumes
+**/data/
+**/volumes/
+
+# ===========================================
 # Other
 # ===========================================
 
@@ -130,8 +138,8 @@ $RECYCLE.BIN/
 # GitHub or CI auto-generated
 .github/instructions/*
 
-
 local.txt
 .claude
 .cache/
 .vitepress/
+.claude/settings.local.json

@@ -1,0 +1,83 @@
+services:
+  # Frontend - React + Vite
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lib-ai-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - lib-ai-network
+    restart: unless-stopped
+
+  # Backend - Flask API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lib-ai-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - MONGO_URI=mongodb://mongo:27017/library_chatbox
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-jwt-secret-key}
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - lib-ai-network
+    restart: unless-stopped
+
+  # MongoDB Database
+  mongo:
+    image: mongo:7.0
+    container_name: lib-ai-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=library_chatbox
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - lib-ai-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: lib-ai-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - lib-ai-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+networks:
+  lib-ai-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
+  redis-data:
+    driver: local

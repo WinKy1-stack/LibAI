@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
-import { Col, Grid, Row, Space, Tag, Input, message } from "antd";
+import { useMemo, useState } from "react";
+import { Col, Grid, Row, Space, Tag, Input, App as AntdApp } from "antd";
 import { 
   HeaderCard,
   FaqStatsOverview,
@@ -10,44 +10,44 @@ import {
 import { GenericFormModal } from "../../components/admin/common";
 import { categoryIcons } from "../../components/admin/faq/constants";
 import {
-  mockFaqItems,
-  faqCategories,
-  faqCategoryDistribution,
-  latestFaqActivities,
-  type FaqItem,
-} from "../../data";
+  useFaqs,
+  useFaqCategories,
+  useFaqCategoryDistribution,
+  useFaqActivities,
+  useCreateFaq,
+  useUpdateFaq,
+  useDeleteFaq,
+} from "../../hooks/useAdminQueries";
+import type { FaqItem } from "../../data";
 
 const { useBreakpoint } = Grid;
 
 export default function FaqPage() {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const { notification } = AntdApp.useApp();
 
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft" | "archived">("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const [searchValue, setSearchValue] = useState("");
-  const [faqData, setFaqData] = useState<FaqItem[]>(mockFaqItems);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FaqItem | null>(null);
   const [tempTags, setTempTags] = useState<string[]>([]);
   const [inputTag, setInputTag] = useState("");
 
-  // Individual loading states with 10s timeout for testing
-  const [tableLoading, setTableLoading] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [activityLoading, setActivityLoading] = useState(true);
+  // Use react-query hooks
+  const { data: initialFaqData = [], isLoading: tableLoading } = useFaqs();
+  const { data: faqCategories = [], isLoading: categoriesLoading } = useFaqCategories();
+  const { data: faqCategoryDistribution = [], isLoading: categoryDistributionLoading } = useFaqCategoryDistribution();
+  const { data: latestFaqActivities = [], isLoading: activityLoading } = useFaqActivities();
+  
+  // Mutations
+  const createFaqMutation = useCreateFaq();
+  const updateFaqMutation = useUpdateFaq();
+  const deleteFaqMutation = useDeleteFaq();
 
-  useEffect(() => {
-    const tableTimer = setTimeout(() => setTableLoading(false), 10000);
-    const categoriesTimer = setTimeout(() => setCategoriesLoading(false), 10000);
-    const activityTimer = setTimeout(() => setActivityLoading(false), 10000);
-
-    return () => {
-      clearTimeout(tableTimer);
-      clearTimeout(categoriesTimer);
-      clearTimeout(activityTimer);
-    };
-  }, []);
+  // Use FAQ data directly from API (no need for local state since we're using mutations)
+  const faqData = initialFaqData;
 
   const totals = useMemo(() => {
     return {
@@ -60,7 +60,7 @@ export default function FaqPage() {
 
   const categoriesForFilter = useMemo(
     () => faqCategories.map((cat) => ({ id: cat.id, name: cat.name })),
-    []
+    [faqCategories]
   );
 
   const filteredFaqs = useMemo(() => {
@@ -97,36 +97,68 @@ export default function FaqPage() {
   };
 
   // Handle save FAQ
-  const handleSaveFaq = (faq: Partial<FaqItem>) => {
-    const faqWithTags = { ...faq, tags: tempTags };
-    
-    if (editingFaq) {
-      // Update existing FAQ
-      setFaqData((prev) =>
-        prev.map((item) => (item.id === faq.id ? { ...item, ...faqWithTags } : item))
-      );
-    } else {
-      // Add new FAQ with additional fields
-      const newFaq = {
-        ...faqWithTags,
-        id: `faq-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        createdBy: "La Thanh Toàn",
-        views: 0,
-        helpful: 0,
-        notHelpful: 0,
-      } as FaqItem;
-      setFaqData((prev) => [newFaq, ...prev]);
+  const handleSaveFaq = async (faq: Partial<FaqItem>) => {
+    try {
+      const faqData = {
+        question: faq.question,
+        answer: faq.answer,
+        category: faq.category,
+        status: faq.status,
+        priority: faq.priority,
+        tags: tempTags,
+      };
+
+      if (editingFaq) {
+        // Update existing FAQ
+        await updateFaqMutation.mutateAsync({
+          faqId: editingFaq.id,
+          data: faqData,
+        });
+        notification.success({
+          message: 'Thành công',
+          description: 'Cập nhật FAQ thành công!',
+          placement: 'topRight',
+        });
+      } else {
+        // Create new FAQ
+        await createFaqMutation.mutateAsync(faqData);
+        notification.success({
+          message: 'Thành công',
+          description: 'Tạo FAQ thành công!',
+          placement: 'topRight',
+        });
+      }
+      
+      setEditModalVisible(false);
+      setTempTags([]);
+      setInputTag("");
+    } catch (error) {
+      console.error('Failed to save FAQ:', error);
+      notification.error({
+        message: 'Lỗi',
+        description: 'Có lỗi xảy ra khi lưu FAQ!',
+        placement: 'topRight',
+      });
     }
-    setEditModalVisible(false);
-    setTempTags([]);
-    setInputTag("");
   };
 
   // Handle delete FAQ
-  const handleDeleteFaq = (id: string) => {
-    setFaqData((prev) => prev.filter((item) => item.id !== id));
-    message.success("Đã xóa FAQ thành công!");
+  const handleDeleteFaq = async (id: string) => {
+    try {
+      await deleteFaqMutation.mutateAsync(id);
+      notification.success({
+        message: 'Thành công',
+        description: 'Đã xóa FAQ thành công!',
+        placement: 'topRight',
+      });
+    } catch (error) {
+      console.error('Failed to delete FAQ:', error);
+      notification.error({
+        message: 'Lỗi',
+        description: 'Có lỗi xảy ra khi xóa FAQ!',
+        placement: 'topRight',
+      });
+    }
   };
 
   // Close modal
@@ -179,7 +211,7 @@ export default function FaqPage() {
               distribution={faqCategoryDistribution}
               totalFaqs={totals.totalQuestions}
               publishedFaqs={totals.publishedQuestions}
-              loading={categoriesLoading}
+              loading={categoriesLoading || categoryDistributionLoading}
             />
           </Col>
           <Col xs={24} lg={12}>
@@ -193,6 +225,7 @@ export default function FaqPage() {
         title="FAQ"
         visible={editModalVisible}
         editItem={editingFaq}
+        showNotification={false}
         fields={[
           {
             name: "question",

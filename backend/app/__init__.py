@@ -21,6 +21,9 @@ def create_app(config_class=Config):
     """
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # Set request size limit (16 MB)
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
 
     # Log MongoDB URI (ẩn password)
     mongo_uri = app.config.get('MONGO_URI', 'NOT SET')
@@ -62,34 +65,16 @@ def create_app(config_class=Config):
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
     from app.routes.library import library_bp
-    from app.routes.library.z3950_routes import z3950_bp
-    from app.routes.chat import chat_bp
+    from app.routes.z3950_routes import z3950_bp
     from app.routes.users import users_bp
-    from app.services.history.conversation import conversation_bp
-    
+    from app.routes.chat import chat_bp
+
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(users_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
+    app.register_blueprint(chat_bp)     # Chat API
     app.register_blueprint(library_bp)  # New library system API
-    app.register_blueprint(z3950_bp)    # Z39.50 search API
-    app.register_blueprint(chat_bp)     # Chat AI API
-    app.register_blueprint(conversation_bp, url_prefix='/api/conversations')        
-    # Root endpoint
-    @app.route('/')
-    def index():
-        return {
-            "message": "📚 Library Chatbox API đang chạy!",
-            "routes": [
-                "/api/auth/register - Đăng ký tài khoản",
-                "/api/auth/login - Đăng nhập",
-                "/api/auth/me - Lấy thông tin user",
-                "/api/mongodb/books - Danh sách sách",
-                "/search?keyword=AI - Tìm kiếm",
-                "/search/test - Test search",
-                "/health - Kiểm tra trạng thái server",
-                "/mongodb-test - Test kết nối MongoDB"
-            ]
-        }, 200
+    app.register_blueprint(z3950_bp)    # Z39.50 search service
 
     # Health check endpoint
     @app.route('/health')
@@ -114,6 +99,16 @@ def create_app(config_class=Config):
                 'status': 'error',
                 'message': f'MongoDB connection failed: {str(e)}'
             }, 500
+
+    # Request size limit handler
+    @app.errorhandler(413)
+    def handle_request_too_large(error):
+        response = jsonify({
+            'success': False,
+            'message': 'Dữ liệu gửi lên quá lớn (tối đa 16MB)'
+        })
+        response.status_code = 413
+        return response
 
     # Error handlers
     from app.exceptions import ApiError

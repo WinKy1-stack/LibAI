@@ -4,7 +4,7 @@ import {
   BookOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
   StatCard,
   UsersTable,
@@ -14,9 +14,7 @@ import {
   VisitorsBorrowersChart,
   OverdueBookTable,
 } from "../../components/admin/dashboard";
-import { mockOverdueBooks, dashboardStatsData } from "../../data";
-import { authService } from "../../services/authService";
-import type { User } from "../../types/auth";
+import { useCurrentUser, useDashboardStats, useOverdueBooks } from "../../hooks/useAdminQueries";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -34,41 +32,17 @@ export default function DashboardPage() {
   const { token } = useToken();
   const [timeRange, setTimeRange] = useState("this-week");
   const [currentPage, setCurrentPage] = useState(1);
-  const [user, setUser] = useState<User | null>(null);
-  const [overdueLoading, setOverdueLoading] = useState(true);
   const pageSize = 4;
+
+  // Use react-query hooks
+  const { data: user } = useCurrentUser();
+  const { data: dashboardStats } = useDashboardStats();
+  const { data: overdueBooks = [], isLoading: overdueLoading } = useOverdueBooks();
 
   const currentDateString = useMemo(
     () => new Date().toLocaleDateString("vi-VN", dateOptions),
     []
   );
-
-  // Fetch user info
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const storedUser = authService.getStoredUser();
-        if (storedUser) {
-          setUser(storedUser);
-        } else {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-        }
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  // Simulate loading overdue books data
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setOverdueLoading(false);
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -136,16 +110,32 @@ export default function DashboardPage() {
           {/* --- Stats Section --- */}
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={12} md={6}>
-              <StatCard title="Tổng lượt truy cập" value={dashboardStatsData.totalVisitors} icon={<TeamOutlined />} />
+              <StatCard 
+                title="Tổng lượt truy cập" 
+                value={dashboardStats?.totalVisitors || 0} 
+                icon={<TeamOutlined />} 
+              />
             </Col>
             <Col xs={12} sm={12} md={6}>
-              <StatCard title="Sách đã mượn" value={dashboardStatsData.booksIssued} icon={<BookOutlined />} />
+              <StatCard 
+                title="Sách đã mượn" 
+                value={dashboardStats?.booksIssued || 0} 
+                icon={<BookOutlined />} 
+              />
             </Col>
             <Col xs={12} sm={12} md={6}>
-              <StatCard title="Sách quá hạn" value={dashboardStatsData.overdueBooks} icon={<BookOutlined />} />
+              <StatCard 
+                title="Sách quá hạn" 
+                value={dashboardStats?.overdueBooks || 0} 
+                icon={<BookOutlined />} 
+              />
             </Col>
             <Col xs={12} sm={12} md={6}>
-              <StatCard title="Thành viên mới" value={dashboardStatsData.newMembers} icon={<UserOutlined />} />
+              <StatCard 
+                title="Thành viên mới" 
+                value={dashboardStats?.newMembers || 0} 
+                icon={<UserOutlined />} 
+              />
             </Col>
           </Row>
 
@@ -171,11 +161,11 @@ export default function DashboardPage() {
               </Title>
             </div>
             <OverdueBookTable
-              dataSource={mockOverdueBooks}
+              dataSource={overdueBooks}
               loading={overdueLoading}
               currentPage={currentPage}
               pageSize={pageSize}
-              total={mockOverdueBooks.length}
+              total={overdueBooks.length}
               onPageChange={handlePageChange}
             />
           </Card>

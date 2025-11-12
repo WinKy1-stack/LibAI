@@ -15,12 +15,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && user && user.role && !allowedRoles.includes(user.role)) {
     // Redirect to appropriate page based on role
     if (user.role === 'admin' || user.role === 'librarian') {
       return <Navigate to="/admin/dashboard" replace />;
     }
-    return <Navigate to="/" replace />;
     // Redirect to 403 Forbidden page
     return <Navigate to="/403" replace />;
   }

@@ -88,7 +88,7 @@ class Config:
 
     # ========== 📚 MongoDB Collections ==========
     COLLECTION_USERS = 'users'
-    COLLECTION_MARC_RECORDS = 'marc_records'
+    COLLECTION_MARC_RECORDS = 'marc_21'
     COLLECTION_ITEMS = 'items'
     COLLECTION_LOANS = 'loans'
     COLLECTION_CONVERSATIONS = 'conversations'
@@ -139,41 +139,40 @@ class Config:
     # ========= 🎯 Trường tìm kiếm theo MARC21 =========
     SEARCH_FIELDS = {
         "any": [
-            "fields.245.a",  # Nhan đề
-            "fields.245.c",  # Trách nhiệm (tác giả trong nhan đề)
-            "fields.100.a",  # Tác giả chính
-            "fields.700.a",  # Tác giả phụ
-            "fields.260.b",  # Nhà xuất bản
-            "fields.260.c",  # Năm xuất bản
-            "fields.650.a",  # Chủ đề
-            "fields.520.a",  # Tóm tắt / mô tả
-            "fields.504.a"   # Ghi chú tài liệu tham khảo
+            "title.main",              # Nhan đề chính
+            "title.subtitle",          # Phụ đề
+            "contributors.name",       # Tác giả/Người đóng góp
+            "subjects",                # Chủ đề (array)
+            "publication.publisher",   # Nhà xuất bản
+            "publication.place",       # Nơi xuất bản
+            "publication.year",        # Năm xuất bản
+            "notes",                   # Ghi chú (array)
+            "identifiers.isbn"         # ISBN (array)
         ],
         "title": [
-            "fields.245.a",  # Tên sách
-            "fields.245.c"   # Phần trách nhiệm
+            "title.main",              # Tên sách
+            "title.subtitle"           # Phụ đề
         ],
         "author": [
-            "fields.100.a",  # Tác giả chính
-            "fields.700.a"   # Tác giả phụ
+            "contributors.name"        # Tác giả/Người đóng góp
         ],
         "subject": [
-            "fields.650.a"   # Chủ đề / lĩnh vực
+            "subjects"                 # Chủ đề (array)
         ],
         "publisher": [
-            "fields.260.b"   # Nhà xuất bản
+            "publication.publisher"    # Nhà xuất bản
         ],
         "year": [
-            "fields.260.c"   # Năm xuất bản
+            "publication.year"         # Năm xuất bản
         ],
         "summary": [
-            "fields.520.a"   # Tóm tắt nội dung
+            "notes"                    # Ghi chú (có thể chứa tóm tắt)
         ],
         "reference": [
-            "fields.504.a"   # Thông tin tham khảo
+            "notes"                    # Ghi chú (có thể chứa thông tin tham khảo)
         ],
         "isbn": [
-            "fields.020.a"   # ISBN (nếu có)
+            "identifiers.isbn"         # ISBN (array)
         ]
     }
 

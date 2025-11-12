@@ -6,6 +6,7 @@ import {
   ArrowLeftOnRectangleIcon,
   Cog8ToothIcon,
   ChatBubbleLeftRightIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useChatContext } from "../../../hooks/useChatContext";
 import { useUserTheme } from "../../../hooks/useUserTheme";
@@ -21,6 +22,17 @@ export default function TopBar() {
 
   useEffect(() => {
     setUser(authService.getStoredUser());
+
+    const handleUserUpdate = (event: CustomEvent) => {
+      if (event.detail && typeof event.detail === 'object' && event.detail.id) {
+        setUser(event.detail);
+      }
+    };
+
+    window.addEventListener('user-updated', handleUserUpdate as EventListener);
+    return () => {
+      window.removeEventListener('user-updated', handleUserUpdate as EventListener);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -146,6 +158,16 @@ export default function TopBar() {
 
                       {/* Menu items */}
                       <div className="py-1">
+                        <button
+                          onClick={() => {
+                            setShowMenu(false);
+                            navigate("/profile");
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-text-primary hover:bg-background-hover transition-colors duration-150"
+                        >
+                          <UserCircleIcon className="w-4 h-4" />
+                          <span>Hồ sơ cá nhân</span>
+                        </button>
                         <button
                           onClick={handleLogout}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-background-hover transition-colors duration-150"

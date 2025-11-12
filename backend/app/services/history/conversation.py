@@ -2,6 +2,7 @@
 Conversation Routes
 Routes for managing user chat conversations and messages
 """
+import logging
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from bson import ObjectId
@@ -11,6 +12,7 @@ from app.exceptions import ApiError
 from .ConversationManager import ConversationManager
 
 conversation_bp = Blueprint('conversations', __name__)
+logger = logging.getLogger(__name__)
 
 
 @conversation_bp.route('', methods=['GET'])
@@ -46,6 +48,13 @@ def create_conversation():
 @jwt_required()
 def get_messages(conv_id):
     """Lấy messages trong conversation (cast conv_id về ObjectId nếu cần)"""
+    current_user = get_jwt_identity()
+    
+    # ✅ CRITICAL SECURITY: Check ownership trước khi lấy messages
+    if not ConversationManager.belongs_to_user(conv_id, current_user):
+        logger.warning(f"Unauthorized access attempt: user {current_user} tried to access conversation {conv_id}")
+        raise ApiError("Không có quyền truy cập cuộc trò chuyện này", 403)
+    
     try:
         try:
             conv_oid = ObjectId(conv_id)
@@ -67,7 +76,14 @@ def get_messages(conv_id):
 def delete_conversation(conv_id):
     """Xóa 1 conversation thuộc về current_user + cascade messages"""
     current_user = get_jwt_identity()
+    
+    # ✅ Logging cho audit trail
+    logger.info(f"Delete request: user {current_user} attempting to delete conversation {conv_id}")
+    
     ok = ConversationManager.delete(conv_id, user_id=current_user)
     if not ok:
+        logger.warning(f"Delete failed: conversation {conv_id} not found or unauthorized for user {current_user}")
         raise ApiError("Không tìm thấy cuộc trò chuyện hoặc không có quyền xóa", 404)
+    
+    logger.info(f"Delete successful: conversation {conv_id} deleted by user {current_user}")
     return jsonify({"message": "Đã xóa cuộc trò chuyện"}), 200

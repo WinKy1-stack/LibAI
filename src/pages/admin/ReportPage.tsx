@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Col, Grid, Row, Space } from "antd";
 import {
   HeaderCard,
@@ -11,13 +11,13 @@ import {
 } from "../../components/admin/reportManagement";
 import type { ReportType, ReportStatus, ReportCategory } from "../../data";
 import {
-  adminReports,
-  overviewMetrics,
-  monthlyRevenue,
-  weeklyActivity,
-  categoryPerformance,
-  topMetrics,
-} from "../../data";
+  useReports,
+  useReportMetrics,
+  useReportRevenue,
+  useReportActivity,
+  useReportCategoryPerformance,
+  useReportTopMetrics,
+} from "../../hooks/useAdminQueries";
 
 const { useBreakpoint } = Grid;
 
@@ -30,28 +30,13 @@ export default function ReportPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | ReportStatus>("all");
   const [searchValue, setSearchValue] = useState("");
 
-  // Individual loading states for each component with 10s timeout for testing
-  const [tableLoading, setTableLoading] = useState(true);
-  const [revenueLoading, setRevenueLoading] = useState(true);
-  const [activityLoading, setActivityLoading] = useState(true);
-  const [categoryLoading, setCategoryLoading] = useState(true);
-  const [metricsLoading, setMetricsLoading] = useState(true);
-
-  useEffect(() => {
-    const tableTimer = setTimeout(() => setTableLoading(false), 10000);
-    const revenueTimer = setTimeout(() => setRevenueLoading(false), 10000);
-    const activityTimer = setTimeout(() => setActivityLoading(false), 10000);
-    const categoryTimer = setTimeout(() => setCategoryLoading(false), 10000);
-    const metricsTimer = setTimeout(() => setMetricsLoading(false), 10000);
-
-    return () => {
-      clearTimeout(tableTimer);
-      clearTimeout(revenueTimer);
-      clearTimeout(activityTimer);
-      clearTimeout(categoryTimer);
-      clearTimeout(metricsTimer);
-    };
-  }, []);
+  // Use react-query hooks
+  const { data: adminReports = [], isLoading: tableLoading } = useReports();
+  const { data: overviewMetrics } = useReportMetrics();
+  const { data: monthlyRevenue = [], isLoading: revenueLoading } = useReportRevenue();
+  const { data: weeklyActivity = [], isLoading: activityLoading } = useReportActivity();
+  const { data: categoryPerformance = [], isLoading: categoryLoading } = useReportCategoryPerformance();
+  const { data: topMetrics, isLoading: metricsLoading } = useReportTopMetrics();
 
   const filteredReports = useMemo(() => {
     const normalized = searchValue.trim().toLowerCase();
@@ -69,7 +54,7 @@ export default function ReportPage() {
 
       return matchSearch && matchType && matchCategory && matchStatus;
     });
-  }, [typeFilter, categoryFilter, statusFilter, searchValue]);
+  }, [typeFilter, categoryFilter, statusFilter, searchValue, adminReports]);
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
@@ -78,7 +63,7 @@ export default function ReportPage() {
           <HeaderCard isMobile={isMobile} />
 
           {/* Stats Overview */}
-          <StatsOverview totals={overviewMetrics} />
+          {overviewMetrics && <StatsOverview totals={overviewMetrics} />}
 
           {/* Main Content: Reports Table and Charts */}
           <Row gutter={[16, 16]}>
@@ -115,7 +100,7 @@ export default function ReportPage() {
               <CategoryPerformanceCard data={categoryPerformance} loading={categoryLoading} />
             </Col>
             <Col xs={24} lg={10}>
-              <TopMetricsCard data={topMetrics} loading={metricsLoading} />
+              {topMetrics && <TopMetricsCard data={topMetrics} loading={metricsLoading} />}
             </Col>
           </Row>
         </Space>

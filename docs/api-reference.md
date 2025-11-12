@@ -1,4 +1,4 @@
-# Tham chiếu API
+# Tham chiếu API (Bản cập nhật)
 
 Tài liệu này cung cấp tài liệu tham khảo cho tất cả các điểm cuối API có sẵn trong backend.
 
@@ -7,135 +7,400 @@ Tài liệu này cung cấp tài liệu tham khảo cho tất cả các điểm 
 
 ### Xác thực (`/api/auth`)
 
+Các điểm cuối để xử lý việc đăng ký, đăng nhập và quản lý phiên của người dùng.
+
 | Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
-| ------ | ----------- | ------------------------ | ------------- |
-| POST | `/login` | Đăng nhập người dùng. | Không |
-| POST | `/register` | Đăng ký người dùng mới. | Không |
-| POST | `/logout` | Đăng xuất người dùng hiện tại. | Có |
-| POST | `/refresh` | Làm mới mã thông báo truy cập. | Có (Mã thông báo làm mới) |
-| GET | `/me` | Lấy thông tin người dùng hiện tại. | Có |
+| --- | --- | --- | --- |
+| POST | `/register` | Đăng ký một tài khoản người dùng mới. | Không |
+| POST | `/login` | Đăng nhập để nhận token truy cập và làm mới. | Không |
+| POST | `/refresh` | Sử dụng token làm mới để nhận token truy cập mới. | Có (Yêu cầu Refresh Token) |
+| GET | `/me` | Lấy thông tin của người dùng hiện tại đã xác thực. | Có |
+| POST | `/change-password` | Thay đổi mật khẩu của người dùng hiện tại. | Có |
+| POST | `/logout` | Đăng xuất người dùng (thông báo cho client xóa token). | Có |
 
-**Ví dụ yêu cầu đăng nhập:**
+---
 
-```bash
-POST /api/auth/login
-Content-Type: application/json
+#### POST `/api/auth/register`
 
-{
-  "username": "sv001@ntt.edu.vn",
-  "password": "Password123"
-}
-```
+Đăng ký tài khoản mới.
 
-**Ví dụ phản hồi đăng nhập:**
+**Yêu cầu Body:**
 
 ```json
 {
-  "success": true,
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbG...",
-  "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbG...",
+  "username": "sv001",
+  "email": "sv001@ntt.edu.vn",
+  "password": "Password@123",
+  "fullName": "Nguyễn Văn A"
+}
+```
+
+**Phản hồi thành công (201):**
+
+```json
+{
+  "message": "Đăng ký thành công",
   "user": {
-    "id": "507f1f77bcf86cd799439011",
-    "username": "sv001",
+    "id": "60d5ec49e7a4b2a3f4e8b9e4",
     "email": "sv001@ntt.edu.vn",
-    "role": "reader",
-    "full_name": "Nguyễn Văn A"
+    "name": "Nguyễn Văn A",
+    "role": "reader"
   }
 }
 ```
 
-### Thư viện (`/api/library`)
+---
 
-| Phương thức | Điểm cuối | Mô tả | Xác thực | Vai trò |
-| ------ | --------------------- | ------------------------- | ---- | ----------- |
-| GET | `/marc-records` | Lấy tất cả các bản ghi MARC. | Có | Tất cả |
-| GET | `/marc-records/:id` | Lấy một bản ghi MARC duy nhất. | Có | Tất cả |
-| POST | `/marc-records` | Tạo một bản ghi MARC mới. | Có | Thủ thư+ |
-| PUT | `/marc-records/:id` | Cập nhật một bản ghi MARC. | Có | Thủ thư+ |
-| DELETE | `/marc-records/:id` | Xóa một bản ghi MARC. | Có | Quản trị viên |
+#### POST `/api/auth/login`
 
-### Trò chuyện (`/api/chat`)
+Đăng nhập bằng `username` (có thể là student_id) hoặc `email`.
 
-| Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
-| ------ | ----------- | ------------------------ | ------------- |
-| POST | `/message` | Gửi tin nhắn đến chatbot. | Có |
-| POST | `/recommend` | Nhận đề xuất sách. | Có |
-| GET | `/history/:id` | Lấy lịch sử trò chuyện. | Có |
-| GET | `/conversations`| Lấy danh sách cuộc trò chuyện.| Có |
-| GET | `/stats` | Lấy thống kê trò chuyện. | Có |
-| GET | `/health` | Kiểm tra tình trạng dịch vụ. | Không |
+**Yêu cầu Body:**
 
-**Ví dụ yêu cầu tin nhắn trò chuyện:**
-
-```bash
-POST /api/chat/message
-Content-Type: application/json
-Authorization: Bearer <your_jwt_token>
-
+```json
 {
-  "message": "Tìm sách về Python cho người mới bắt đầu"
+  "username": "sv001@ntt.edu.vn",
+  "password": "Password@123"
 }
 ```
 
-**Ví dụ phản hồi tin nhắn trò chuyện:**
+**Phản hồi thành công (200):**
+
+```json
+{
+  "message": "Đăng nhập thành công",
+  "access_token": "...",
+  "refresh_token": "...",
+  "user": {
+    "id": "60d5ec49e7a4b2a3f4e8b9e4",
+    "email": "sv001@ntt.edu.vn",
+    "name": "Nguyễn Văn A",
+    "role": "reader",
+    "student_id": "sv001",
+    "major": ""
+  }
+}
+```
+
+---
+
+#### POST `/api/auth/refresh`
+
+Làm mới access token. Cần gửi kèm `Refresh Token` trong header `Authorization`.
+
+**Phản hồi thành công (200):**
+
+```json
+{
+  "access_token": "..."
+}
+```
+
+---
+
+#### GET `/api/auth/me`
+
+Lấy thông tin chi tiết của người dùng đang đăng nhập.
+
+**Phản hồi thành công (200):**
+
+```json
+{
+  "user": {
+    "id": "60d5ec49e7a4b2a3f4e8b9e4",
+    "email": "sv001@ntt.edu.vn",
+    "name": "Nguyễn Văn A",
+    "role": "reader",
+    "student_id": "sv001",
+    "major": "",
+    "status": "active"
+  }
+}
+```
+
+---
+
+#### POST `/api/auth/change-password`
+
+Thay đổi mật khẩu.
+
+**Yêu cầu Body:**
+
+```json
+{
+  "old_password": "Password@123",
+  "new_password": "NewPassword@123"
+}
+```
+
+**Phản hồi thành công (200):**
+
+```json
+{
+  "message": "Đổi mật khẩu thành công"
+}
+```
+
+---
+
+#### POST `/api/auth/logout`
+
+Thông báo cho client để xóa token.
+
+**Phản hồi thành công (200):**
+
+```json
+{
+  "message": "Đăng xuất thành công"
+}
+```
+
+### Người dùng (`/api/users`)
+
+Các điểm cuối để quản lý tài khoản người dùng. Yêu cầu quyền admin.
+
+| Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
+| --- | --- | --- | --- |
+| GET | `/users` | Lấy danh sách tất cả người dùng. | Có (Admin) |
+| GET | `/users/<string:user_id>` | Lấy thông tin chi tiết của một người dùng. | Có (Admin) |
+| POST | `/users` | Tạo một người dùng mới. | Có (Admin) |
+| PUT | `/users/<string:user_id>` | Cập nhật thông tin của một người dùng. | Có (Admin) |
+| DELETE | `/users/<string:user_id>` | Xóa một người dùng. | Có (Admin) |
+
+---
+
+#### GET `/api/users`
+
+Lấy danh sách tất cả người dùng.
+
+**Phản hồi thành công (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "60d5ec49e7a4b2a3f4e8b9e4",
+      "email": "sv001@ntt.edu.vn",
+      "name": "Nguyễn Văn A",
+      "role": "reader",
+      ...
+    }
+  ]
+}
+```
+
+---
+
+#### GET `/api/users/<string:user_id>`
+
+Lấy thông tin chi tiết của một người dùng cụ thể.
+
+**Phản hồi thành công (200):**
 
 ```json
 {
   "success": true,
   "data": {
-    "message": "Tôi đề xuất cuốn 'Python Crash Course' của Eric Matthes.",
-    "conversation_id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
-  },
-  "metadata": {
-    "latency_ms": 789
+    "id": "60d5ec49e7a4b2a3f4e8b9e4",
+    "email": "sv001@ntt.edu.vn",
+    "name": "Nguyễn Văn A",
+    ...
   }
 }
 ```
-**Ví dụ truy vấn dữ liệu:**
-1.Cài ứng dụng Yaz: https://www.indexdata.com/resources/software/yaz/
-  Phiên bản 3.31.0
-  Sau khi cài xong, kiểm tra trong Command Prompt:yaz-client
-  Kết quả trả về: Z>(Cài đặt thành công)
-  Nếu không vào PATH thêm file.bin
-2. Kiểm thử với Yaz: Mở Terminal:yaz-client z3950.loc.gov:7090/voyager
-  -find @attr 1=4 "python"
-  -show 1
-3.Chạy với dự án trong Visual Studio Code
-   #Di chuyển vào thư mục backend
-    cd backend
-    # Tạo và kích hoạt môi trường ảo
-    python -m venv venv311
-    # Windows: .\venv311\Scripts\Activate.ps1
-    # Linux/macOS: source venv311/bin/activate
 
-- Chạy ứng dụng: python run.py
-- Thử nghiệm truy vấn với những trường:
-- Tác giả: http://127.0.0.1:5000/search?keyword=Stephen%20Hawking&field=author
-- Tên sách: http://127.0.0.1:5000/search?keyword=Deep%20Learning&field=title
-- Chủ đề: http://127.0.0.1:5000/search?keyword=Artificial%20Intelligence&field=subject
-- IISBN: http://127.0.0.1:5000/search?keyword=9780262035613&field=isbn
-### Tìm kiếm 
+---
 
-| Phương thức | Điểm cuối                             | Mô tả                                                            | Yêu cầu xác thực |
-| ----------- | ------------------------------------- | ---------------------------------------------------------------- | ---------------- |
-| **GET**     | `/search?keyword=...&field=any`       | Tìm kiếm tổng hợp toàn văn (tiêu đề, tác giả, chủ đề, mô tả...). | Không            |
-| **GET**     | `/search?keyword=...&field=title`     | Tìm theo **nhan đề** (245$a).                                    | Không            |
-| **GET**     | `/search?keyword=...&field=author`    | Tìm theo **tác giả** (100$a hoặc 700$a).                         | Không            |
-| **GET**     | `/search?keyword=...&field=subject`   | Tìm theo **chủ đề** (650$a).                                     | Không            |
-| **GET**     | `/search?keyword=...&field=isbn`      | Tìm theo **ISBN** (020$a).                                       | Không            |
-| **GET**     | `/search?keyword=...&field=publisher` | Tìm theo **nhà xuất bản** (260$b).                               | Không            |
-| **GET**     | `/search?keyword=...&field=date`      | Tìm theo **năm xuất bản** (260$c).                               | Không            |
-### DS Các trường(`field`)
+#### POST `/api/users`
 
-| Mã MARC | Tên trường                         | Tiểu trường | Ý nghĩa                             |   `field` |  Ví dụ                                |
-| ------- | ---------------------------------- | ----------- | ----------------------------------- | ----------| --------------------------------------- |
-| **245** | Title Statement                    | `$a`        | Nhan đề chính của tài liệu          | `title`   | `?keyword=Deep+Learning&field=title`    |
-| **245** | Title Statement                    | `$c`        | Trách nhiệm (tác giả trong nhan đề) | `any`     | `?keyword=Goodfellow&field=any`         |
-| **100** | Main Entry — Personal Name         | `$a`        | Tác giả chính                       | `author`  | `?keyword=Stephen+Hawking&field=author` |
-| **700** | Added Entry — Personal Name        | `$a`        | Tác giả phụ                         | `author`  | `?keyword=Yoshua+Bengio&field=author`   |
-| **260** | Publication, Distribution, etc.    | `$b`        | Nhà xuất bản                        | `publisher`| `?keyword=Pearson&field=publisher`     |
-| **260** | Publication, Distribution, etc.    | `$c`        | Năm xuất bản                        | `date`     | `?keyword=2023&field=date`             |
-| **650** | Subject Added Entry — Topical Term | `$a`        | Chủ đề / lĩnh vực                   | `subject`  | `?keyword=Artificial+Intelligence&field=subject` |
-| **520** | Summary, etc.                      | `$a`        | Tóm tắt hoặc mô tả nội dung         | `any`      | `?keyword=neural+network&field=any`    |
-| **504** | Bibliography, etc. Note            | `$a`        | Ghi chú tài liệu tham khảo          | `any`      | `?keyword=reference&field=any`         |
-| **020** | ISBN                               | `$a`        | Mã số sách chuẩn quốc tế            | `isbn`     | `?keyword=9780262035613&field=isbn`    |
+Tạo một người dùng mới.
+
+**Yêu cầu Body:**
+
+```json
+{
+  "email": "sv002@ntt.edu.vn",
+  "name": "Trần Thị B",
+  "password": "Password@456",
+  "role": "librarian",
+  "student_id": "sv002"
+}
+```
+
+**Phản hồi thành công (201):**
+
+```json
+{
+  "success": true,
+  "message": "Tạo user thành công",
+  "data": { ... }
+}
+```
+
+---
+
+#### PUT `/api/users/<string:user_id>`
+
+Cập nhật thông tin của một người dùng.
+
+**Yêu cầu Body:**
+
+```json
+{
+  "name": "Trần Thị C",
+  "major": "Công nghệ thông tin"
+}
+```
+
+**Phản hồi thành công (200):**
+
+```json
+{
+  "success": true,
+  "message": "Cập nhật user thành công",
+  "data": { ... }
+}
+```
+
+---
+
+#### DELETE `/api/users/<string:user_id>`
+
+Xóa một người dùng.
+
+**Phản hồi thành công (200):**
+
+```json
+{
+  "success": true,
+  "message": "Xóa user thành công"
+}
+```
+
+### Chat (`/api/chat`)
+
+Các điểm cuối liên quan đến AI chat, lịch sử và gợi ý.
+
+| Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
+| --- | --- | --- | --- |
+| POST | `/message` | Gửi tin nhắn đến AI (lưu lịch sử). | Có |
+| POST | `/message/guest` | Gửi tin nhắn đến AI (không lưu lịch sử). | Không |
+| GET | `/history/<string:conv_id>` | Lấy lịch sử tin nhắn của một cuộc trò chuyện. | Có |
+| GET | `/conversations` | Lấy danh sách cuộc trò chuyện của người dùng. | Có |
+| POST | `/conversation/end` | Kết thúc một cuộc trò chuyện. | Có |
+| GET | `/stats` | Lấy thống kê trò chuyện của người dùng. | Có |
+| POST | `/recommend` | Nhận gợi ý sách dựa trên sở thích. | Có |
+| POST | `/search` | Tìm kiếm sách thông minh bằng AI. | Có |
+
+---
+
+#### POST `/api/chat/message`
+
+Gửi tin nhắn và nhận phản hồi từ AI. Lịch sử sẽ được lưu lại.
+
+**Yêu cầu Body:**
+
+```json
+{
+  "message": "Xin chào, bạn có thể giúp gì cho tôi?",
+  "conversation_id": "60d5f..." // (Tùy chọn)
+}
+```
+
+**Phản hồi thành công (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Chào bạn, tôi là trợ lý ảo của thư viện...",
+    "conversation_id": "60d5f..."
+  },
+  ...
+}
+```
+
+---
+
+#### POST `/api/chat/message/guest`
+
+Gửi tin nhắn như một khách (không đăng nhập). Lịch sử không được lưu.
+
+**Yêu cầu Body:**
+
+```json
+{
+  "message": "Thư viện có những loại sách nào?"
+}
+```
+
+---
+
+#### GET `/api/chat/history/<string:conversation_id>`
+
+Lấy lịch sử tin nhắn của một cuộc trò chuyện.
+
+**Tham số Query:**
+- `limit`: Số lượng tin nhắn tối đa (mặc định: 100).
+
+---
+
+#### GET `/api/chat/conversations`
+
+Lấy danh sách các cuộc trò chuyện của người dùng hiện tại.
+
+**Tham số Query:**
+- `limit`: Số lượng cuộc trò chuyện (mặc định: 20).
+- `skip`: Bỏ qua bao nhiêu cuộc trò chuyện (mặc định: 0).
+
+### Thư viện (`/api/library`)
+
+Các điểm cuối để quản lý tài nguyên thư viện, mượn trả và thống kê.
+
+| Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
+| --- | --- | --- | --- |
+| GET | `/configs` | Lấy tất cả cấu hình quản trị. | Có (Admin) |
+| GET | `/configs/<string:key>` | Lấy một cấu hình cụ thể. | Có (Admin) |
+| POST | `/configs` | Cập nhật hoặc tạo mới một cấu hình. | Có (Admin) |
+| GET | `/documents` | Lấy danh sách các tài liệu (hướng dẫn, quy định). | Công khai |
+| GET | `/items` | Lấy danh sách các bản sao vật lý của sách. | Công khai |
+| PUT | `/items/<string:item_id>` | Cập nhật thông tin một bản sao sách. | Có (Librarian) |
+| GET | `/loans` | Lấy danh sách các lượt mượn sách. | Có |
+| POST | `/loans` | Tạo một lượt mượn sách mới. | Có (Librarian) |
+| POST | `/loans/<string:loan_id>/return` | Đánh dấu một lượt mượn đã được trả. | Có (Librarian) |
+| POST | `/loans/<string:loan_id>/renew` | Gia hạn một lượt mượn. | Có |
+| GET | `/marc` | Lấy danh sách các biên mục MARC. | Công khai |
+| GET | `/marc/<string:record_id>` | Lấy chi tiết một biên mục MARC. | Công khai |
+| POST | `/marc` | Tạo một biên mục MARC mới. | Có (Librarian) |
+| GET | `/stats/overview` | Lấy thống kê tổng quan của thư viện. | Có (Librarian) |
+| GET | `/faq` | Lấy danh sách các câu hỏi thường gặp (FAQ). | Công khai |
+| POST | `/faq` | Tạo một câu hỏi thường gặp mới. | Có (Librarian) |
+| GET | `/conversations` | Lấy danh sách các cuộc trò chuyện của người dùng. | Có |
+| GET | `/conversations/<string:conv_id>/messages` | Lấy tin nhắn trong một cuộc trò chuyện. | Có |
+
+### Tìm kiếm Z39.50 (`/api/z3950`)
+
+Tìm kiếm sách từ các thư viện quốc tế sử dụng giao thức Z39.50.
+
+| Phương thức | Điểm cuối | Mô tả | Yêu cầu xác thực |
+| --- | --- | --- | --- |
+| GET | `/search/all` | Tìm kiếm trên tất cả các nguồn Z39.50. | Không |
+| GET | `/search/<string:source>` | Tìm kiếm trên một nguồn Z39.50 cụ thể. | Không |
+| GET | `/sources` | Lấy danh sách các nguồn Z39.50 có sẵn. | Không |
+| GET | `/health` | Kiểm tra trạng thái của dịch vụ Z39.50. | Không |
+| POST | `/cache/clear` | Xóa bộ nhớ cache của Z39.50. | Có (Librarian) |
+| GET | `/cache/stats` | Lấy thống kê bộ nhớ cache của Z39.50. | Có (Librarian) |
+
+---
+
+#### GET `/api/z3950/search/all`
+
+Tìm kiếm trên tất cả các nguồn Z39.50 được kích hoạt.
+
+**Tham số Query:**
+- `q` (bắt buộc): Truy vấn tìm kiếm.
+- `type`: Loại truy vấn (`isbn`, `title`, `author`, `subject`, `keyword`). Mặc định: `keyword`.
+- `limit`: Số lượng kết quả tối đa cho mỗi nguồn. Mặc định: 5.
+- `cache`: Sử dụng bộ nhớ cache (`true`/`false`). Mặc định: `true`.
+- `save`: Lưu các bản ghi mới vào cơ sở dữ liệu (`true`/`false`). Mặc định: `false`.

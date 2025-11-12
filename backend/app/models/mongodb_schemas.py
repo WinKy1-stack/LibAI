@@ -97,27 +97,67 @@ def get_user_schema() -> Dict[str, Any]:
     }
 
 def get_marc_record_schema() -> Dict[str, Any]:
-    """Schema cho collection marc_records"""
+    """Schema cho collection marc_21 (MARC21 Book Record format)"""
     return {
-        "control_number": "",  # unique
-        "leader": "",
-        "fields": {},  # MARC21 fields
-        "normalized": {
-            "isbn": [],
-            "title": "",
-            "authors": [],
-            "publisher": "",
-            "year": None,
-            "subjects": []
+        "record_id": "",  # UUID string
+        "leader": "",  # MARC21 leader (24 characters)
+        "control_number": "",  # MARC control number (001)
+        "agency_code": "",  # Agency that created the record
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "source": MARCRecordSource.LOCAL.value,  # local, z3950, oai
+        "rights": {
+            "access": "",  # Access rights
+            "format": []  # Format restrictions
         },
-        "raw_mrc_ref": "",  # GridFS reference
-        "source": MARCRecordSource.LOCAL.value
+        "fixed_fields": {
+            "date_entered": "",  # Date entered on file (008 pos 00-05)
+            "type_of_record": "",  # Type of record (008 pos 06)
+            "language": "",  # Language code (008 pos 35-37)
+            "publication_year": ""  # Publication year (008 pos 07-10)
+        },
+        "identifiers": {
+            "isbn": [],  # Array of ISBN strings
+            "other": []  # Other identifiers (ISSN, etc.)
+        },
+        "title": {
+            "main": "",  # Main title (245$a)
+            "subtitle": None  # Subtitle (245$b)
+        },
+        "contributors": [],  # [{"role": "", "name": ""}]
+        "edition": "",  # Edition statement (250$a)
+        "publication": {
+            "publisher": "",  # Publisher (260$b or 264$b)
+            "place": "",  # Place of publication (260$a or 264$a)
+            "year": ""  # Publication year (260$c or 264$c)
+        },
+        "physical_description": {
+            "extent": "",  # Extent (300$a)
+            "size": "",  # Dimensions (300$c)
+            "illustration": ""  # Illustrations (300$b)
+        },
+        "notes": [],  # Array of note strings (500, 520, etc.)
+        "subjects": [],  # Array of subject strings (650, 651, etc.)
+        "classification": {
+            "ddc": "",  # Dewey Decimal Classification (082)
+            "lcc": ""  # Library of Congress Classification (050)
+        },
+        "holdings": [],  # [{"location": "", "call_number": "", "copies": 0, "available": 0}]
+        "access": {
+            "online_url": "",  # Online access URL (856$u)
+            "restrictions": ""  # Access restrictions
+        },
+        "format": [],  # ["book", "ebook", etc.]
+        "image_url": ""  # Book cover image URL from Google Books API
     }
 
 def get_item_schema() -> Dict[str, Any]:
-    """Schema cho collection items"""
+    """Schema cho collection items
+    Note: marc_record schema đã có trường 'holdings' tích hợp sẵn.
+    Collection 'items' này có thể được dùng cho quản lý chi tiết hơn hoặc deprecated.
+    """
     return {
-        "record_id": None,  # ObjectId ref to marc_records
+        "record_id": None,  # UUID string ref to marc_21.record_id (hoặc ObjectId nếu dùng _id)
         "barcode": "",  # unique
         "status": ItemStatus.AVAILABLE.value,
         "location": {
@@ -195,7 +235,7 @@ def get_recommend_event_schema() -> Dict[str, Any]:
     """Schema cho collection recommend_events"""
     return {
         "user_id": None,  # ObjectId ref to users
-        "record_id": None,  # ObjectId ref to marc_records
+        "record_id": None,  # ObjectId ref to marc_21
         "event": RecommendEvent.VIEW.value,
         "score": 1.0,
         "context": {},  # {"query": "...", "major": "..."}
@@ -238,7 +278,7 @@ def get_oai_record_schema() -> Dict[str, Any]:
         "datestamp": "",
         "setSpec": [],
         "metadata": {},  # MARCXML/DC
-        "mapped_record_id": None,  # ObjectId ref to marc_records
+        "mapped_record_id": None,  # ObjectId ref to marc_21
         "harvest_log": []  # [{"ts": ISODate(), "status": "ok", "note": ""}]
     }
 

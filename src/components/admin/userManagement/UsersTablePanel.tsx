@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import type { ColumnsType } from "antd/es/table";
 import {
   Avatar,
@@ -34,10 +34,12 @@ interface UsersTablePanelProps {
   statusFilter: "all" | UserStatus;
   roleFilter: "all" | UserRole;
   searchValue: string;
+  loading?: boolean;
   onStatusChange: (value: "all" | UserStatus) => void;
   onRoleChange: (value: "all" | UserRole) => void;
   onSearchChange: (value: string) => void;
   onSearchSubmit: (value: string) => void;
+  onUserClick?: (user: AdminUser) => void;
 }
 
 export function UsersTablePanel({
@@ -45,21 +47,15 @@ export function UsersTablePanel({
   statusFilter,
   roleFilter,
   searchValue,
+  loading = false,
   onStatusChange,
   onRoleChange,
   onSearchChange,
   onSearchSubmit,
+  onUserClick,
 }: UsersTablePanelProps) {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const columns: ColumnsType<AdminUser> = useMemo(
     () => [
@@ -69,7 +65,11 @@ export function UsersTablePanel({
         key: "user",
         render: (_, record) => (
           <Space align="center" size={12}>
-            <Avatar src={record.avatar} icon={!record.avatar ? <TeamOutlined /> : undefined} size={36}>
+            <Avatar 
+              src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${record.email || 'user'}`}
+              icon={<TeamOutlined />}
+              size={36}
+            >
               {record.name.charAt(0)}
             </Avatar>
             <Space direction="vertical" size={2}>
@@ -164,9 +164,14 @@ export function UsersTablePanel({
         title: "",
         key: "actions",
         fixed: "right" as const,
-        render: () => (
+        render: (_, record) => (
           <Space direction="vertical" size={0}>
-            <Button type="link" size="small" icon={<InfoCircleOutlined />}>
+            <Button 
+              type="link" 
+              size="small" 
+              icon={<InfoCircleOutlined />}
+              onClick={() => onUserClick?.(record)}
+            >
               Chi tiết
             </Button>
             <Button type="link" size="small" icon={<BellOutlined />}>
@@ -177,7 +182,7 @@ export function UsersTablePanel({
         width: screens.md ? 120 : 60,
       },
     ],
-    [token.colorPrimary, screens.md],
+    [token.colorPrimary, screens.md, onUserClick],
   );
 
   return (
@@ -240,13 +245,11 @@ export function UsersTablePanel({
       <Table
         columns={columns}
         dataSource={data}
-        loading={{
-          spinning: loading,
-          indicator: <></>,
-        }}
+        loading={loading}
         pagination={{
-          pageSize: 5,
-          showSizeChanger: false,
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Tổng ${total} người dùng`,
           position: ["bottomRight"],
         }}
         rowKey="id"

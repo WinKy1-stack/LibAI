@@ -1,19 +1,88 @@
-import { Card, Form, Input, Button, Space, Typography, Avatar, Upload, Row, Col, message, theme } from "antd";
+import { Card, Form, Input, Button, Space, Typography, Avatar, Upload, Row, Col, App as AntdApp, theme, Spin } from "antd";
 import { UserOutlined, SaveOutlined, CameraOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { UploadFile } from "antd";
-import { defaultLibrarianProfile } from "../../../data";
 import { getLibrarianSettingsColors } from "./constants";
+import { authService } from "../../../services/authService";
+import type { User } from "../../../types/auth";
 
 const { Title, Text } = Typography;
 
 export default function LibrarianProfileCard() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [avatarUrl, setAvatarUrl] = useState(defaultLibrarianProfile.avatar);
+  const [user, setUser] = useState<User | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
   const { token } = theme.useToken();
   const librarianColors = getLibrarianSettingsColors(token);
+  const { notification } = AntdApp.useApp();
+
+  // Fetch user info on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        // Try to get from localStorage first
+        const storedUser = authService.getStoredUser();
+        if (storedUser) {
+          setUser(storedUser);
+          // Generate avatar URL from email or student_id
+          const seed = storedUser.email || storedUser.student_id || storedUser.name;
+          setAvatarUrl(`https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}`);
+          
+          // Set form initial values
+          form.setFieldsValue({
+            fullName: storedUser.name || '',
+            email: storedUser.email || '',
+            phone: '',
+            department: storedUser.role === 'admin' ? 'Quản trị hệ thống' : storedUser.role === 'librarian' ? 'Quản lý mượn trả' : 'Sinh viên',
+            position: storedUser.role === 'admin' ? 'Quản trị viên' : storedUser.role === 'librarian' ? 'Thủ thư' : 'Độc giả',
+            bio: '',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // If not in localStorage, fetch from API
+        const currentUser = await authService.getCurrentUser();
+        setUser(currentUser);
+        
+        // Generate avatar URL
+        const seed = currentUser.email || currentUser.student_id || currentUser.name;
+        setAvatarUrl(`https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}`);
+        
+        // Set form initial values
+        form.setFieldsValue({
+          fullName: currentUser.name || '',
+          email: currentUser.email || '',
+          phone: '',
+          department: currentUser.role === 'admin' ? 'Quản trị hệ thống' : currentUser.role === 'librarian' ? 'Quản lý mượn trả' : 'Sinh viên',
+          position: currentUser.role === 'admin' ? 'Quản trị viên' : currentUser.role === 'librarian' ? 'Thủ thư' : 'Độc giả',
+          bio: '',
+        });
+        
+        // Store in localStorage
+        try {
+          localStorage.setItem('user', JSON.stringify(currentUser));
+        } catch (e) {
+          console.warn('Failed to store user in localStorage', e);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+        notification.error({
+          message: 'Lỗi',
+          description: 'Không thể tải thông tin người dùng',
+          placement: 'topRight',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [form, notification]);
 
   const handleSave = async () => {
     try {
@@ -21,7 +90,10 @@ export default function LibrarianProfileCard() {
       const values = await form.validateFields();
       console.log("Profile values:", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      message.success("Cập nhật thông tin thành công!");
+      notification.success({
+        message: "Cập nhật thông tin thành công!",
+        placement: "topRight",
+      });
       setSaving(false);
     } catch {
       setSaving(false);
@@ -36,6 +108,25 @@ export default function LibrarianProfileCard() {
     reader.readAsDataURL(file);
     return false; // Prevent default upload
   };
+
+  if (loading) {
+    return (
+      <Card
+        variant="borderless"
+        style={{
+          background: librarianColors.backgrounds.card,
+          minHeight: 400,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Spin size="large" />
+      </Card>
+    );
+  }
+
+  const roleLabel = user?.role === 'admin' ? 'Quản trị viên' : user?.role === 'librarian' ? 'Thủ thư' : 'Độc giả';
 
   return (
     <Card
@@ -77,9 +168,9 @@ export default function LibrarianProfileCard() {
               </div>
               <div style={{ textAlign: "center" }}>
                 <Title level={4} style={{ margin: 0 }}>
-                  {defaultLibrarianProfile.fullName}
+                  {user?.name || 'Người dùng'}
                 </Title>
-                <Text type="secondary">{defaultLibrarianProfile.position}</Text>
+                <Text type="secondary">{roleLabel}</Text>
               </div>
             </Space>
           </Col>
@@ -89,7 +180,6 @@ export default function LibrarianProfileCard() {
         <Form
           form={form}
           layout="vertical"
-          initialValues={defaultLibrarianProfile}
         >
           <Row gutter={16}>
             <Col xs={24} md={12}>

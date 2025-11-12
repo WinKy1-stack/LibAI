@@ -1,4 +1,4 @@
-import { Card, Form, Select, Switch, Button, Space, Typography, Divider, Radio, Slider, message, theme } from "antd";
+import { Card, Form, Select, Switch, Button, Space, Typography, Divider, Radio, Slider, App as AntdApp, theme } from "antd";
 import { SaveOutlined, SunOutlined, MoonOutlined, SyncOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { defaultLibrarianPreferences, languageOptions } from "../../../data";
@@ -11,6 +11,7 @@ export default function LibrarianPreferencesCard() {
   const [saving, setSaving] = useState(false);
   const { token } = theme.useToken();
   const librarianColors = getLibrarianSettingsColors(token);
+  const { notification } = AntdApp.useApp();
 
   const handleSave = async () => {
     try {
@@ -18,7 +19,10 @@ export default function LibrarianPreferencesCard() {
       const values = await form.validateFields();
       console.log("Preferences values:", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      message.success("Cập nhật giao diện thành công!");
+      notification.success({
+        message: "Cập nhật giao diện thành công!",
+        placement: "topRight",
+      });
       setSaving(false);
     } catch {
       setSaving(false);

@@ -58,14 +58,23 @@ export function useUserTheme(): UseUserThemeReturn {
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === 'user-theme' && e.newValue) {
-        const val = e.newValue as ThemeMode;
-        if (val === 'light' || val === 'dark') setModeState(val);
+        const val = e.newValue;
+        // Validate type đầy đủ
+        if (typeof val === 'string' && (val === 'light' || val === 'dark')) {
+          setModeState(val as ThemeMode);
+        }
       }
     };
 
     const handleCustom = (e: Event) => {
-      const val = (e as CustomEvent<ThemeMode>).detail;
-      if (val === 'light' || val === 'dark') setModeState(val);
+      // Validate CustomEvent và detail
+      if (e instanceof CustomEvent && e.detail) {
+        const val = e.detail;
+        // Validate type đầy đủ
+        if (typeof val === 'string' && (val === 'light' || val === 'dark')) {
+          setModeState(val as ThemeMode);
+        }
+      }
     };
 
     window.addEventListener('storage', handleStorage);
