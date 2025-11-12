@@ -130,16 +130,27 @@ class KohaClient:
         safe_query = query.strip()
         url = f"{self.base_url}/api/v1/biblios"
         
-        # Try multiple search strategies
+        # Smart Search: Try ALL 6 fields with single keyword
+        # Stops at first successful result - very flexible for users!
+        # User only needs to provide ONE keyword, system tries all fields
         search_strategies = [
-            # Strategy 1: Search title only (simplest, most reliable)
+            # Strategy 1: Title (most common - book names, subjects)
             {"title": {"-like": f"%{safe_query}%"}},
             
-            # Strategy 2: Search author only
+            # Strategy 2: Author name
             {"author": {"-like": f"%{safe_query}%"}},
             
-            # Strategy 3: No filter - get all and filter client-side (fallback)
-            {}
+            # Strategy 3: Publisher (NXB queries like "NXB Giáo dục")
+            {"publisher": {"-like": f"%{safe_query}%"}},
+            
+            # Strategy 4: Publication year (year queries like "2023")
+            {"publication_year": {"-like": f"%{safe_query}%"}},
+            
+            # Strategy 5: Copyright date (alternative year field)
+            {"copyright_date": {"-like": f"%{safe_query}%"}},
+            
+            # Strategy 6: ISBN (exact code queries)
+            {"isbn": {"-like": f"%{safe_query}%"}},
         ]
         
         for idx, koha_query in enumerate(search_strategies):
