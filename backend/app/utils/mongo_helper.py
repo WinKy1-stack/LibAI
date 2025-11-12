@@ -129,6 +129,8 @@ class MongoHelper:
     @staticmethod
     def count(name, query=None):
         col = MongoHelper._get_collection(name)
+        if query is not None and not isinstance(query, dict):
+            raise ValueError("query phải là dict")
         return col.count_documents(query or {})
 
     @staticmethod
