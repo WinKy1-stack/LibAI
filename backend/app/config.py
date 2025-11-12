@@ -125,7 +125,18 @@ class Config:
         }
     }
 
-    # ========= 🎯 Trường tìm kiếm theo MARC21 Book Record format =========
+    # ========== 📚 Koha (ILS) ==========
+    # Cấu hình cho staff OPAC, xem thêm: http://45.118.146.109:8082
+    KOHA_BASE_URL = os.getenv('KOHA_BASE_URL', '')
+    # Chọn chế độ xác thực: api_key | basic
+    KOHA_AUTH_MODE = os.getenv('KOHA_AUTH_MODE', 'api_key')
+    # API key để truy cập REST API
+    KOHA_API_KEY = os.getenv('KOHA_API_KEY')
+    # Thông tin xác thực Basic Auth
+    KOHA_USERNAME = os.getenv('KOHA_USERNAME')
+    KOHA_PASSWORD = os.getenv('KOHA_PASSWORD')
+
+    # ========= 🎯 Trường tìm kiếm theo MARC21 =========
     SEARCH_FIELDS = {
         "any": [
             "title.main",              # Nhan đề chính

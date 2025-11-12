@@ -16,6 +16,7 @@ from .document_routes import document_bp
 from .conversation_routes import conversation_bp
 from .admin_routes import admin_bp
 from .stats_routes import stats_bp
+from .koha_routes import koha_bp
 
 # Register sub-blueprints
 library_bp.register_blueprint(marc_bp, url_prefix='/marc-records')
@@ -26,6 +27,7 @@ library_bp.register_blueprint(document_bp, url_prefix='/documents')
 library_bp.register_blueprint(conversation_bp, url_prefix='/conversations')
 library_bp.register_blueprint(admin_bp, url_prefix='/admin')
 library_bp.register_blueprint(stats_bp, url_prefix='/stats')
+library_bp.register_blueprint(koha_bp, url_prefix='/koha')
 
 __all__ = ['library_bp']
 
