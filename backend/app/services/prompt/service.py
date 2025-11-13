@@ -933,9 +933,11 @@ class PromptService:
     def _call_gemini_api(
         self,
         contents: List[Dict[str, Any]],
-        system_instruction: str
+        system_instruction: str,
+        retry_count: int = 0,
+        max_retries: int = 3
     ) -> Any:
-        """Call Gemini API với SDK mới (google-genai)"""
+        """Call Gemini API với SDK mới (google-genai) - Có retry logic"""
         try:
             # SDK mới: from google import genai
             # Cấu hình safety settings
@@ -976,16 +978,106 @@ class PromptService:
             # TODO: Implement chat history properly với SDK mới
             
             # Generate content với SDK mới
+            logger.debug(f"[API Call #{retry_count + 1}] Sending request to Gemini {self.model_id}...")
             response = self.client.models.generate_content(
                 model=self.model_id,
                 contents=current_message,
                 config=generation_config
             )
             
+            logger.debug("Gemini API call successful")
             return response
+            
         except Exception as e:
-            logger.error("Gemini API call failed: %s", str(e), exc_info=True)
-            raise GeminiAPIError(f"Không thể kết nối với AI: {str(e)}") from e
+            error_str = str(e)
+            status_code = None
+            error_type = "UNKNOWN"
+            
+            if '503' in error_str or 'Service Unavailable' in error_str or 'UNAVAILABLE' in error_str:
+                error_type = "SERVICE_OVERLOADED"
+                status_code = 503
+                user_message = "AI đang quá tải. Vui lòng thử lại trong vài giây."
+                
+                # Retry nếu chưa vượt quá max_retries
+                if retry_count < max_retries:
+                    wait_time = 2 ** (retry_count + 1)  # Exponential backoff: 2s, 4s, 8s
+                    logger.warning(f"[Retry {retry_count + 1}/{max_retries}] Service overloaded. Waiting {wait_time}s...")
+                    import time
+                    time.sleep(wait_time)
+                    return self._call_gemini_api(contents, system_instruction, retry_count + 1, max_retries)
+                else:
+                    logger.error("Max retries reached. Service still overloaded.")
+                    
+            elif '429' in error_str or 'Rate limit' in error_str or 'RESOURCE_EXHAUSTED' in error_str:
+                error_type = "RATE_LIMITED"
+                status_code = 429
+                user_message = "Yêu cầu quá nhiều. Vui lòng đợi một lát rồi thử lại."
+                logger.warning(f"Rate limited by Gemini API. Waiting before retry...")
+                if retry_count < max_retries:
+                    wait_time = 5 + (2 * retry_count)  # 5s, 7s, 9s
+                    import time
+                    time.sleep(wait_time)
+                    return self._call_gemini_api(contents, system_instruction, retry_count + 1, max_retries)
+                    
+            elif '401' in error_str or '403' in error_str or 'PERMISSION_DENIED' in error_str:
+                error_type = "AUTH_ERROR"
+                status_code = 401
+                user_message = "Lỗi xác thực. Vui lòng kiểm tra cài đặt API key."
+                logger.error("Authentication/Authorization failed with Gemini API")
+                
+            elif '400' in error_str or 'BadRequest' in error_str or 'INVALID_ARGUMENT' in error_str:
+                error_type = "BAD_REQUEST"
+                status_code = 400
+                user_message = "Yêu cầu không hợp lệ. Vui lòng kiểm tra lại tin nhắn."
+                logger.error(f"Bad request to Gemini API: {error_str}")
+                
+            elif 'timeout' in error_str.lower() or 'deadline' in error_str.lower():
+                error_type = "TIMEOUT"
+                status_code = 504
+                user_message = "⏱Yêu cầu quá lâu. Vui lòng thử lại."
+                logger.error("Gemini API request timed out")
+                if retry_count < max_retries:
+                    wait_time = 3
+                    import time
+                    time.sleep(wait_time)
+                    return self._call_gemini_api(contents, system_instruction, retry_count + 1, max_retries)
+                    
+            elif 'safety' in error_str.lower() or 'blocked' in error_str.lower():
+                error_type = "SAFETY_BLOCKED"
+                status_code = 400
+                user_message = "Tin nhắn bị chặn bởi bộ lọc an toàn. Vui lòng rephrase."
+                logger.warning(f"Safety filter blocked message: {error_str}")
+                
+            elif 'overloaded' in error_str.lower() or 'overloaded' in error_str:
+                error_type = "MODEL_OVERLOADED"
+                status_code = 503
+                user_message = "Model đang quá tải. Vui lòng thử lại sau."
+                if retry_count < max_retries:
+                    wait_time = 3 + (2 * retry_count)
+                    logger.warning(f"Model overloaded. Retry {retry_count + 1}/{max_retries} after {wait_time}s")
+                    import time
+                    time.sleep(wait_time)
+                    return self._call_gemini_api(contents, system_instruction, retry_count + 1, max_retries)
+                    
+            else:
+                error_type = "UNKNOWN_ERROR"
+                user_message = f"Lỗi khi xử lý tin nhắn: {error_str[:100]}"
+                logger.error(f"Unknown API error: {error_str}")
+            
+            # Log chi tiết lỗi
+            logger.error(f"""
+                        ╔═══════════════════════════════════════════════════════════╗
+                        ║ GEMINI API ERROR DETAILS
+                        ╠═══════════════════════════════════════════════════════════╣
+                        ║ Type: {error_type}
+                        ║ Status: {status_code}
+                        ║ Message: {user_message}
+                        ║ Retry: {retry_count}/{max_retries}
+                        ║ Original Error: {error_str}
+                        ╚═══════════════════════════════════════════════════════════╝
+                        """)
+            
+            raise GeminiAPIError(user_message) from e
 
 
 # Singleton pattern với class để tránh global statement
