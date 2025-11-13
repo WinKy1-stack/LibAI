@@ -1,7 +1,7 @@
 # ============================================
 # Flask Framework & Core Dependencies
 # ============================================
-Flask==3.1.2
+Flask[async]==3.1.2
 Flask-CORS==6.0.1
 Flask-JWT-Extended==4.7.1
 Flask-PyMongo==3.0.1
