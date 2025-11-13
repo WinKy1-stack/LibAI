@@ -26,23 +26,18 @@ class EnvConfig:
         if not api_key:
             raise ValueError("GEMINI_API_KEY không được cấu hình trong .env")
         
-        # Get MongoDB URI based on USE_CLOUD_MONGODB flag
         use_cloud = os.getenv('USE_CLOUD_MONGODB', 'true').lower() == 'true'
         mongo_uri = os.getenv('MONGO_URI_CLOUD') if use_cloud else os.getenv('MONGO_URI_LOCAL')
         
         if not mongo_uri:
             raise ValueError("MONGO_URI không được cấu hình trong .env")
         
-        # Get database name
         mongo_dbname = os.getenv('MONGO_DBNAME', 'library_chatbox')
         
-        # Ensure database name is in URI
         if '?' in mongo_uri:
-            # URI has query params, insert database before ?
             base_uri = mongo_uri.split('?')[0]
             query_params = mongo_uri.split('?')[1]
             
-            # Check if database is already in URI
             if not base_uri.endswith(f'/{mongo_dbname}'):
                 if base_uri.endswith('/'):
                     mongo_uri = f"{base_uri}{mongo_dbname}?{query_params}"
@@ -51,7 +46,6 @@ class EnvConfig:
             else:
                 mongo_uri = f"{base_uri}?{query_params}"
         else:
-            # No query params
             if not mongo_uri.endswith(f'/{mongo_dbname}'):
                 if mongo_uri.endswith('/'):
                     mongo_uri = f"{mongo_uri}{mongo_dbname}"
@@ -75,18 +69,15 @@ class Config:
     """Cấu hình cơ bản cho Flask app"""
     env_config = EnvConfig.from_env()
 
-    # ========== 🔑 Flask & JWT ==========
     SECRET_KEY = env_config.SECRET_KEY
     JWT_SECRET_KEY = env_config.JWT_SECRET_KEY
 
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
-    # ========== 🍃 MongoDB ==========
     MONGO_URI = env_config.MONGO_URI
     MONGO_DBNAME = env_config.MONGO_DBNAME
 
-    # ========== 📚 MongoDB Collections ==========
     COLLECTION_USERS = 'users'
     COLLECTION_MARC_RECORDS = 'marc_21'
     COLLECTION_ITEMS = 'items'
@@ -103,10 +94,8 @@ class Config:
     COLLECTION_SIP2_EVENTS = 'sip2_events'
     COLLECTION_AUTH_SESSIONS = 'auth_sessions'
 
-    # ========== 🌐 CORS ==========
     CORS_HEADERS = 'Content-Type'
 
-    # ========== 🤖 Gemini AI ==========
     GEMINI_API_KEY = env_config.GEMINI_API_KEY
     GEMINI_MODEL = env_config.GEMINI_MODEL
     GEMINI_MAX_TOKENS = env_config.GEMINI_MAX_TOKENS
@@ -114,7 +103,6 @@ class Config:
     MAX_BOOKS_IN_CONTEXT = env_config.MAX_BOOKS_IN_CONTEXT
     MAX_CHAT_HISTORY = env_config.MAX_CHAT_HISTORY
 
-    # ========== 🔎 Z39.50 ==========
     Z3950_SERVERS = {
         "LOC": {
             "name": "Thư viện Quốc hội Mỹ (Library of Congress)",
@@ -125,8 +113,6 @@ class Config:
         }
     }
 
-    # ========== 📚 Koha (ILS) ==========
-    # Cấu hình cho staff OPAC, xem thêm: http://45.118.146.109:8082
     KOHA_BASE_URL = os.getenv('KOHA_BASE_URL', '')
     # Chọn chế độ xác thực: api_key | basic
     KOHA_AUTH_MODE = os.getenv('KOHA_AUTH_MODE', 'api_key')
@@ -136,7 +122,6 @@ class Config:
     KOHA_USERNAME = os.getenv('KOHA_USERNAME')
     KOHA_PASSWORD = os.getenv('KOHA_PASSWORD')
 
-    # ========= 🎯 Trường tìm kiếm theo MARC21 =========
     SEARCH_FIELDS = {
         "any": [
             "title.main",              # Nhan đề chính

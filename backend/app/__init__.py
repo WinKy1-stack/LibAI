@@ -1,6 +1,3 @@
-"""
-Khởi tạo Flask application
-"""
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -10,7 +7,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Khởi tạo extensions
 jwt = JWTManager()
 mongo = PyMongo()
 
@@ -23,7 +19,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     
     # Set request size limit (16 MB)
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 
 
     # Log MongoDB URI (ẩn password)
     mongo_uri = app.config.get('MONGO_URI', 'NOT SET')
@@ -38,10 +34,8 @@ def create_app(config_class=Config):
     else:
         logger.info(f"MongoDB URI: {mongo_uri}")
     
-    # Khởi tạo extensions
     jwt.init_app(app)
     
-    # Khởi tạo MongoDB
     try:
         mongo.init_app(app)
         # Test connection
@@ -54,14 +48,12 @@ def create_app(config_class=Config):
         logger.error(f"MongoDB connection failed: {str(e)}")
         raise
 
-    # Cấu hình CORS chi tiết
     CORS(app,
          resources={r"/*": {"origins": "*"}},
          supports_credentials=True,
          allow_headers=["Content-Type", "Authorization"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
-    # Đăng ký blueprints
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
     from app.routes.library import library_bp
@@ -72,20 +64,17 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(users_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
-    app.register_blueprint(chat_bp)     # Chat API
-    app.register_blueprint(library_bp)  # New library system API
-    app.register_blueprint(z3950_bp)    # Z39.50 search service
+    app.register_blueprint(chat_bp) 
+    app.register_blueprint(library_bp)
+    app.register_blueprint(z3950_bp)
 
-    # Health check endpoint
     @app.route('/health')
     def health():
         return {'status': 'ok', 'message': 'Server đang chạy'}, 200
     
-    # MongoDB connection test endpoint
     @app.route('/mongodb-test')
     def mongodb_test():
         try:
-            # Test MongoDB connection
             mongo.db.command('ping')
             collections = mongo.db.list_collection_names()
             return {
@@ -100,7 +89,6 @@ def create_app(config_class=Config):
                 'message': f'MongoDB connection failed: {str(e)}'
             }, 500
 
-    # Request size limit handler
     @app.errorhandler(413)
     def handle_request_too_large(error):
         response = jsonify({
@@ -110,7 +98,6 @@ def create_app(config_class=Config):
         response.status_code = 413
         return response
 
-    # Error handlers
     from app.exceptions import ApiError
     from flask import jsonify
 

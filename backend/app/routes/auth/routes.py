@@ -52,6 +52,16 @@ def register():
     if not password_valid:
         raise ValidationError(password_msg)
 
+    # Kiểm tra email đã tồn tại chưa
+    existing_user = MongoHelper.find_one('users', {'email': email})
+    if existing_user:
+        raise ValidationError('Email đã được sử dụng')
+
+    # Kiểm tra username đã tồn tại chưa
+    existing_user = MongoHelper.find_one('users', {'student_id': username})
+    if existing_user:
+        raise ValidationError('Tên đăng nhập đã được sử dụng')
+
     # Tạo user mới trong MongoDB
     new_user = {
         'email': email,

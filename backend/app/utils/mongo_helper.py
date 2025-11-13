@@ -1,187 +1,153 @@
-"""
-MongoDB Utilities
-"""
-from app import mongo
-from bson import ObjectId
 from datetime import datetime, timezone
+from bson import ObjectId
 from pymongo import ReturnDocument
+from app import mongo
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MongoHelper:
-    """Helper class để làm việc với MongoDB"""
-    
+    """Helper class để thao tác MongoDB an toàn và rõ ràng hơn"""
+
     @staticmethod
-    def get_collection(collection_name):
-        """Lấy collection từ MongoDB"""
-        return mongo.db[collection_name]
-    
+    def _get_collection(name):
+        return mongo.db[name]
+
     @staticmethod
-    def insert_one(collection_name, document):
-        """Insert một document vào collection, trả về string ID"""
-        collection = MongoHelper.get_collection(collection_name)
-        # Chỉ thêm timestamps nếu chưa có
-        if 'created_at' not in document:
-            document['created_at'] = datetime.now(timezone.utc)
-        if 'updated_at' not in document:
-            document['updated_at'] = datetime.now(timezone.utc)
-        result = collection.insert_one(document)
-        # Convert ObjectId to string before returning
-        return str(result.inserted_id)
-    
+    def _ensure_objectid(doc_or_id):
+        """Chuyển string ID thành ObjectId nếu cần"""
+        if isinstance(doc_or_id, str):
+            try:
+                return ObjectId(doc_or_id)
+            except Exception:
+                return doc_or_id
+        if isinstance(doc_or_id, dict) and '_id' in doc_or_id and isinstance(doc_or_id['_id'], str):
+            doc_or_id['_id'] = ObjectId(doc_or_id['_id'])
+        return doc_or_id
+
     @staticmethod
-    def insert_many(collection_name, documents):
-        """Insert nhiều documents vào collection"""
-        collection = MongoHelper.get_collection(collection_name)
-        for doc in documents:
-            doc['created_at'] = datetime.now(timezone.utc)
-            doc['updated_at'] = datetime.now(timezone.utc)
-        result = collection.insert_many(documents)
-        return [str(id) for id in result.inserted_ids]
-    
-    @staticmethod
-    def find_one(collection_name, query=None, projection=None):
-        """Tìm một document"""
-        collection = MongoHelper.get_collection(collection_name)
-        if query is None:
-            query = {}
-        # Convert string _id to ObjectId if present
-        if '_id' in query and isinstance(query['_id'], str):
-            query['_id'] = ObjectId(query['_id'])
-        doc = collection.find_one(query, projection)
-        if doc and '_id' in doc:
-            doc['_id'] = str(doc['_id'])
+    def _serialize(doc):
+        """Convert ObjectId → str"""
+        if not doc:
+            return None
+        if isinstance(doc, list):
+            return [{**d, "_id": str(d["_id"])} if "_id" in d else d for d in doc]
+        if "_id" in doc and isinstance(doc["_id"], ObjectId):
+            doc["_id"] = str(doc["_id"])
         return doc
-    
+
     @staticmethod
-    def find_many(collection_name, query=None, projection=None, sort=None, limit=None, skip=None):
-        """Tìm nhiều documents"""
-        collection = MongoHelper.get_collection(collection_name)
-        if query is None:
-            query = {}
-        
-        cursor = collection.find(query, projection)
-        
+    def insert_one(name, doc):
+        col = MongoHelper._get_collection(name)
+        now = datetime.now(timezone.utc)
+        doc.setdefault("created_at", now)
+        doc.setdefault("updated_at", now)
+        result = col.insert_one(doc)
+        return str(result.inserted_id)
+
+    @staticmethod
+    def insert_many(name, docs):
+        if not docs:
+            return []
+        col = MongoHelper._get_collection(name)
+        now = datetime.now(timezone.utc)
+        for d in docs:
+            d.setdefault("created_at", now)
+            d.setdefault("updated_at", now)
+        result = col.insert_many(docs)
+        return [str(_id) for _id in result.inserted_ids]
+
+    @staticmethod
+    def find_one(name, query=None, projection=None):
+        col = MongoHelper._get_collection(name)
+        query = MongoHelper._ensure_objectid(query or {})
+        doc = col.find_one(query, projection)
+        return MongoHelper._serialize(doc)
+
+    @staticmethod
+    def find_many(name, query=None, projection=None, sort=None, limit=None, skip=None):
+        col = MongoHelper._get_collection(name)
+        query = MongoHelper._ensure_objectid(query or {})
+        cursor = col.find(query, projection)
         if sort:
+            if isinstance(sort, dict):
+                sort = list(sort.items())
             cursor = cursor.sort(sort)
         if skip:
             cursor = cursor.skip(skip)
         if limit:
             cursor = cursor.limit(limit)
-        
-        docs = list(cursor)
-        for doc in docs:
-            if '_id' in doc:
-                doc['_id'] = str(doc['_id'])
-        return docs
-    
+        return MongoHelper._serialize(list(cursor))
+
     @staticmethod
-    def update_one(collection_name, query, update):
-        """Update một document"""
-        collection = MongoHelper.get_collection(collection_name)
-        if '_id' in query and isinstance(query['_id'], str):
-            query['_id'] = ObjectId(query['_id'])
-        
-        if '$set' not in update:
-            update = {'$set': update}
-        
-        update['$set']['updated_at'] = datetime.now(timezone.utc)
-        result = collection.update_one(query, update)
+    def update_one(name, query, update, upsert=False):
+        col = MongoHelper._get_collection(name)
+        query = MongoHelper._ensure_objectid(query)
+        if "$set" not in update and not any(k.startswith("$") for k in update):
+            update = {"$set": update}
+        update["$set"] = {**update.get("$set", {}), "updated_at": datetime.now(timezone.utc)}
+        result = col.update_one(query, update, upsert=upsert)
         return result.modified_count
-    
+
     @staticmethod
-    def find_one_and_update(collection_name, query, update, return_document=ReturnDocument.AFTER, upsert=False):
-        """
-        Atomic find và update operation - returns updated document
-        Đây là atomic operation, tránh race condition
-        
-        Args:
-            collection_name: Tên collection
-            query: Query filter
-            update: Update operations
-            return_document: BEFORE hoặc AFTER update (default: AFTER)
-            upsert: Tạo document mới nếu không tìm thấy (default: False)
-            
-        Returns:
-            Updated document hoặc None nếu không tìm thấy
-        """
-        collection = MongoHelper.get_collection(collection_name)
-        if '_id' in query and isinstance(query['_id'], str):
-            query['_id'] = ObjectId(query['_id'])
-        
-        if '$set' not in update:
-            update = {'$set': update}
-        
-        update['$set']['updated_at'] = datetime.now(timezone.utc)
-        
-        doc = collection.find_one_and_update(
+    def find_one_and_update(name, query, update, *, upsert=False, after=True):
+        col = MongoHelper._get_collection(name)
+        query = MongoHelper._ensure_objectid(query)
+        if "$set" not in update and not any(k.startswith("$") for k in update):
+            update = {"$set": update}
+        update["$set"] = {**update.get("$set", {}), "updated_at": datetime.now(timezone.utc)}
+        doc = col.find_one_and_update(
             query,
             update,
-            return_document=return_document,
+            return_document=ReturnDocument.AFTER if after else ReturnDocument.BEFORE,
             upsert=upsert
         )
-        
-        if doc and '_id' in doc:
-            doc['_id'] = str(doc['_id'])
-        
-        return doc
-    
+        return MongoHelper._serialize(doc)
+
     @staticmethod
-    def update_many(collection_name, query, update):
-        """Update nhiều documents"""
-        collection = MongoHelper.get_collection(collection_name)
-        
-        if '$set' not in update:
-            update = {'$set': update}
-        
-        update['$set']['updated_at'] = datetime.now(timezone.utc)
-        result = collection.update_many(query, update)
+    def update_many(name, query, update):
+        col = MongoHelper._get_collection(name)
+        query = MongoHelper._ensure_objectid(query)
+        if "$set" not in update and not any(k.startswith("$") for k in update):
+            update = {"$set": update}
+        update["$set"] = {**update.get("$set", {}), "updated_at": datetime.now(timezone.utc)}
+        result = col.update_many(query, update)
         return result.modified_count
-    
+
     @staticmethod
-    def delete_one(collection_name, query):
-        """Xóa một document"""
-        collection = MongoHelper.get_collection(collection_name)
-        if '_id' in query and isinstance(query['_id'], str):
-            query['_id'] = ObjectId(query['_id'])
-        result = collection.delete_one(query)
-        return result.deleted_count
-    
+    def delete_one(name, query):
+        col = MongoHelper._get_collection(name)
+        query = MongoHelper._ensure_objectid(query)
+        return col.delete_one(query).deleted_count
+
     @staticmethod
-    def delete_many(collection_name, query):
-        """Xóa nhiều documents"""
-        collection = MongoHelper.get_collection(collection_name)
-        result = collection.delete_many(query)
-        return result.deleted_count
-    
+    def delete_many(name, query):
+        col = MongoHelper._get_collection(name)
+        query = MongoHelper._ensure_objectid(query)
+        return col.delete_many(query).deleted_count
+
     @staticmethod
-    def count_documents(collection_name, query=None):
-        """Đếm số lượng documents"""
-        collection = MongoHelper.get_collection(collection_name)
-        if query is None:
-            query = {}
-        return collection.count_documents(query)
-    
+    def count(name, query=None):
+        col = MongoHelper._get_collection(name)
+        if query is not None and not isinstance(query, dict):
+            raise ValueError("query phải là dict")
+        return col.count_documents(query or {})
+
     @staticmethod
-    def aggregate(collection_name, pipeline):
-        """Thực hiện aggregation pipeline"""
-        collection = MongoHelper.get_collection(collection_name)
-        result = list(collection.aggregate(pipeline))
-        for doc in result:
-            if '_id' in doc and isinstance(doc['_id'], ObjectId):
-                doc['_id'] = str(doc['_id'])
-        return result
-    
+    def aggregate(name, pipeline):
+        col = MongoHelper._get_collection(name)
+        result = list(col.aggregate(pipeline))
+        return MongoHelper._serialize(result)
+
     @staticmethod
-    def create_index(collection_name, keys, **kwargs):
-        """Tạo index cho collection"""
-        collection = MongoHelper.get_collection(collection_name)
-        return collection.create_index(keys, **kwargs)
-    
+    def create_index(name, keys, **kwargs):
+        col = MongoHelper._get_collection(name)
+        return col.create_index(keys, **kwargs)
+
     @staticmethod
     def list_collections():
-        """Liệt kê tất cả collections"""
         return mongo.db.list_collection_names()
-    
+
     @staticmethod
-    def drop_collection(collection_name):
-        """Xóa một collection"""
-        return mongo.db.drop_collection(collection_name)
+    def drop_collection(name):
+        return mongo.db.drop_collection(name)

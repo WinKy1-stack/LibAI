@@ -1,39 +1,54 @@
-from pymongo import MongoClient
+import logging
+from app import mongo
 from app.config import Config
 
+logger = logging.getLogger(__name__)
 
-def search_in_mongo(keyword: str, field: str = "any"):
-    """Tìm kiếm trong MongoDB theo cấu trúc MARC21 Book Record format."""
-    client = MongoClient(Config.MONGO_URI)
-    db = client[Config.MONGO_DBNAME]
-    collection = db[Config.COLLECTION_MARC_RECORDS]  # Uses marc_21
+def search_in_mongo(keyword: str, field: str = "any", limit: int = 10):
+    """
+    Tìm kiếm MARC21 Book Records trong MongoDB.
+    - Hỗ trợ multi-field search
+    - Regex không phân biệt hoa thường
+    - Có limit và sort
+    """
+    if not keyword or not keyword.strip():
+        return []
+
+    collection = mongo.db[Config.COLLECTION_MARC_RECORDS]
+    keyword = keyword.strip()
+
     field_map = {
         "any": [
-            "title.main", "title.subtitle",  # title
-            "contributors.name",              # author/contributors
-            "subjects",                       # subject (array)
-            "publication.publisher",          # publisher
-            "publication.place",              # place
+            "title.main", "title.subtitle",
+            "contributors.name", "subjects",
+            "publication.publisher", "publication.place",
+            "publication.year", "identifiers.isbn"
         ],
         "title": ["title.main", "title.subtitle"],
         "author": ["contributors.name"],
         "subject": ["subjects"],
         "publisher": ["publication.publisher"],
-        "date": ["publication.year"],
+        "year": ["publication.year"],
         "isbn": ["identifiers.isbn"]
     }
 
-    query_conditions = []
+    conditions = []
     for f in field_map.get(field, ["title.main"]):
-        # For array fields like subjects, use $in or $elemMatch
-        if f == "subjects" or f == "identifiers.isbn" or f == "contributors.name":
-            query_conditions.append({f: {"$regex": keyword, "$options": "i"}})
+        if f in ["subjects", "contributors.name", "identifiers.isbn"]:
+            conditions.append({f: {"$elemMatch": {"$regex": keyword, "$options": "i"}}})
         else:
-            query_conditions.append({f: {"$regex": keyword, "$options": "i"}})
+            conditions.append({f: {"$regex": keyword, "$options": "i"}})
 
-    mongo_query = {"$or": query_conditions}
+    query = {"$or": conditions}
 
-    result = collection.find_one(mongo_query)
-    if result:
-        result["_id"] = str(result["_id"])
-    return result
+    try:
+        cursor = collection.find(query).limit(limit).sort("publication.year", -1)
+        results = []
+        for doc in cursor:
+            doc["_id"] = str(doc["_id"])
+            results.append(doc)
+        return results
+
+    except Exception as e:
+        logger.error(f"Lỗi tìm kiếm MongoDB: {e}")
+        return []
