@@ -76,6 +76,9 @@ def validate_user_data(data: dict):
     if not ok: return False, msg
     return True, None
 
+def validate_name(name: str):
+    return validate_text_field(name, "Tên", min_len=2, max_len=100)
+
 def validate_student_id(student_id: str):
     if not PATTERNS["student_id"].fullmatch(student_id or ""):
         return False, "Mã sinh viên chỉ được chứa chữ, số, gạch ngang/gạch dưới (3–20 ký tự)"
