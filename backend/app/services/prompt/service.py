@@ -1,5 +1,5 @@
 """
-Prompt Service - Core AI logic cho chat system  
+Prompt Service - Core AI logic cho chat system
 Refactored version - sử dụng Validator và Formatter với Chat Session
 """
 import logging
@@ -18,6 +18,9 @@ from app.services.prompt.validators import PromptValidator
 from app.services.prompt.formatters import PromptFormatter
 
 logger = logging.getLogger(__name__)
+
+# Import MessageManager để lưu/lấy history (import ở cuối để tránh circular import)
+# Sẽ import khi cần dùng trong method
 
 # System prompts
 SYSTEM_INSTRUCTIONS = {
@@ -487,17 +490,15 @@ class PromptService:
     def get_or_create_chat_session(
         self,
         conversation_id: str,
-        instruction_type: str = 'default',
-        history_service = None
+        instruction_type: str = 'default'
     ) -> ChatSession:
         """
         Lấy hoặc tạo chat session cho conversation
-        
+
         Args:
             conversation_id: ID của conversation
             instruction_type: Loại system instruction
-            history_service: ChatHistoryService để lấy lịch sử từ DB (optional)
-            
+
         Returns:
             ChatSession instance
         """
@@ -507,23 +508,25 @@ class PromptService:
                     instruction_type,
                     SYSTEM_INSTRUCTIONS['default']
                 )
-                
+
                 # Lấy lịch sử từ database
                 initial_history = []
-                if history_service:
-                    try:
-                        db_messages = history_service.get_conversation_history(conversation_id, limit=50)
-                        # Convert DB format sang format cần cho ChatSession
-                        initial_history = [
-                            {
-                                'role': msg.get('role', 'user'),
-                                'content': msg.get('content', '')
-                            }
-                            for msg in db_messages
-                        ]
-                        logger.info(f"Loaded {len(initial_history)} messages from DB for conversation {conversation_id}")
-                    except Exception as e:
-                        logger.warning(f"Failed to load history from DB: {str(e)}")
+                try:
+                    # Import ở đây để tránh circular import
+                    from app.services.history import MessageManager
+
+                    db_messages = MessageManager.get_by_conversation(conversation_id, limit=50)
+                    # Convert DB format sang format cần cho ChatSession
+                    initial_history = [
+                        {
+                            'role': msg.get('role', 'user'),
+                            'content': msg.get('content', '')
+                        }
+                        for msg in db_messages
+                    ]
+                    logger.info(f"Loaded {len(initial_history)} messages from DB for conversation {conversation_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to load history from DB: {str(e)}")
                 
                 self._chat_sessions[conversation_id] = ChatSession(
                     client=self.client,
@@ -554,23 +557,21 @@ class PromptService:
         conversation_id: str,
         user_message: str,
         instruction_type: str = 'default',
-        history_service = None,
         latency_ms: int = 0,
         patron_id: Optional[str] = None,
         auto_inject_koha_context: bool = True
     ) -> str:
         """
         Tạo response sử dụng chat session (có memory)
-        
+
         Args:
             conversation_id: ID của conversation
             user_message: Tin nhắn từ người dùng
             instruction_type: Loại instruction
-            history_service: ChatHistoryService để lưu/lấy history (optional)
             latency_ms: Độ trễ của request (để lưu vào DB)
             patron_id: ID bạn đọc để lấy thông tin từ Koha (optional)
             auto_inject_koha_context: Tự động thêm context từ Koha khi phát hiện keywords
-        
+
         Returns:
             Response text từ AI
         """
@@ -588,32 +589,33 @@ class PromptService:
             
             # Get or create chat session (với history từ DB nếu có)
             chat_session = self.get_or_create_chat_session(
-                conversation_id, 
-                instruction_type,
-                history_service
+                conversation_id,
+                instruction_type
             )
-            
+
             # Send message through session (history tự động được lưu trong session memory)
             logger.debug("Sending message to chat session %s", conversation_id)
             response_text = chat_session.send_message(enhanced_message)
-            
+
             if not response_text or not response_text.strip():
                 logger.warning("Empty response text")
                 raise EmptyResponseError("AI trả về nội dung trống")
-            
-            # Lưu vào database nếu có history_service (chỉ lưu message gốc, không lưu context)
-            if history_service:
-                try:
-                    history_service.save_chat_exchange(
-                        conversation_id=conversation_id,
-                        user_message=user_message,  # Lưu message gốc
-                        assistant_message=response_text,
-                        latency_ms=latency_ms
-                    )
-                    logger.debug("Saved exchange to DB for conversation %s", conversation_id)
-                except Exception as db_error:
-                    logger.warning(f"Failed to save to DB: {str(db_error)}")
-                    # Continue even if DB save fails
+
+            # Lưu vào database (chỉ lưu message gốc, không lưu context)
+            try:
+                # Import ở đây để tránh circular import
+                from app.services.history import MessageManager
+
+                MessageManager.save_exchange(
+                    conversation_id=conversation_id,
+                    user_message=user_message,  # Lưu message gốc
+                    assistant_message=response_text,
+                    latency_ms=latency_ms
+                )
+                logger.debug("Saved exchange to DB for conversation %s", conversation_id)
+            except Exception as db_error:
+                logger.warning(f"Failed to save to DB: {str(db_error)}")
+                # Continue even if DB save fails
             
             logger.info("Generated response: %d characters (with session)", len(response_text))
             return response_text.strip()

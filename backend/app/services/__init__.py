@@ -11,8 +11,6 @@ from .prompt import (
 
 # Chat history services
 from .history import (
-    ChatHistoryService,
-    get_chat_history_service,
     ConversationManager,
     MessageManager
 )
@@ -35,16 +33,14 @@ __all__ = [
     'get_prompt_service',
     'PromptValidator',
     'PromptFormatter',
-    
+
     # History
-    'ChatHistoryService',
-    'get_chat_history_service',
     'ConversationManager',
     'MessageManager',
-    
+
     # User
     'UserService',
-    
+
     # Exceptions
     'ChatServiceError',
     'GeminiAPIError',

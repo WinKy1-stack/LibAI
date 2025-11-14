@@ -1,5 +1,5 @@
 """
-Message Route - Xử lý chat message với AI (ASYNC)
+Message Route - Xử lý chat message với AI
 """
 import logging
 import time
@@ -7,7 +7,7 @@ import asyncio
 from flask import Blueprint, jsonify
 
 from app.services.prompt import get_prompt_service
-from app.services.history import get_chat_history_service
+from app.services.history import ConversationManager, MessageManager
 from app.exceptions import ApiError, ValidationError, GeminiAPIError
 from app.utils.decorators import token_required
 from app.routes.helpers import (
@@ -20,23 +20,8 @@ logger = logging.getLogger(__name__)
 message_bp = Blueprint('chat_message', __name__)
 
 
-@message_bp.route('/message', methods=['POST'])
-@token_required
-async def send_message(current_user):
-    """
-    Gửi tin nhắn và nhận phản hồi từ AI (CÓ ĐĂNG NHẬP - LƯU LỊCH SỬ)
-    
-    Request Body:
-        {
-            "message": str (required) - Tin nhắn người dùng,
-            "chat_history": list (optional) - Lịch sử chat,
-            "context": str (optional) - Context bổ sung,
-            "conversation_id": str (optional) - ID conversation đang chat
-        }
-    """
-    # Validate và lấy data
-    data = validate_request_data(required_fields=['message'])
-
+async def _send_message_async(current_user, data):
+    """Helper function để xử lý async logic"""
     user_message = data['message'].strip()
     chat_history = data.get('chat_history', [])
     context = data.get('context')
@@ -45,9 +30,8 @@ async def send_message(current_user):
     logger.info("User %s sent message: %s...", current_user['id'], user_message[:50])
 
     # Tạo conversation mới nếu chưa có
-    history_service = get_chat_history_service()
     if not conversation_id:
-        conversation_id = history_service.create_conversation(
+        conversation_id = ConversationManager.create(
             user_id=current_user['id'],
             channel='web',
             model='gemini-2.0-flash-exp'
@@ -55,7 +39,7 @@ async def send_message(current_user):
         logger.info("Created new conversation: %s", conversation_id)
     else:
         # Validate conversation_id thuộc user hiện tại
-        if not history_service.conversation_belongs_to_user(conversation_id, current_user['id']):
+        if not ConversationManager.belongs_to_user(conversation_id, current_user['id']):
             logger.warning("Unauthorized access to conversation %s by user %s", conversation_id, current_user['id'])
             raise ApiError("Không có quyền truy cập conversation này", status_code=403)
         logger.debug("Using existing conversation: %s for user %s", conversation_id, current_user['id'])
@@ -75,7 +59,6 @@ async def send_message(current_user):
                 conversation_id=conversation_id,
                 user_message=user_message,
                 instruction_type='default',
-                history_service=history_service,  # Truyền history_service để lưu/lấy từ DB
                 latency_ms=int((time.time() - start_time) * 1000),  # Tính latency
                 patron_id=patron_id,  # Truyền patron_id để lấy thông tin từ Koha
                 auto_inject_koha_context=True  # Tự động inject Koha context
@@ -93,9 +76,6 @@ async def send_message(current_user):
         raise ApiError("Lỗi xử lý tin nhắn, vui lòng thử lại", status_code=500)
     
     latency_ms = int((time.time() - start_time) * 1000)
-
-    # Lưu vào database đã được thực hiện bên trong generate_response_with_session()
-    # Nên không cần lưu lại ở đây
 
     response_data = build_success_response(
         data={
@@ -115,21 +95,34 @@ async def send_message(current_user):
     return jsonify(response_data), 200
 
 
-@message_bp.route('/message/guest', methods=['POST'])
-async def send_message_guest():
+@message_bp.route('/message', methods=['POST'])
+@token_required
+def send_message(current_user):
     """
-    Gửi tin nhắn KHÔNG CẦN ĐĂNG NHẬP (KHÔNG LƯU LỊCH SỬ) - ASYNC
+    Gửi tin nhắn và nhận phản hồi từ AI (CÓ ĐĂNG NHẬP - LƯU LỊCH SỬ)
     
     Request Body:
         {
             "message": str (required) - Tin nhắn người dùng,
-            "chat_history": list (optional) - Lịch sử chat (chỉ local),
-            "context": str (optional) - Context bổ sung
+            "chat_history": list (optional) - Lịch sử chat,
+            "context": str (optional) - Context bổ sung,
+            "conversation_id": str (optional) - ID conversation đang chat
         }
     """
     # Validate và lấy data
     data = validate_request_data(required_fields=['message'])
+    
+    # Chạy async function từ sync context
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(_send_message_async(current_user, data))
+    finally:
+        loop.close()
 
+
+async def _send_message_guest_async(data):
+    """Helper function để xử lý async logic cho guest"""
     user_message = data['message'].strip()
     chat_history = data.get('chat_history', [])
     context = data.get('context')
@@ -178,3 +171,27 @@ async def send_message_guest():
 
     logger.info("Guest response generated successfully")
     return jsonify(response_data), 200
+
+
+@message_bp.route('/message/guest', methods=['POST'])
+def send_message_guest():
+    """
+    Gửi tin nhắn KHÔNG CẦN ĐĂNG NHẬP (KHÔNG LƯU LỊCH SỬ)
+    
+    Request Body:
+        {
+            "message": str (required) - Tin nhắn người dùng,
+            "chat_history": list (optional) - Lịch sử chat (chỉ local),
+            "context": str (optional) - Context bổ sung
+        }
+    """
+    # Validate và lấy data
+    data = validate_request_data(required_fields=['message'])
+    
+    # Chạy async function từ sync context
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(_send_message_guest_async(data))
+    finally:
+        loop.close()

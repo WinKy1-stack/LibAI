@@ -1,6 +1,3 @@
-"""
-Chat Routes Module - API endpoints cho chat system
-"""
 from flask import Blueprint, jsonify
 
 from .message import message_bp
@@ -8,7 +5,6 @@ from .history import history_bp
 from .recommendation import recommendation_bp
 from .health import health_bp
 
-# Tạo main chat blueprint
 chat_bp = Blueprint('chat', __name__, url_prefix='/api/chat')
 
 
@@ -44,7 +40,6 @@ def register_chat_routes():
         }), 405
 
 
-# Auto-register khi import
 register_chat_routes()
 
 __all__ = ['chat_bp']

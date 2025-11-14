@@ -1,10 +1,7 @@
-"""
-History Routes - Quản lý lịch sử chat và conversations
-"""
 import logging
 from flask import Blueprint, jsonify, request
 
-from app.services.history import get_chat_history_service
+from app.services.history import ConversationManager, MessageManager
 from app.exceptions import ApiError, ValidationError
 from app.utils.decorators import token_required
 from app.routes.helpers import (
@@ -22,7 +19,7 @@ history_bp = Blueprint('chat_history', __name__)
 def get_conversation_history(current_user, conversation_id):
     """
     Lấy lịch sử chat của một conversation
-    
+
     Query Params:
         limit: int (optional) - Số lượng tin nhắn tối đa (default: 100)
     """
@@ -31,8 +28,7 @@ def get_conversation_history(current_user, conversation_id):
     if limit < 1 or limit > 500:
         raise ValidationError("Limit phải trong khoảng 1-500")
 
-    history_service = get_chat_history_service()
-    messages = history_service.get_conversation_history(
+    messages = MessageManager.get_by_conversation(
         conversation_id=conversation_id,
         limit=limit
     )
@@ -55,7 +51,7 @@ def get_conversation_history(current_user, conversation_id):
 def get_user_conversations(current_user):
     """
     Lấy danh sách conversations của user
-    
+
     Query Params:
         limit: int (optional) - Số lượng conversations (default: 20)
         skip: int (optional) - Bỏ qua số lượng (default: 0)
@@ -68,8 +64,7 @@ def get_user_conversations(current_user):
     if skip < 0:
         raise ValidationError("Skip phải >= 0")
 
-    history_service = get_chat_history_service()
-    conversations = history_service.get_user_conversations(
+    conversations = ConversationManager.get_by_user(
         user_id=current_user['id'],
         limit=limit,
         skip=skip
@@ -92,7 +87,7 @@ def get_user_conversations(current_user):
 def end_conversation(current_user):
     """
     Kết thúc một conversation
-    
+
     Request Body:
         {
             "conversation_id": str (required) - ID của conversation
@@ -101,8 +96,7 @@ def end_conversation(current_user):
     data = validate_request_data(required_fields=['conversation_id'])
     conversation_id = data['conversation_id']
 
-    history_service = get_chat_history_service()
-    success = history_service.end_conversation(conversation_id)
+    success = ConversationManager.end(conversation_id)
 
     if not success:
         raise ApiError("Không thể kết thúc conversation")
@@ -125,8 +119,38 @@ def get_conversation_stats(current_user):
     """
     Lấy thống kê chat của user
     """
-    history_service = get_chat_history_service()
-    stats = history_service.get_conversation_stats(current_user['id'])
+    try:
+        user_id = current_user['id']
+
+        # Get conversation stats
+        conv_stats = ConversationManager.get_stats(user_id)
+
+        # Get message stats
+        conv_ids = ConversationManager.get_all_ids_by_user(user_id)
+        msg_stats = MessageManager.get_stats(conv_ids)
+
+        # Combine stats
+        stats = {
+            **conv_stats,
+            **msg_stats
+        }
+
+        # Calculate average messages per conversation
+        total_conv = stats.get('total_conversations', 0)
+        total_msg = stats.get('total_messages', 0)
+
+        if total_conv > 0:
+            stats['avg_messages_per_conversation'] = total_msg / total_conv
+        else:
+            stats['avg_messages_per_conversation'] = 0
+
+    except Exception as e:
+        logger.error("Error getting combined stats: %s", str(e))
+        stats = {
+            'total_conversations': 0,
+            'total_messages': 0,
+            'avg_messages_per_conversation': 0
+        }
 
     response_data = build_success_response(
         data={'stats': stats},

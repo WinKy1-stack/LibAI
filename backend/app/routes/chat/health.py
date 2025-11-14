@@ -1,6 +1,3 @@
-"""
-Health Route - Service health check
-"""
 import logging
 from datetime import datetime
 from flask import Blueprint, jsonify

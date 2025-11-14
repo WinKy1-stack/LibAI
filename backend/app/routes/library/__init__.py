@@ -13,7 +13,6 @@ from .item_routes import item_bp
 from .loan_routes import loan_bp
 from .faq_routes import faq_bp
 from .document_routes import document_bp
-from .conversation_routes import conversation_bp
 from .admin_routes import admin_bp
 from .stats_routes import stats_bp
 from .koha_routes import koha_bp
@@ -24,7 +23,6 @@ library_bp.register_blueprint(item_bp, url_prefix='/items')
 library_bp.register_blueprint(loan_bp, url_prefix='/loans')
 library_bp.register_blueprint(faq_bp, url_prefix='/faq')
 library_bp.register_blueprint(document_bp, url_prefix='/documents')
-library_bp.register_blueprint(conversation_bp, url_prefix='/conversations')
 library_bp.register_blueprint(admin_bp, url_prefix='/admin')
 library_bp.register_blueprint(stats_bp, url_prefix='/stats')
 library_bp.register_blueprint(koha_bp, url_prefix='/koha')
