@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 @dataclass
 class EnvConfig:
-    """Dataclass để quản lý các biến môi trường"""
     SECRET_KEY: str
     JWT_SECRET_KEY: str
     MONGO_URI: str
@@ -16,28 +15,30 @@ class EnvConfig:
     GEMINI_MODEL: str
     GEMINI_MAX_TOKENS: int
     GEMINI_TEMPERATURE: float
+    GEMINI_TOP_P: float
+    GEMINI_TOP_K: int
     MAX_BOOKS_IN_CONTEXT: int
     MAX_CHAT_HISTORY: int
+    MAX_MESSAGE_LENGTH: int
 
     @classmethod
     def from_env(cls) -> 'EnvConfig':
-        """Tạo config từ environment variables"""
         api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
             raise ValueError("GEMINI_API_KEY không được cấu hình trong .env")
-        
+
         use_cloud = os.getenv('USE_CLOUD_MONGODB', 'true').lower() == 'true'
         mongo_uri = os.getenv('MONGO_URI_CLOUD') if use_cloud else os.getenv('MONGO_URI_LOCAL')
-        
+
         if not mongo_uri:
             raise ValueError("MONGO_URI không được cấu hình trong .env")
-        
+
         mongo_dbname = os.getenv('MONGO_DBNAME', 'library_chatbox')
-        
+
         if '?' in mongo_uri:
             base_uri = mongo_uri.split('?')[0]
             query_params = mongo_uri.split('?')[1]
-            
+
             if not base_uri.endswith(f'/{mongo_dbname}'):
                 if base_uri.endswith('/'):
                     mongo_uri = f"{base_uri}{mongo_dbname}?{query_params}"
@@ -61,8 +62,11 @@ class EnvConfig:
             GEMINI_MODEL=os.getenv('GEMINI_MODEL', 'gemini-2.0-flash'),
             GEMINI_MAX_TOKENS=int(os.getenv('GEMINI_MAX_TOKENS', '1000')),
             GEMINI_TEMPERATURE=float(os.getenv('GEMINI_TEMPERATURE', '0.7')),
+            GEMINI_TOP_P=float(os.getenv('GEMINI_TOP_P', '0.95')),
+            GEMINI_TOP_K=int(os.getenv('GEMINI_TOP_K', '40')),
             MAX_BOOKS_IN_CONTEXT=int(os.getenv('MAX_BOOKS_IN_CONTEXT', '30')),
-            MAX_CHAT_HISTORY=int(os.getenv('MAX_CHAT_HISTORY', '10'))
+            MAX_CHAT_HISTORY=int(os.getenv('MAX_CHAT_HISTORY', '10')),
+            MAX_MESSAGE_LENGTH=int(os.getenv('MAX_MESSAGE_LENGTH', '2000'))
         )
 
 class Config:
@@ -100,18 +104,11 @@ class Config:
     GEMINI_MODEL = env_config.GEMINI_MODEL
     GEMINI_MAX_TOKENS = env_config.GEMINI_MAX_TOKENS
     GEMINI_TEMPERATURE = env_config.GEMINI_TEMPERATURE
+    GEMINI_TOP_P = env_config.GEMINI_TOP_P
+    GEMINI_TOP_K = env_config.GEMINI_TOP_K
     MAX_BOOKS_IN_CONTEXT = env_config.MAX_BOOKS_IN_CONTEXT
     MAX_CHAT_HISTORY = env_config.MAX_CHAT_HISTORY
-
-    Z3950_SERVERS = {
-        "LOC": {
-            "name": "Thư viện Quốc hội Mỹ (Library of Congress)",
-            "host": "z3950.loc.gov",
-            "port": 7090,
-            "database": "voyager",
-            "syntax": "USMARC",
-        }
-    }
+    MAX_MESSAGE_LENGTH = env_config.MAX_MESSAGE_LENGTH
 
     KOHA_BASE_URL = os.getenv('KOHA_BASE_URL', '')
     # Chọn chế độ xác thực: api_key | basic

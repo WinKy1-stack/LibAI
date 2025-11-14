@@ -29,10 +29,10 @@ def test_gemini_connection():
             from flask import current_app
             prompt_service = PromptService(current_app.config)
 
-            test_response = prompt_service.generate_response(
+            test_response = prompt_service.generate_response_with_session(
+                conversation_id="test_connection",
                 user_message="Hello, are you working?",
-                chat_history=[],
-                context=None
+                instruction_type='default'
             )
 
             print("GEMINI API CONNECTION: SUCCESS")

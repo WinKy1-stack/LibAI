@@ -23,16 +23,11 @@ class ChatSession:
 
         self.chat = self._create_chat()
 
-        if initial_history:
-            for msg in initial_history:
-                try:
-                    role = "user" if msg.get('role') == 'user' else "model"
-                    content = msg.get('content', '')
-                    logger.debug(f"Loaded message from history: role={role}, len={len(content)}")
-                except Exception as e:
-                    logger.warning(f"Failed to load history message: {str(e)}")
-
-        logger.info("Created new chat session with model %s (history_size=%d)", model_id, len(initial_history) if initial_history else 0)
+        logger.info(
+            "Created chat session (model=%s, history_size=%d)",
+            model_id,
+            len(initial_history) if initial_history else 0
+        )
 
     def _generation_overrides(self) -> Dict[str, Any]:
         return {
@@ -51,11 +46,9 @@ class ChatSession:
     def send_message(self, message: str) -> str:
         try:
             response = self.chat.send_message(message)
-            response_text = response.text
-            logger.debug("Sent message to chat session, received %d chars", len(response_text))
-            return response_text.strip()
+            return response.text.strip()
         except Exception as e:
-            logger.error("Error in chat session: %s", str(e))
+            logger.error("Chat session error: %s", str(e))
             raise GeminiAPIError(f"Lỗi khi chat với AI: {str(e)}") from e
 
     def send_message_stream(self, message: str):
@@ -65,22 +58,22 @@ class ChatSession:
                 if hasattr(chunk, 'text') and chunk.text:
                     yield chunk.text
         except Exception as e:
-            logger.error("Error in chat stream: %s", str(e))
+            logger.error("Chat stream error: %s", str(e))
             raise GeminiAPIError(f"Lỗi khi stream chat: {str(e)}") from e
 
     def get_history(self) -> List[Dict[str, Any]]:
         try:
             history = []
-            for message in self.chat.get_history():
+            for msg in self.chat.get_history():
                 history.append({
-                    'role': message.role,
-                    'content': message.parts[0].text if message.parts else ''
+                    'role': msg.role,
+                    'content': msg.parts[0].text if msg.parts else ''
                 })
             return history
         except Exception as e:
-            logger.error("Error getting chat history: %s", str(e))
+            logger.error("Get history error: %s", str(e))
             return []
 
     def clear_history(self):
         self.chat = self._create_chat()
-        logger.info("Cleared chat history for session")
+        logger.info("Chat session history cleared")
