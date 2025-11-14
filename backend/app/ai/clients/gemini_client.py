@@ -35,8 +35,6 @@ DEFAULT_SAFETY_SETTINGS: List[types.SafetySetting] = [
 
 @dataclass(frozen=True)
 class GeminiClientSettings:
-    """Thông số chung cho một pipeline Gemini."""
-
     model: str
     temperature: float = 0.7
     max_output_tokens: int = 1000
@@ -50,7 +48,6 @@ class GeminiClientSettings:
         safety_settings: Optional[SafetyConfig] = None,
         **overrides: Any,
     ) -> types.GenerateContentConfig:
-        """Tạo config GenerateContentConfig với khả năng override."""
         config_kwargs = {
             "temperature": overrides.get("temperature", self.temperature),
             "max_output_tokens": overrides.get("max_output_tokens", self.max_output_tokens),
@@ -63,8 +60,6 @@ class GeminiClientSettings:
 
 
 class GoogleGenAIClient:
-    """Wrapper đơn giản quanh google-genai Client để tái sử dụng trong toàn bộ app."""
-
     def __init__(self, *, api_key: str, settings: GeminiClientSettings):
         if not api_key:
             raise InvalidConfigurationError("Thiếu GEMINI_API_KEY trong cấu hình")
@@ -90,7 +85,6 @@ class GoogleGenAIClient:
         safety_settings: Optional[SafetyConfig] = None,
         **overrides: Any,
     ) -> Any:
-        """Gọi models.generate_content với xử lý lỗi chuẩn."""
         config = self.settings.build_generation_config(
             system_instruction=system_instruction,
             safety_settings=safety_settings,
@@ -112,7 +106,6 @@ class GoogleGenAIClient:
         safety_settings: Optional[SafetyConfig] = None,
         **overrides: Any,
     ):
-        """Tạo chat session theo cấu hình mặc định."""
         config = self.settings.build_generation_config(
             system_instruction=system_instruction,
             safety_settings=safety_settings,

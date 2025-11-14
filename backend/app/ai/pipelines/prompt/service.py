@@ -20,19 +20,12 @@ from app.ai.pipelines.prompt.chat_session import ChatSession
 
 logger = logging.getLogger(__name__)
 
-# Import MessageManager để lưu/lấy history (import ở cuối để tránh circular import)
-# Sẽ import khi cần dùng trong method
-
 
 class PromptService:
-    """Service xử lý prompt và tương tác với Gemini API"""
-    
     def __init__(self, config):
-        """Khởi tạo service với config"""
         try:
             self.config = config
-            
-            # Configure Gemini với SDK mới (google-genai)
+
             settings = GeminiClientSettings(
                 model=self.config['GEMINI_MODEL'],
                 temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
@@ -45,19 +38,16 @@ class PromptService:
                 settings=settings
             )
             self.model_id = settings.model
-            
-            # Khởi tạo validator và formatter
+
             self.validator = PromptValidator(
                 max_message_length=2000,
                 max_history_length=10
             )
             self.formatter = PromptFormatter()
-            
-            # Dictionary để lưu chat sessions theo conversation_id
+
             self._chat_sessions: Dict[str, ChatSession] = {}
             self._sessions_lock = threading.Lock()
-            
-            # Test connection với Gemini API
+
             logger.info("=" * 60)
             logger.info("GEMINI AI SERVICE INITIALIZATION")
             logger.info("=" * 60)
@@ -65,7 +55,7 @@ class PromptService:
             logger.info("✓ API Key: %s...%s",
                         self.config['GEMINI_API_KEY'][:10],
                         self.config['GEMINI_API_KEY'][-4:])
-            logger.info("✓ Gemini API configured successfully with new SDK")
+            logger.info("✓ Gemini API configured successfully")
             logger.info("=" * 60)
             
         except ValueError as e:
@@ -80,16 +70,6 @@ class PromptService:
         conversation_id: str,
         instruction_type: str = 'default'
     ) -> ChatSession:
-        """
-        Lấy hoặc tạo chat session cho conversation
-
-        Args:
-            conversation_id: ID của conversation
-            instruction_type: Loại system instruction
-
-        Returns:
-            ChatSession instance
-        """
         with self._sessions_lock:
             if conversation_id not in self._chat_sessions:
                 system_instruction = SYSTEM_INSTRUCTIONS.get(
@@ -97,14 +77,11 @@ class PromptService:
                     SYSTEM_INSTRUCTIONS['default']
                 )
 
-                # Lấy lịch sử từ database
                 initial_history = []
                 try:
-                    # Import ở đây để tránh circular import
                     from app.services.history import MessageManager
 
                     db_messages = MessageManager.get_by_conversation(conversation_id, limit=50)
-                    # Convert DB format sang format cần cho ChatSession
                     initial_history = [
                         {
                             'role': msg.get('role', 'user'),
@@ -115,7 +92,7 @@ class PromptService:
                     logger.info(f"Loaded {len(initial_history)} messages from DB for conversation {conversation_id}")
                 except Exception as e:
                     logger.warning(f"Failed to load history from DB: {str(e)}")
-                
+
                 self._chat_sessions[conversation_id] = ChatSession(
                     client=self.genai_client,
                     model_id=self.model_id,
@@ -123,18 +100,12 @@ class PromptService:
                     system_instruction=system_instruction,
                     initial_history=initial_history
                 )
-                
+
                 logger.info("Created chat session for conversation %s with %d history messages", conversation_id, len(initial_history))
-            
+
             return self._chat_sessions[conversation_id]
-    
+
     def clear_chat_session(self, conversation_id: str) -> None:
-        """
-        Xóa chat session
-        
-        Args:
-            conversation_id: ID của conversation
-        """
         with self._sessions_lock:
             if conversation_id in self._chat_sessions:
                 del self._chat_sessions[conversation_id]
@@ -147,29 +118,14 @@ class PromptService:
         instruction_type: str = 'default',
         latency_ms: int = 0
     ) -> str:
-        """
-        Tạo response sử dụng chat session (có memory)
-
-        Args:
-            conversation_id: ID của conversation
-            user_message: Tin nhắn từ người dùng
-            instruction_type: Loại instruction
-            latency_ms: Độ trễ của request (để lưu vào DB)
-
-        Returns:
-            Response text từ AI
-        """
         try:
-            # Validate input
             self.validator.validate_message(user_message)
 
-            # Get or create chat session (với history từ DB nếu có)
             chat_session = self.get_or_create_chat_session(
                 conversation_id,
                 instruction_type
             )
 
-            # Send message through session (history tự động được lưu trong session memory)
             logger.debug("Sending message to chat session %s", conversation_id)
             response_text = chat_session.send_message(user_message)
 
@@ -177,25 +133,22 @@ class PromptService:
                 logger.warning("Empty response text")
                 raise EmptyResponseError("AI trả về nội dung trống")
 
-            # Lưu vào database (chỉ lưu message gốc, không lưu context)
             try:
-                # Import ở đây để tránh circular import
                 from app.services.history import MessageManager
 
                 MessageManager.save_exchange(
                     conversation_id=conversation_id,
-                    user_message=user_message,  # Lưu message gốc
+                    user_message=user_message,
                     assistant_message=response_text,
                     latency_ms=latency_ms
                 )
                 logger.debug("Saved exchange to DB for conversation %s", conversation_id)
             except Exception as db_error:
                 logger.warning(f"Failed to save to DB: {str(db_error)}")
-                # Continue even if DB save fails
-            
+
             logger.info("Generated response: %d characters (with session)", len(response_text))
             return response_text.strip()
-                
+
         except (ValidationError, EmptyResponseError):
             raise
         except Exception as e:
