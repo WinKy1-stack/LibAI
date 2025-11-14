@@ -53,6 +53,23 @@ export function useChatHistory(): UseChatHistoryReturn {
     }
   }, [conversationId]);
 
+  // Load all conversations
+  const loadConversations = useCallback(async (limit: number = 20, skip: number = 0) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await chatService.getConversations(limit, skip);
+      setConversations(result.conversations);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load conversations';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Send message
   const sendMessage = useCallback(
     async (message: string, context?: string): Promise<string> => {
@@ -86,7 +103,20 @@ export function useChatHistory(): UseChatHistoryReturn {
           }
 
           // Update conversation ID
-          setConversationId(response.data.conversation_id);
+          const newConversationId = response.data.conversation_id;
+          const isNewConversation = !conversationId && newConversationId;
+          
+          setConversationId(newConversationId);
+          
+          // Reload conversations để hiện conversation mới trong sidebar
+          if (isNewConversation) {
+            // Dùng delay nhỏ để đảm bảo backend đã lưu xong
+            setTimeout(() => {
+              loadConversations(50, 0).catch(err => 
+                console.error('Failed to reload conversations:', err)
+              );
+            }, 300);
+          }
         } else {
           // CHƯA ĐĂNG NHẬP: Gọi endpoint /message/guest (KHÔNG TOKEN - KHÔNG LƯU)
           response = await chatService.sendMessageGuest(request);
@@ -123,7 +153,7 @@ export function useChatHistory(): UseChatHistoryReturn {
         setLoading(false);
       }
     },
-    [conversationId, messages]
+    [conversationId, messages, loadConversations]
   );
 
   // Load conversation history
@@ -137,23 +167,6 @@ export function useChatHistory(): UseChatHistoryReturn {
       setConversationId(convId);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load history';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Load all conversations
-  const loadConversations = useCallback(async (limit: number = 20, skip: number = 0) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await chatService.getConversations(limit, skip);
-      setConversations(result.conversations);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load conversations';
       setError(errorMessage);
       throw err;
     } finally {

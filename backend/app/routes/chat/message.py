@@ -23,6 +23,8 @@ async def _send_message_async(current_user, data):
     chat_history = data.get('chat_history', [])
     context = data.get('context')
     conversation_id = data.get('conversation_id')
+    
+    
 
     logger.info("User %s sent message: %s...", current_user['id'], user_message[:50])
 

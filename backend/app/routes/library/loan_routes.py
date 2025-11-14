@@ -43,7 +43,7 @@ def get_loans():
         limit=limit
     )
 
-    total = MongoHelper.count_documents('loans', query)
+    total = MongoHelper.count('loans', query)
 
     return jsonify({
         'loans': loans,

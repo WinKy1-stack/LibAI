@@ -82,6 +82,54 @@ def get_user_conversations(current_user):
     return jsonify(response_data), 200
 
 
+@history_bp.route('/conversations/<conversation_id>', methods=['DELETE'])
+@token_required
+def delete_conversation(current_user, conversation_id):
+    """Xóa một conversation và tất cả messages"""
+    if not ConversationManager.belongs_to_user(conversation_id, current_user['id']):
+        raise ApiError("Không có quyền xóa conversation này", status_code=403)
+
+    success = ConversationManager.delete(conversation_id, current_user['id'])
+    
+    if not success:
+        raise ApiError("Không thể xóa conversation", status_code=500)
+
+    response_data = build_success_response(
+        data={'conversation_id': conversation_id, 'deleted': True},
+        user_id=current_user['id']
+    )
+    
+    logger.info("Deleted conversation %s for user %s", conversation_id, current_user['id'])
+    return jsonify(response_data), 200
+
+
+@history_bp.route('/conversations/<conversation_id>/messages', methods=['GET'])
+@token_required
+def get_conversation_messages(current_user, conversation_id):
+    """Lấy messages của một conversation"""
+    if not ConversationManager.belongs_to_user(conversation_id, current_user['id']):
+        raise ApiError("Không có quyền truy cập conversation này", status_code=403)
+    
+    limit = request.args.get('limit', 100, type=int)
+    
+    if limit < 1 or limit > 500:
+        raise ValidationError("Limit phải trong khoảng 1-500")
+    
+    messages = MessageManager.get_by_conversation(conversation_id, limit)
+    
+    response_data = build_success_response(
+        data={
+            'conversation_id': conversation_id,
+            'messages': messages,
+            'count': len(messages)
+        },
+        user_id=current_user['id'],
+        metadata={'limit': limit}
+    )
+    
+    return jsonify(response_data), 200
+
+
 @history_bp.route('/conversation/end', methods=['POST'])
 @token_required
 def end_conversation(current_user):

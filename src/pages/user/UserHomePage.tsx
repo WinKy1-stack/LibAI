@@ -216,6 +216,13 @@ export default function UserHomePage() {
             currentConversationId={conversationId}
             onSelectConversation={handleSelectConversation}
             onNewConversation={handleNewConversation}
+            onConversationDeleted={(deletedId) => {
+              if (deletedId === conversationId) {
+                clearMessages();
+                setChatMessages([]);
+                setIsChatting(false);
+              }
+            }}
           />
           
           {/* Resize Handle */}

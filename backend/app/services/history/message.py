@@ -193,7 +193,7 @@ class MessageManager:
             if conversation_ids:
                 query['conversation_id'] = {'$in': conversation_ids}
             
-            total_messages = MongoHelper.count_documents(
+            total_messages = MongoHelper.count(
                 MessageManager.COLLECTION_NAME,
                 query
             )
