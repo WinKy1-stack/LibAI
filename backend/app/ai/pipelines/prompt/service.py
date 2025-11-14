@@ -1,7 +1,3 @@
-"""
-Prompt Service - Core AI logic cho chat system
-Refactored version - sử dụng Validator và Formatter với Chat Session
-"""
 import logging
 import threading
 from typing import List, Dict, Optional, Any
@@ -353,16 +349,7 @@ class ChatSession:
         self.system_instruction = system_instruction
         
         # Tạo chat session với SDK mới
-        self.chat = self.client.chats.create(
-            model=self.model_id,
-            config=types.GenerateContentConfig(
-                temperature=config.get('GEMINI_TEMPERATURE', 0.7),
-                max_output_tokens=config.get('GEMINI_MAX_TOKENS', 1000),
-                top_p=config.get('GEMINI_TOP_P', 0.95),
-                top_k=config.get('GEMINI_TOP_K', 40),
-                system_instruction=system_instruction,
-            )
-        )
+        self.chat = self._create_chat()
         
         # Load initial history từ database nếu có
         if initial_history:
@@ -378,6 +365,20 @@ class ChatSession:
                     logger.warning(f"Failed to load history message: {str(e)}")
         
         logger.info("Created new chat session with model %s (history_size=%d)", model_id, len(initial_history) if initial_history else 0)
+    
+    def _generation_overrides(self) -> Dict[str, Any]:
+        return {
+            'temperature': self.config.get('GEMINI_TEMPERATURE', 0.7),
+            'max_output_tokens': self.config.get('GEMINI_MAX_TOKENS', 1000),
+            'top_p': self.config.get('GEMINI_TOP_P', 0.95),
+            'top_k': self.config.get('GEMINI_TOP_K', 40)
+        }
+    
+    def _create_chat(self):
+        return self.client.create_chat_session(
+            system_instruction=self.system_instruction,
+            **self._generation_overrides()
+        )
     
     def send_message(self, message: str) -> str:
         """
@@ -443,16 +444,7 @@ class ChatSession:
     
     def clear_history(self):
         """Clear chat history bằng cách tạo session mới"""
-        self.chat = self.client.chats.create(
-            model=self.model_id,
-            config=types.GenerateContentConfig(
-                temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
-                max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 1000),
-                top_p=self.config.get('GEMINI_TOP_P', 0.95),
-                top_k=self.config.get('GEMINI_TOP_K', 40),
-                system_instruction=self.system_instruction,
-            )
-        )
+        self.chat = self._create_chat()
         logger.info("Cleared chat history for session")
 
 
@@ -549,7 +541,7 @@ class PromptService:
                     logger.warning(f"Failed to load history from DB: {str(e)}")
                 
                 self._chat_sessions[conversation_id] = ChatSession(
-                    client=self.client,
+                    client=self.genai_client,
                     model_id=self.model_id,
                     config=self.config,
                     system_instruction=system_instruction,
@@ -658,7 +650,7 @@ class PromptService:
             Context string hoặc empty string
         """
         try:
-            from app.services.prompt.koha_context import (
+            from app.ai.pipelines.prompt.koha_context import (
                 build_koha_context_for_patron,
                 build_koha_context_for_books,
                 build_faq_context
@@ -963,34 +955,15 @@ class PromptService:
         try:
             # SDK mới: from google import genai
             # Cấu hình safety settings
-            safety_settings = [
-                types.SafetySetting(
-                    category='HARM_CATEGORY_HARASSMENT',
-                    threshold='BLOCK_MEDIUM_AND_ABOVE'
-                ),
-                types.SafetySetting(
-                    category='HARM_CATEGORY_HATE_SPEECH',
-                    threshold='BLOCK_MEDIUM_AND_ABOVE'
-                ),
-                types.SafetySetting(
-                    category='HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                    threshold='BLOCK_MEDIUM_AND_ABOVE'
-                ),
-                types.SafetySetting(
-                    category='HARM_CATEGORY_DANGEROUS_CONTENT',
-                    threshold='BLOCK_MEDIUM_AND_ABOVE'
-                ),
-            ]
+            safety_settings = list(DEFAULT_SAFETY_SETTINGS)
             
-            # Generation config
-            generation_config = types.GenerateContentConfig(
-                temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
-                max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 1000),
-                top_p=self.config.get('GEMINI_TOP_P', 0.95),
-                top_k=self.config.get('GEMINI_TOP_K', 40),
-                system_instruction=system_instruction,
-                safety_settings=safety_settings
-            )
+            # Generation config overrides
+            generation_kwargs = {
+                'temperature': self.config.get('GEMINI_TEMPERATURE', 0.7),
+                'max_output_tokens': self.config.get('GEMINI_MAX_TOKENS', 1000),
+                'top_p': self.config.get('GEMINI_TOP_P', 0.95),
+                'top_k': self.config.get('GEMINI_TOP_K', 40)
+            }
             
             # Tách lịch sử và message cuối
             current_message = contents[-1]['parts'][0] if contents else ""
@@ -1001,10 +974,11 @@ class PromptService:
             
             # Generate content với SDK mới
             logger.debug(f"[API Call #{retry_count + 1}] Sending request to Gemini {self.model_id}...")
-            response = self.client.models.generate_content(
-                model=self.model_id,
+            response = self.genai_client.generate_content(
                 contents=current_message,
-                config=generation_config
+                system_instruction=system_instruction,
+                safety_settings=safety_settings,
+                **generation_kwargs
             )
             
             logger.debug("Gemini API call successful")

@@ -1,10 +1,7 @@
-"""
-Prompt Validators - Validation logic cho chat service
-"""
 import logging
 from typing import List, Dict
 
-from app.services.exceptions import ValidationError
+from app.ai.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 

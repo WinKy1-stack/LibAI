@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from flask import Blueprint, jsonify
 
-from app.services.prompt import get_prompt_service
+from app.ai.pipelines.prompt import get_prompt_service
 from app.exceptions import ApiError
 
 logger = logging.getLogger(__name__)

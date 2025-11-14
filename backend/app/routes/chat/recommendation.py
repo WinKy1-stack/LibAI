@@ -1,10 +1,7 @@
-"""
-Recommendation Routes - Book recommendations và AI search
-"""
 import logging
 from flask import Blueprint, jsonify
 
-from app.services.prompt import get_prompt_service
+from app.ai.pipelines.prompt import get_prompt_service
 from app.exceptions import ApiError, ValidationError, GeminiAPIError
 from app.utils.decorators import token_required
 from app.routes.helpers import (

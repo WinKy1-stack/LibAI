@@ -19,7 +19,7 @@ app = create_app(DevelopmentConfig)
 def test_gemini_connection():
     """Test kết nối với Gemini API khi server khởi động"""
     try:
-        from app.services.prompt import PromptService
+        from app.ai.pipelines.prompt import PromptService
 
         print("\n" + "=" * 70)
         print("TESTING GEMINI API CONNECTION...")

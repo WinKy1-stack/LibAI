@@ -1,12 +1,9 @@
-"""
-Message Route - Xử lý chat message với AI
-"""
 import logging
 import time
 import asyncio
 from flask import Blueprint, jsonify
 
-from app.services.prompt import get_prompt_service
+from app.ai.pipelines.prompt import get_prompt_service
 from app.services.history import ConversationManager, MessageManager
 from app.exceptions import ApiError, ValidationError, GeminiAPIError
 from app.utils.decorators import token_required
