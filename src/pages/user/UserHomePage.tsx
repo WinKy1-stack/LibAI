@@ -71,6 +71,7 @@ export default function UserHomePage() {
         type: msg.role === 'user' ? 'user' : 'bot',
         content: msg.content,
         timestamp: new Date(msg.timestamp || Date.now()),
+        books: msg.books,  // Thêm books từ API response
       }));
       setChatMessages(formattedMessages);
     }

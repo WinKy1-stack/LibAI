@@ -28,6 +28,21 @@ export interface ChatMessage {
   content: string;
   timestamp?: string;
   latency_ms?: number;
+  books?: Book[];  // Thêm books array (optional)
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  accuracy: string;
+  source: string;
+  related: RelatedItem[];
+}
+
+export interface RelatedItem {
+  type: string;  // "chủ đề", "sách cùng tác giả", "thể loại"
+  value: string;
 }
 
 export interface ChatMessageRequest {
