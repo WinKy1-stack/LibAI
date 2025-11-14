@@ -5,17 +5,20 @@ Refactored version - sử dụng Validator và Formatter với Chat Session
 import logging
 import threading
 from typing import List, Dict, Optional, Any
-from google import genai
-from google.genai import types
 
-from app.services.exceptions import (
+from app.ai.exceptions import (
     GeminiAPIError,
     InvalidConfigurationError,
     ValidationError,
-    EmptyResponseError
+    EmptyResponseError,
 )
-from app.services.prompt.validators import PromptValidator
-from app.services.prompt.formatters import PromptFormatter
+from app.ai.clients import (
+    DEFAULT_SAFETY_SETTINGS,
+    GeminiClientSettings,
+    GoogleGenAIClient,
+)
+from app.ai.pipelines.prompt.validators import PromptValidator
+from app.ai.pipelines.prompt.formatters import PromptFormatter
 
 logger = logging.getLogger(__name__)
 
@@ -328,7 +331,14 @@ class ChatSession:
     Cho phép AI nhớ được lịch sử chat
     """
     
-    def __init__(self, client: genai.Client, model_id: str, config: Dict[str, Any], system_instruction: str, initial_history: List[Dict[str, str]] = None):
+    def __init__(
+        self,
+        client: GoogleGenAIClient,
+        model_id: str,
+        config: Dict[str, Any],
+        system_instruction: str,
+        initial_history: Optional[List[Dict[str, str]]] = None
+    ):
         """
         Args:
             client: Gemini client
@@ -455,8 +465,18 @@ class PromptService:
             self.config = config
             
             # Configure Gemini với SDK mới (google-genai)
-            self.client = genai.Client(api_key=self.config['GEMINI_API_KEY'])
-            self.model_id = self.config['GEMINI_MODEL']
+            settings = GeminiClientSettings(
+                model=self.config['GEMINI_MODEL'],
+                temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
+                max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 1000),
+                top_p=self.config.get('GEMINI_TOP_P', 0.95),
+                top_k=self.config.get('GEMINI_TOP_K', 40),
+            )
+            self.genai_client = GoogleGenAIClient(
+                api_key=self.config['GEMINI_API_KEY'],
+                settings=settings
+            )
+            self.model_id = settings.model
             
             # Khởi tạo validator và formatter
             self.validator = PromptValidator(
