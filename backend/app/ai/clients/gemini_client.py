@@ -46,6 +46,7 @@ class GeminiClientSettings:
         *,
         system_instruction: str,
         safety_settings: Optional[SafetyConfig] = None,
+        tools: Optional[List[types.FunctionDeclaration]] = None,
         **overrides: Any,
     ) -> types.GenerateContentConfig:
         config_kwargs = {
@@ -56,6 +57,10 @@ class GeminiClientSettings:
             "system_instruction": system_instruction,
             "safety_settings": list(safety_settings or DEFAULT_SAFETY_SETTINGS),
         }
+        
+        if tools:
+            config_kwargs["tools"] = [types.Tool(function_declarations=tools)]
+        
         return types.GenerateContentConfig(**config_kwargs)
 
 
@@ -104,11 +109,13 @@ class GoogleGenAIClient:
         *,
         system_instruction: str,
         safety_settings: Optional[SafetyConfig] = None,
+        tools: Optional[List[types.FunctionDeclaration]] = None,
         **overrides: Any,
     ):
         config = self.settings.build_generation_config(
             system_instruction=system_instruction,
             safety_settings=safety_settings,
+            tools=tools,
             **overrides,
         )
         try:

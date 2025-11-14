@@ -31,15 +31,19 @@ async def _send_message_async(current_user, data):
     if not conversation_id:
         conversation_id = ConversationManager.create(
             user_id=current_user['id'],
-            channel='web',
-            model='gemini-2.0-flash-exp'
+            channel='web'
         )
         logger.info("Created new conversation: %s", conversation_id)
     else:
         if not ConversationManager.belongs_to_user(conversation_id, current_user['id']):
-            logger.warning("Unauthorized access to conversation %s by user %s", conversation_id, current_user['id'])
-            raise ApiError("Không có quyền truy cập conversation này", status_code=403)
-        logger.debug("Using existing conversation: %s for user %s", conversation_id, current_user['id'])
+            logger.warning("Unauthorized access to conversation %s by user %s - creating new one", conversation_id, current_user['id'])
+            conversation_id = ConversationManager.create(
+                user_id=current_user['id'],
+                channel='web'
+            )
+            logger.info("Created new conversation: %s for user %s", conversation_id, current_user['id'])
+        else:
+            logger.debug("Using existing conversation: %s for user %s", conversation_id, current_user['id'])
 
     start_time = time.time()
     prompt_service = get_prompt_service()

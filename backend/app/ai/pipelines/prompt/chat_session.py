@@ -54,18 +54,21 @@ class ChatSession:
         self.model_id = model_id
         self.config = config
         self.system_instruction = system_instruction
-
+        
+        self.tool_registry = get_tool_registry()
+        
         self.chat = self._create_chat()
+        
         self.agent = ChatAgent(
             chat_session=self,
-            tool_registry=get_tool_registry()
+            tool_registry=self.tool_registry
         )
 
         logger.info(
             "Created chat session (model=%s, history_size=%d, tools=%d)",
             model_id,
             len(initial_history) if initial_history else 0,
-            len(self.agent.tool_registry.get_all()) if self.agent.has_tools() else 0
+            len(self.tool_registry.get_all())
         )
 
     def _generation_overrides(self) -> Dict[str, Any]:
@@ -77,8 +80,16 @@ class ChatSession:
         }
 
     def _create_chat(self):
+        tools = None
+        if self.tool_registry:
+            tool_declarations = self.tool_registry.get_function_declarations()
+            if tool_declarations:
+                tools = tool_declarations
+                logger.info(f"Registering {len(tool_declarations)} tools with Gemini SDK")
+        
         return self.client.create_chat_session(
             system_instruction=self.system_instruction,
+            tools=tools,
             **self._generation_overrides()
         )
 
@@ -86,12 +97,60 @@ class ChatSession:
     def send_message(self, message: str) -> str:
         try:
             response = self.chat.send_message(message)
+            
+            # Kiểm tra xem có function call không
+            if hasattr(response, 'candidates') and response.candidates:
+                candidate = response.candidates[0]
+                if hasattr(candidate, 'content') and candidate.content:
+                    for part in candidate.content.parts:
+                        if hasattr(part, 'function_call') and part.function_call:
+                            # Có function call, thực thi tool
+                            logger.info(f"Detected function call: {part.function_call.name}")
+                            result = self._handle_function_call(part.function_call)
+                            
+                            # Gửi kết quả tool execution trở lại Gemini
+                            from google.genai import types
+                            function_response = types.Part(
+                                function_response=types.FunctionResponse(
+                                    name=part.function_call.name,
+                                    response=result
+                                )
+                            )
+                            
+                            # Gửi lại để lấy response cuối cùng
+                            final_response = self.chat.send_message(function_response)
+                            return final_response.text.strip()
+            
             return response.text.strip()
         except GeminiAPIError:
             raise
         except Exception as e:
             logger.error("Chat session error: %s", str(e))
             raise GeminiAPIError(f"Lỗi khi chat với AI: {str(e)}") from e
+    
+    def _handle_function_call(self, function_call) -> Dict[str, Any]:
+        """Xử lý function call từ Gemini"""
+        tool_name = function_call.name
+        tool_args = dict(function_call.args) if hasattr(function_call, 'args') else {}
+        
+        logger.info(f"Executing tool: {tool_name} with args: {tool_args}")
+        
+        tool = self.tool_registry.get(tool_name)
+        if not tool:
+            logger.error(f"Tool not found: {tool_name}")
+            return {"error": f"Tool {tool_name} không tồn tại"}
+        
+        try:
+            result = tool.execute(**tool_args)
+            if result.success:
+                logger.info(f"Tool {tool_name} executed successfully")
+                return {"result": result.data}
+            else:
+                logger.error(f"Tool {tool_name} failed: {result.error}")
+                return {"error": result.error}
+        except Exception as e:
+            logger.error(f"Error executing tool {tool_name}: {str(e)}")
+            return {"error": str(e)}
 
     def send_message_stream(self, message: str):
         try:

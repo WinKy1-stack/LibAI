@@ -22,6 +22,18 @@ chatApi.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Handle 403 errors - clear invalid conversation_id
+chatApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403) {
+      // Clear conversation_id khi gặp 403
+      localStorage.removeItem('current_conversation_id');
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Types
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';

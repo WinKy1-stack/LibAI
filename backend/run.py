@@ -60,12 +60,12 @@ if __name__ == '__main__':
         print("=" * 70)
 
         # Kiểm tra Gemini trước khi khởi động
-        gemini_ok = test_gemini_connection()
+        # gemini_ok = test_gemini_connection()
 
-        if gemini_ok:
-            print("Tất cả hệ thống sẵn sàng - Đang khởi động Flask server...\n")
-        else:
-            print("Cảnh báo: Gemini API không khả dụng - Các tính năng chat có thể không hoạt động\n")
+        # if gemini_ok:
+        #     print("Tất cả hệ thống sẵn sàng - Đang khởi động Flask server...\n")
+        # else:
+        #     print("Cảnh báo: Gemini API không khả dụng - Các tính năng chat có thể không hoạt động\n")
 
         app.run(
             host='0.0.0.0',
