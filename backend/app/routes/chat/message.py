@@ -44,10 +44,7 @@ async def _send_message_async(current_user, data):
     # Generate response with timing
     start_time = time.time()
     prompt_service = get_prompt_service()
-    
-    # Lấy patron_id từ user profile nếu có
-    patron_id = current_user.get('koha_patron_id') or current_user.get('patron_id')
-    
+
     # Dùng method có session để lưu history conversation (ASYNC với timeout & error handling)
     try:
         ai_response = await asyncio.wait_for(
@@ -56,9 +53,7 @@ async def _send_message_async(current_user, data):
                 conversation_id=conversation_id,
                 user_message=user_message,
                 instruction_type='default',
-                latency_ms=int((time.time() - start_time) * 1000),  # Tính latency
-                patron_id=patron_id,  # Truyền patron_id để lấy thông tin từ Koha
-                auto_inject_koha_context=True  # Tự động inject Koha context
+                latency_ms=int((time.time() - start_time) * 1000)  # Tính latency
             ),
             timeout=30.0  # 30 seconds timeout
         )
