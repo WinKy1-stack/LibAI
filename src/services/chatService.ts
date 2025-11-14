@@ -57,30 +57,6 @@ export interface ChatMessageResponse {
   };
 }
 
-export interface BookRecommendationRequest {
-  preferences: {
-    category?: string;
-    level?: string;
-    topics?: string;
-  };
-  available_books: Array<{
-    title: string;
-    author: string;
-    category: string;
-    description?: string;
-  }>;
-}
-
-export interface BookSearchRequest {
-  query: string;
-  books_data: Array<{
-    _id: string;
-    title: string;
-    author: string;
-    category: string;
-    description?: string;
-  }>;
-}
 
 export interface Conversation {
   conversation_id: string;
@@ -130,21 +106,9 @@ export const chatService = {
     return response.data;
   },
 
-  // Send chat message (KHÔNG ĐĂNG NHẬP - KHÔNG LƯU)
+  // Send chat message (KHÔNG ĐĂNG NHẬP - LƯU IN-MEMORY)
   sendMessageGuest: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
     const response = await chatApi.post<ChatMessageResponse>('/message/guest', request);
-    return response.data;
-  },
-
-  // Get book recommendations
-  getRecommendations: async (request: BookRecommendationRequest): Promise<ChatMessageResponse> => {
-    const response = await chatApi.post<ChatMessageResponse>('/recommend', request);
-    return response.data;
-  },
-
-  // Search books with AI
-  searchBooks: async (request: BookSearchRequest): Promise<ChatMessageResponse> => {
-    const response = await chatApi.post<ChatMessageResponse>('/search', request);
     return response.data;
   },
 

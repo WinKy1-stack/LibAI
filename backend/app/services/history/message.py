@@ -144,11 +144,14 @@ class MessageManager:
             messages = MongoHelper.find_many(
                 MessageManager.COLLECTION_NAME,
                 query={'conversation_id': conv_id},
-                sort=[('ts', 1)],  # Ascending order
+                sort=[('ts', 1)],
                 limit=limit
             )
             
-            # Format messages for frontend
+            if messages is None:
+                logger.warning("No messages found or DB error for conversation %s", conversation_id)
+                return []
+            
             formatted_messages = []
             for msg in messages:
                 formatted_msg = {

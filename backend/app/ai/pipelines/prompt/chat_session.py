@@ -1,10 +1,44 @@
 import logging
+import time
 from typing import List, Dict, Optional, Any
 
 from app.ai.exceptions import GeminiAPIError
 from app.ai.clients import GoogleGenAIClient
+from app.ai.agents import ChatAgent
+from app.ai.tools import get_tool_registry
 
 logger = logging.getLogger(__name__)
+
+
+def retry_on_503(max_retries=3, base_delay=1.0):
+    """Retry decorator cho 503 errors với exponential backoff"""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except GeminiAPIError as e:
+                    error_msg = str(e)
+                    is_503 = ("503" in error_msg or "UNAVAILABLE" in error_msg or 
+                             "overloaded" in error_msg.lower())
+                    
+                    if not is_503 or attempt == max_retries - 1:
+                        raise
+                    
+                    delay = base_delay * (2 ** attempt)
+                    logger.warning(
+                        f"API 503 (lần {attempt + 1}/{max_retries}), retry sau {delay}s"
+                    )
+                    time.sleep(delay)
+                    last_exception = e
+                except Exception:
+                    raise
+            
+            if last_exception:
+                raise last_exception
+        return wrapper
+    return decorator
 
 
 class ChatSession:
@@ -22,11 +56,16 @@ class ChatSession:
         self.system_instruction = system_instruction
 
         self.chat = self._create_chat()
+        self.agent = ChatAgent(
+            chat_session=self,
+            tool_registry=get_tool_registry()
+        )
 
         logger.info(
-            "Created chat session (model=%s, history_size=%d)",
+            "Created chat session (model=%s, history_size=%d, tools=%d)",
             model_id,
-            len(initial_history) if initial_history else 0
+            len(initial_history) if initial_history else 0,
+            len(self.agent.tool_registry.get_all()) if self.agent.has_tools() else 0
         )
 
     def _generation_overrides(self) -> Dict[str, Any]:
@@ -43,10 +82,13 @@ class ChatSession:
             **self._generation_overrides()
         )
 
+    @retry_on_503(max_retries=3, base_delay=1.0)
     def send_message(self, message: str) -> str:
         try:
             response = self.chat.send_message(message)
             return response.text.strip()
+        except GeminiAPIError:
+            raise
         except Exception as e:
             logger.error("Chat session error: %s", str(e))
             raise GeminiAPIError(f"Lỗi khi chat với AI: {str(e)}") from e
@@ -57,9 +99,17 @@ class ChatSession:
             for chunk in response:
                 if hasattr(chunk, 'text') and chunk.text:
                     yield chunk.text
+        except GeminiAPIError:
+            raise
         except Exception as e:
             logger.error("Chat stream error: %s", str(e))
             raise GeminiAPIError(f"Lỗi khi stream chat: {str(e)}") from e
+
+    def run(self, message: str) -> str:
+        return self.agent.run(message)
+
+    def run_stream(self, message: str):
+        return self.agent.run_stream(message)
 
     def get_history(self) -> List[Dict[str, Any]]:
         try:

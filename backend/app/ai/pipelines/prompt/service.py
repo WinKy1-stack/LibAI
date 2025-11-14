@@ -1,5 +1,6 @@
 import logging
 import threading
+import time
 from typing import Dict, Optional
 
 from app.ai.exceptions import (
@@ -17,6 +18,36 @@ from app.ai.pipelines.prompt.instructions import SYSTEM_INSTRUCTIONS
 from app.ai.pipelines.prompt.chat_session import ChatSession
 
 logger = logging.getLogger(__name__)
+
+
+def retry_on_503(max_retries=3, base_delay=1.0):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except GeminiAPIError as e:
+                    error_msg = str(e)
+                    is_503 = ("503" in error_msg or "UNAVAILABLE" in error_msg or 
+                             "overloaded" in error_msg.lower())
+                    
+                    if not is_503 or attempt == max_retries - 1:
+                        raise
+                    
+                    delay = base_delay * (2 ** attempt)
+                    logger.warning(
+                        f"API 503 (lần {attempt + 1}/{max_retries}), retry sau {delay}s"
+                    )
+                    time.sleep(delay)
+                    last_exception = e
+                except Exception:
+                    raise
+            
+            if last_exception:
+                raise last_exception
+        return wrapper
+    return decorator
 
 
 class PromptService:
@@ -123,8 +154,8 @@ class PromptService:
                 instruction_type
             )
 
-            logger.debug("Sending message to chat session %s", conversation_id)
-            response_text = chat_session.send_message(user_message)
+            logger.debug("Sending message via agent to session %s", conversation_id)
+            response_text = chat_session.run(user_message)
 
             if not response_text or not response_text.strip():
                 logger.warning("Empty response text")

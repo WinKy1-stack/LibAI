@@ -1,5 +1,5 @@
 """
-Central place để import các component AI (clients, pipelines, exceptions).
+Central place để import các component AI (clients, pipelines, exceptions, agents, tools).
 """
 from .exceptions import (
     ChatServiceError,
@@ -13,6 +13,8 @@ from .clients import (
     GeminiClientSettings,
     GoogleGenAIClient,
 )
+from .agents import BaseAgent, ChatAgent
+from .tools import BaseTool, ToolResult, get_tool_registry, register_default_tools
 
 __all__ = [
     # Exceptions
@@ -25,4 +27,12 @@ __all__ = [
     "DEFAULT_SAFETY_SETTINGS",
     "GeminiClientSettings",
     "GoogleGenAIClient",
+    # Agents
+    "BaseAgent",
+    "ChatAgent",
+    # Tools
+    "BaseTool",
+    "ToolResult",
+    "get_tool_registry",
+    "register_default_tools",
 ]

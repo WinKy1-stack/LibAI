@@ -26,7 +26,6 @@ async def _send_message_async(current_user, data):
 
     logger.info("User %s sent message: %s...", current_user['id'], user_message[:50])
 
-    # Tạo conversation mới nếu chưa có
     if not conversation_id:
         conversation_id = ConversationManager.create(
             user_id=current_user['id'],
@@ -35,17 +34,14 @@ async def _send_message_async(current_user, data):
         )
         logger.info("Created new conversation: %s", conversation_id)
     else:
-        # Validate conversation_id thuộc user hiện tại
         if not ConversationManager.belongs_to_user(conversation_id, current_user['id']):
             logger.warning("Unauthorized access to conversation %s by user %s", conversation_id, current_user['id'])
             raise ApiError("Không có quyền truy cập conversation này", status_code=403)
         logger.debug("Using existing conversation: %s for user %s", conversation_id, current_user['id'])
 
-    # Generate response with timing
     start_time = time.time()
     prompt_service = get_prompt_service()
 
-    # Dùng method có session để lưu history conversation (ASYNC với timeout & error handling)
     try:
         ai_response = await asyncio.wait_for(
             asyncio.to_thread(
@@ -53,15 +49,18 @@ async def _send_message_async(current_user, data):
                 conversation_id=conversation_id,
                 user_message=user_message,
                 instruction_type='default',
-                latency_ms=int((time.time() - start_time) * 1000)  # Tính latency
+                latency_ms=int((time.time() - start_time) * 1000)
             ),
-            timeout=30.0  # 30 seconds timeout
+            timeout=30.0
         )
     except asyncio.TimeoutError:
         logger.error("AI response timeout for user %s after 30s", current_user['id'])
         raise ApiError("AI đang xử lý quá lâu, vui lòng thử lại", status_code=503)
     except GeminiAPIError as e:
         logger.exception("Gemini API error for user %s: %s", current_user['id'], str(e))
+        error_msg = str(e)
+        if "503" in error_msg or "UNAVAILABLE" in error_msg or "overloaded" in error_msg.lower():
+            raise ApiError("Dịch vụ AI hiện quá tải, vui lòng thử lại sau vài giây", status_code=503)
         raise ApiError(f"Lỗi AI: {str(e)}", status_code=502)
     except Exception as e:
         logger.exception("Unexpected error during AI generation for user %s", current_user['id'])
@@ -101,10 +100,8 @@ def send_message(current_user):
             "conversation_id": str (optional) - ID conversation đang chat
         }
     """
-    # Validate và lấy data
     data = validate_request_data(required_fields=['message'])
     
-    # Chạy async function từ sync context
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -114,49 +111,50 @@ def send_message(current_user):
 
 
 async def _send_message_guest_async(data):
-    """Helper function để xử lý async logic cho guest"""
+    import uuid
+
     user_message = data['message'].strip()
-    chat_history = data.get('chat_history', [])
-    context = data.get('context')
+    conversation_id = data.get('conversation_id') or f"guest_{uuid.uuid4().hex[:16]}"
 
-    logger.info("Guest sent message: %s...", user_message[:50])
+    logger.info("Guest sent message: %s... (session: %s)", user_message[:50], conversation_id)
 
-    # Generate response with timing (KHÔNG LƯU DB) - ASYNC với timeout & error handling
     start_time = time.time()
     prompt_service = get_prompt_service()
-    
+
     try:
         ai_response = await asyncio.wait_for(
             asyncio.to_thread(
-                prompt_service.generate_response,
+                prompt_service.generate_response_with_session,
+                conversation_id=conversation_id,
                 user_message=user_message,
-                chat_history=chat_history,
-                context=context
+                instruction_type='default',
+                latency_ms=0
             ),
-            timeout=30.0  # 30 seconds timeout
+            timeout=30.0
         )
     except asyncio.TimeoutError:
         logger.error("AI response timeout for guest after 30s")
         raise ApiError("AI đang xử lý quá lâu, vui lòng thử lại", status_code=503)
     except GeminiAPIError as e:
         logger.exception("Gemini API error for guest: %s", str(e))
+        error_msg = str(e)
+        if "503" in error_msg or "UNAVAILABLE" in error_msg or "overloaded" in error_msg.lower():
+            raise ApiError("Dịch vụ AI hiện quá tải, vui lòng thử lại sau vài giây", status_code=503)
         raise ApiError(f"Lỗi AI: {str(e)}", status_code=502)
     except Exception as e:
         logger.exception("Unexpected error during AI generation for guest")
         raise ApiError("Lỗi xử lý tin nhắn, vui lòng thử lại", status_code=500)
-    
+
     latency_ms = int((time.time() - start_time) * 1000)
 
     response_data = build_success_response(
         data={
             'message': ai_response,
-            'conversation_id': None  # Không có conversation_id
+            'conversation_id': conversation_id
         },
         user_id='guest',
         metadata={
             'message_length': len(ai_response),
-            'has_context': context is not None,
-            'history_length': len(chat_history),
             'latency_ms': latency_ms
         }
     )
@@ -168,19 +166,16 @@ async def _send_message_guest_async(data):
 @message_bp.route('/message/guest', methods=['POST'])
 def send_message_guest():
     """
-    Gửi tin nhắn KHÔNG CẦN ĐĂNG NHẬP (KHÔNG LƯU LỊCH SỬ)
-    
+    Gửi tin nhắn KHÔNG CẦN ĐĂNG NHẬP (LƯU HISTORY IN-MEMORY)
+
     Request Body:
         {
             "message": str (required) - Tin nhắn người dùng,
-            "chat_history": list (optional) - Lịch sử chat (chỉ local),
-            "context": str (optional) - Context bổ sung
+            "conversation_id": str (optional) - Session ID để maintain history
         }
     """
-    # Validate và lấy data
     data = validate_request_data(required_fields=['message'])
     
-    # Chạy async function từ sync context
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:

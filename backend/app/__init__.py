@@ -54,6 +54,11 @@ def create_app(config_class=Config):
          allow_headers=["Content-Type", "Authorization"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
+    with app.app_context():
+        from app.ai.tools import register_default_tools
+        register_default_tools()
+        logger.info("AI tools registered successfully")
+
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
     from app.routes.library import library_bp
