@@ -43,12 +43,12 @@ def get_tool_registry() -> ToolRegistry:
 
 
 def register_default_tools():
-    from app.ai.tools.book_tools import SearchBooksTool, GetBookDetailsTool
+    from app.ai.tools.book_tools import SearchBooksTool
     from app.ai.tools.faq_tools import SearchFAQTool, GetFAQCategoriesTool
 
     registry = get_tool_registry()
     registry.register(SearchBooksTool())
-    registry.register(GetBookDetailsTool())
+    # registry.register(GetBookDetailsTool())
     registry.register(SearchFAQTool())
     registry.register(GetFAQCategoriesTool())
 

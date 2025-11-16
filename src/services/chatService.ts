@@ -40,6 +40,21 @@ export interface ChatMessage {
   content: string;
   timestamp?: string;
   latency_ms?: number;
+  books?: Book[];  // Thêm books array (optional)
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  accuracy: string;
+  source: string;
+  related: RelatedItem[];
+}
+
+export interface RelatedItem {
+  type: string;  // "chủ đề", "sách cùng tác giả", "thể loại"
+  value: string;
 }
 
 export interface ChatMessageRequest {
@@ -53,13 +68,15 @@ export interface ChatMessageResponse {
   success: boolean;
   data: {
     message: string;
+    books?: Book[] | null;  
     conversation_id: string;
-    user_id: string;
-    timestamp: string;
+    user_id?: string;
+    timestamp?: string;
     metadata: {
       message_length: number;
-      has_context: boolean;
-      history_length: number;
+      books_count?: number;
+      has_context?: boolean;
+      history_length?: number;
       latency_ms?: number;
     };
   };

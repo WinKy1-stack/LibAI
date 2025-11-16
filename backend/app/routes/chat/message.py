@@ -23,8 +23,7 @@ async def _send_message_async(current_user, data):
     chat_history = data.get('chat_history', [])
     context = data.get('context')
     conversation_id = data.get('conversation_id')
-    
-    
+
 
     logger.info("User %s sent message: %s...", current_user['id'], user_message[:50])
 
@@ -71,7 +70,7 @@ async def _send_message_async(current_user, data):
     except Exception as e:
         logger.exception("Unexpected error during AI generation for user %s", current_user['id'])
         raise ApiError("Lỗi xử lý tin nhắn, vui lòng thử lại", status_code=500)
-    
+
     latency_ms = int((time.time() - start_time) * 1000)
 
     response_data = build_success_response(
@@ -97,7 +96,7 @@ async def _send_message_async(current_user, data):
 def send_message(current_user):
     """
     Gửi tin nhắn và nhận phản hồi từ AI (CÓ ĐĂNG NHẬP - LƯU LỊCH SỬ)
-    
+
     Request Body:
         {
             "message": str (required) - Tin nhắn người dùng,
@@ -107,7 +106,7 @@ def send_message(current_user):
         }
     """
     data = validate_request_data(required_fields=['message'])
-    
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -181,7 +180,7 @@ def send_message_guest():
         }
     """
     data = validate_request_data(required_fields=['message'])
-    
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:

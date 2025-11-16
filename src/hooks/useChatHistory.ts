@@ -135,11 +135,14 @@ export function useChatHistory(): UseChatHistoryReturn {
           timestamp: new Date().toISOString(),
         };
 
+        const books = response.data.books || undefined;
+        
         const aiMessage: ChatMessage = {
           role: 'assistant',
           content: response.data.message,
           timestamp: response.data.timestamp,
           latency_ms: response.data.metadata.latency_ms,
+          books: Array.isArray(books) && books.length > 0 ? books : undefined,
         };
 
         setMessages((prev) => [...prev, userMessage, aiMessage]);

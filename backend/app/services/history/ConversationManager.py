@@ -67,15 +67,17 @@ class ConversationManager:
                 skip=skip,
             )
 
+            # Bảo vệ khi DB trả về None
+            if not conversations:
+                conversations = []
+
             conv_ids: List[ObjectId] = []
             for conv in conversations:
                 conv_oid = _to_oid(conv.get("_id"))
                 if isinstance(conv_oid, ObjectId):
                     conv_ids.append(conv_oid)
                 else:
-                    logger.warning(
-                        f"Invalid conversation _id format: {conv.get('_id')}"
-                    )
+                    logger.warning("Invalid conversation _id format: %s", conv.get("_id"))
 
             message_counts: Dict[str, int] = {}
             if conv_ids:

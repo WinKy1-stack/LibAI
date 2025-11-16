@@ -147,6 +147,9 @@ class MessageManager:
                 sort=[('ts', 1)],
                 limit=limit
             )
+            # Bảo vệ khi DB trả về None
+            if not messages:
+                messages = []
             
             if messages is None:
                 logger.warning("No messages found or DB error for conversation %s", conversation_id)
