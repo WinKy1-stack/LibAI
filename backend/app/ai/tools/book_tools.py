@@ -1,5 +1,4 @@
 import logging
-import random
 from typing import List, Dict, Any
 from app.ai.tools.base import BaseTool, ToolResult
 
@@ -13,65 +12,56 @@ class SearchBooksTool(BaseTool):
 
     @property
     def description(self) -> str:
-        return "Tìm kiếm sách trong thư viện theo từ khóa, tác giả, hoặc chủ đề"
+        return """Tìm kiếm sách trong thư viện (Local DB + Z39.50).
+        Dùng tool này khi user:
+        - Hỏi tìm sách: "Tìm sách Python", "Có sách về AI không?"
+        - Gợi ý sách: "Gợi ý sách lập trình"
+        - Hỏi về tên sách cụ thể: "Python Crash Course"
+
+        Tool sẽ tìm trong:
+        1. Local MongoDB database (nhanh)
+        2. Z39.50 LOC & UW (nếu không đủ)
+
+        Trả về tối thiểu 4 cuốn sách phù hợp."""
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "Từ khóa tìm kiếm (tên sách, tác giả, chủ đề)"
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Số lượng kết quả tối đa (mặc định 10)",
-                    "default": 10
+                    "description": "Từ khóa tìm kiếm (VD: 'Python', 'lập trình', 'văn học')"
                 }
             },
             "required": ["query"]
         }
 
-    def execute(self, query: str, limit: int = 10) -> ToolResult:
+    def execute(self, query: str) -> ToolResult:
+        """
+        Execute search_books tool
+        Searches from Local DB first, then Z39.50 if needed
+        """
         try:
-            from app.ai.tools.schemas import SearchBooksResponse, BookDetails
-            
-            books = [
-                {
-                    "id": 1,
-                    "title": f"Trí Tuệ Nhân Tạo Đỉnh Cao - {query}",
-                    "author": "Nguyễn Văn A",
-                    "accuracy": round(random.uniform(0.8, 1.0), 2),
-                    "source": "Mock DB"
-                },
-                {
-                    "id": 2,
-                    "title": f"Python Cho Người Mới Bắt Đầu - {query}",
-                    "author": "Trần B",
-                    "accuracy": round(random.uniform(0.7, 0.95), 2),
-                    "source": "Mock DB"
-                },
-                {
-                    "id": 3,
-                    "title": f"Lập Trình Nâng Cao với {query}",
-                    "author": "Lê C",
-                    "accuracy": round(random.uniform(0.75, 0.9), 2),
-                    "source": "Mock DB"
+            from app.ai.pipelines.prompt.search_helper import search_books_multi_source
+
+            logger.info(f"🔧 [TOOL] Executing search_books(query='{query}')")
+
+            books_data = search_books_multi_source(query, min_results=4)
+
+            logger.info(f"🔧 [TOOL] Found {len(books_data)} books")
+
+            return ToolResult(
+                success=True,
+                data={
+                    "query": query,
+                    "total_found": len(books_data),
+                    "books": books_data
                 }
-            ][:limit]
-            
-            book_details = [BookDetails(**book) for book in books]
-            response = SearchBooksResponse(
-                text=f"Bạn vừa tìm: {query}. Đây là danh sách sách liên quan.",
-                books=book_details
             )
-            
-            logger.info(f"Found {len(books)} books for query: {query}")
-            return ToolResult(success=True, data=response.model_dump())
 
         except Exception as e:
-            logger.error(f"Error searching books: {str(e)}")
+            logger.error(f"Error executing search_books: {str(e)}")
             return ToolResult(success=False, error=str(e))
 
 

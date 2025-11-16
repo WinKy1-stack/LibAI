@@ -80,13 +80,14 @@ class ChatSession:
         }
 
     def _create_chat(self):
+        """Create Gemini chat session with tools"""
         tools = None
         if self.tool_registry:
-            tool_declarations = self.tool_registry.get_function_declarations()
-            if tool_declarations:
-                tools = tool_declarations
-                logger.info(f"Registering {len(tool_declarations)} tools with Gemini SDK")
-        
+            tools = self.tool_registry.get_function_declarations()
+            if tools:
+                num_tools = len(self.tool_registry.get_all())
+                logger.info(f"Registering {num_tools} tools with Gemini SDK")
+
         return self.client.create_chat_session(
             system_instruction=self.system_instruction,
             tools=tools,
@@ -129,27 +130,35 @@ class ChatSession:
             raise GeminiAPIError(f"Lỗi khi chat với AI: {str(e)}") from e
     
     def _handle_function_call(self, function_call) -> Dict[str, Any]:
-        """Xử lý function call từ Gemini"""
+        """
+        Execute function call from Gemini and return result
+
+        Args:
+            function_call: FunctionCall object from Gemini response
+
+        Returns:
+            Dict result to send back to Gemini
+        """
         tool_name = function_call.name
         tool_args = dict(function_call.args) if hasattr(function_call, 'args') else {}
-        
-        logger.info(f"Executing tool: {tool_name} with args: {tool_args}")
-        
+
+        logger.info(f"🔧 [FUNCTION CALL] {tool_name}({tool_args})")
+
         tool = self.tool_registry.get(tool_name)
         if not tool:
             logger.error(f"Tool not found: {tool_name}")
-            return {"error": f"Tool {tool_name} không tồn tại"}
-        
+            return {"error": f"Tool '{tool_name}' không tồn tại"}
+
         try:
             result = tool.execute(**tool_args)
             if result.success:
-                logger.info(f"Tool {tool_name} executed successfully")
-                return {"result": result.data}
+                logger.info(f"✓ Tool {tool_name} executed successfully")
+                return result.data if isinstance(result.data, dict) else {"result": result.data}
             else:
-                logger.error(f"Tool {tool_name} failed: {result.error}")
+                logger.error(f"✗ Tool {tool_name} failed: {result.error}")
                 return {"error": result.error}
         except Exception as e:
-            logger.error(f"Error executing tool {tool_name}: {str(e)}")
+            logger.error(f"✗ Error executing tool {tool_name}: {str(e)}")
             return {"error": str(e)}
 
     def send_message_stream(self, message: str):
