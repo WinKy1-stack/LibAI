@@ -99,19 +99,10 @@ export default function UserHomePage() {
   // Send message to real API
   const sendMessageToAPI = async (userQuery: string) => {
     setIsTyping(true);
-    
+
     try {
-      // Call real API
-      const aiResponse = await sendMessage(userQuery);
-      
-      // Add bot response
-      const botMessage: ChatMessage = {
-        id: Date.now().toString() + '-bot',
-        type: 'bot',
-        content: aiResponse,
-        timestamp: new Date(),
-      };
-      setChatMessages(prev => [...prev, botMessage]);
+      await sendMessage(userQuery);
+
     } catch (err) {
       // Show error message
       const errorMessage: ChatMessage = {

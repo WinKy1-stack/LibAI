@@ -48,9 +48,10 @@ async def _send_message_async(current_user, data):
     prompt_service = get_prompt_service()
 
     try:
+        # Use structured output để có books data cho rich UI
         ai_response = await asyncio.wait_for(
             asyncio.to_thread(
-                prompt_service.generate_response_with_session,
+                prompt_service.generate_response_structured,
                 conversation_id=conversation_id,
                 user_message=user_message,
                 instruction_type='default',
@@ -73,14 +74,24 @@ async def _send_message_async(current_user, data):
 
     latency_ms = int((time.time() - start_time) * 1000)
 
+    response_text = ai_response.get('text', '') if isinstance(ai_response, dict) else str(ai_response)
+    response_books = ai_response.get('books') if isinstance(ai_response, dict) else None
+    response_metadata = ai_response.get('metadata') if isinstance(ai_response, dict) else None
+
+    data = {
+        'message': response_text,
+        'conversation_id': conversation_id
+    }
+    if response_books: 
+        data['books'] = response_books
+
     response_data = build_success_response(
-        data={
-            'message': ai_response,
-            'conversation_id': conversation_id
-        },
+        data=data,
         user_id=current_user['id'],
         metadata={
-            'message_length': len(ai_response),
+            'message_length': len(response_text),
+            'books_count': len(response_books) if response_books else 0,
+            'tool_metadata': response_metadata,
             'has_context': context is not None,
             'history_length': len(chat_history),
             'latency_ms': latency_ms

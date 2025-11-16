@@ -54,11 +54,13 @@ class ChatSession:
         self.model_id = model_id
         self.config = config
         self.system_instruction = system_instruction
-        
+
         self.tool_registry = get_tool_registry()
-        
+
+        self.last_function_result = None
+
         self.chat = self._create_chat()
-        
+
         self.agent = ChatAgent(
             chat_session=self,
             tool_registry=self.tool_registry
@@ -83,8 +85,9 @@ class ChatSession:
         """Create Gemini chat session with tools"""
         tools = None
         if self.tool_registry:
-            tools = self.tool_registry.get_function_declarations()
-            if tools:
+            function_decls = self.tool_registry.get_function_declarations()
+            if function_decls and len(function_decls) > 0:
+                tools = function_decls
                 num_tools = len(self.tool_registry.get_all())
                 logger.info(f"Registering {num_tools} tools with Gemini SDK")
 
@@ -96,20 +99,28 @@ class ChatSession:
 
     @retry_on_503(max_retries=3, base_delay=1.0)
     def send_message(self, message: str) -> str:
+        """
+        Send message and return text response
+        Note: Use send_message_structured() for rich UI with books data
+        """
         try:
+            self.last_function_result = None
+
             response = self.chat.send_message(message)
-            
-            # Kiểm tra xem có function call không
+
             if hasattr(response, 'candidates') and response.candidates:
                 candidate = response.candidates[0]
                 if hasattr(candidate, 'content') and candidate.content:
                     for part in candidate.content.parts:
                         if hasattr(part, 'function_call') and part.function_call:
-                            # Có function call, thực thi tool
                             logger.info(f"Detected function call: {part.function_call.name}")
                             result = self._handle_function_call(part.function_call)
-                            
-                            # Gửi kết quả tool execution trở lại Gemini
+
+                            self.last_function_result = {
+                                'tool_name': part.function_call.name,
+                                'data': result
+                            }
+
                             from google.genai import types
                             function_response = types.Part(
                                 function_response=types.FunctionResponse(
@@ -117,17 +128,51 @@ class ChatSession:
                                     response=result
                                 )
                             )
-                            
-                            # Gửi lại để lấy response cuối cùng
+
                             final_response = self.chat.send_message(function_response)
                             return final_response.text.strip()
-            
+
             return response.text.strip()
         except GeminiAPIError:
             raise
         except Exception as e:
             logger.error("Chat session error: %s", str(e))
             raise GeminiAPIError(f"Lỗi khi chat với AI: {str(e)}") from e
+
+    def send_message_structured(self, message: str) -> Dict[str, Any]:
+        """
+        Send message and return structured output with text + function results
+
+        Returns:
+            {
+                "text": "AI response text",
+                "books": [...] or None,  # If search_books was called
+                "metadata": {...}        # Tool execution metadata
+            }
+        """
+        text_response = self.send_message(message)
+
+        structured_response = {
+            "text": text_response,
+            "books": None,
+            "metadata": None
+        }
+
+        if self.last_function_result:
+            tool_name = self.last_function_result['tool_name']
+            tool_data = self.last_function_result['data']
+
+            # Extract books if it was search_books tool
+            if tool_name == 'search_books' and isinstance(tool_data, dict):
+                structured_response['books'] = tool_data.get('books', [])
+                structured_response['metadata'] = {
+                    'tool_used': tool_name,
+                    'query': tool_data.get('query'),
+                    'total_found': tool_data.get('total_found', 0)
+                }
+                logger.info(f"📚 Structured response with {len(structured_response['books'])} books")
+
+        return structured_response
     
     def _handle_function_call(self, function_call) -> Dict[str, Any]:
         """

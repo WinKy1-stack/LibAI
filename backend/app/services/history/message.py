@@ -23,7 +23,9 @@ class MessageManager:
         role: str,
         content: str,
         latency_ms: int = 0,
-        citations: List[Dict] = None
+        citations: List[Dict] = None,
+        books: List[Dict] = None,
+        metadata: Dict = None
     ) -> str:
         """
         Lưu một message vào conversation
@@ -34,6 +36,8 @@ class MessageManager:
             content: Nội dung tin nhắn
             latency_ms: Thời gian phản hồi (ms)
             citations: Danh sách trích dẫn
+            books: Danh sách sách (rich UI data)
+            metadata: Metadata của message (tool info, etc.)
             
         Returns:
             message_id (str)
@@ -51,6 +55,8 @@ class MessageManager:
             message['content'] = content
             message['latency_ms'] = latency_ms
             message['citations'] = citations or []
+            message['books'] = books
+            message['metadata'] = metadata
             message['ts'] = datetime.now(timezone.utc)
             
             message_id = MongoHelper.insert_one(
@@ -73,7 +79,9 @@ class MessageManager:
         conversation_id: str,
         user_message: str,
         assistant_message: str,
-        latency_ms: int = 0
+        latency_ms: int = 0,
+        books: List[Dict] = None,
+        metadata: Dict = None
     ) -> Dict[str, str]:
         """
         Lưu cả user message và assistant response
@@ -83,6 +91,8 @@ class MessageManager:
             user_message: Tin nhắn từ user
             assistant_message: Phản hồi từ AI
             latency_ms: Thời gian phản hồi
+            books: Danh sách sách (rich UI data) - chỉ lưu với assistant message
+            metadata: Metadata của message (tool info, etc.) - chỉ lưu với assistant message
             
         Returns:
             Dict với user_message_id và assistant_message_id
@@ -101,7 +111,9 @@ class MessageManager:
                 conversation_id=conversation_id,
                 role=MessageRole.ASSISTANT.value,
                 content=assistant_message,
-                latency_ms=latency_ms
+                latency_ms=latency_ms,
+                books=books,
+                metadata=metadata
             )
             
             logger.info(
@@ -164,6 +176,8 @@ class MessageManager:
                     'content': msg.get('content', ''),
                     'timestamp': msg.get('ts'),
                     'citations': msg.get('citations', []),
+                    'books': msg.get('books'),
+                    'metadata': msg.get('metadata'),
                     'latency_ms': msg.get('latency_ms', 0)
                 }
                 formatted_messages.append(formatted_msg)

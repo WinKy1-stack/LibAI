@@ -58,7 +58,7 @@ class GeminiClientSettings:
             "safety_settings": list(safety_settings or DEFAULT_SAFETY_SETTINGS),
         }
         
-        if tools:
+        if tools and len(tools) > 0:
             config_kwargs["tools"] = [types.Tool(function_declarations=tools)]
         
         return types.GenerateContentConfig(**config_kwargs)

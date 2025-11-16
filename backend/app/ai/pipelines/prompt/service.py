@@ -146,6 +146,10 @@ class PromptService:
         instruction_type: str = 'default',
         latency_ms: int = 0
     ) -> str:
+        """
+        Generate text-only response (backward compatible)
+        For rich UI with books, use generate_response_structured()
+        """
         try:
             self.validator.validate_message(user_message)
 
@@ -181,6 +185,72 @@ class PromptService:
             raise
         except Exception as e:
             logger.error("Error in generate_response_with_session: %s", str(e), exc_info=True)
+            raise GeminiAPIError(f"Lỗi khi gọi AI: {str(e)}") from e
+
+    def generate_response_structured(
+        self,
+        conversation_id: str,
+        user_message: str,
+        instruction_type: str = 'default',
+        latency_ms: int = 0
+    ) -> Dict[str, any]:
+        """
+        Generate structured response with text + books data for rich UI
+
+        Returns:
+            {
+                "text": "AI response",
+                "books": [...] or None,
+                "metadata": {...} or None
+            }
+        """
+        try:
+            self.validator.validate_message(user_message)
+
+            chat_session = self.get_or_create_chat_session(
+                conversation_id,
+                instruction_type
+            )
+
+            logger.debug("Sending message via agent (structured) to session %s", conversation_id)
+            structured_response = chat_session.send_message_structured(user_message)
+
+            response_text = structured_response.get('text', '')
+            if not response_text or not response_text.strip():
+                logger.warning("Empty response text")
+                raise EmptyResponseError("AI trả về nội dung trống")
+
+            try:
+                from app.services.history import MessageManager
+
+                books = structured_response.get('books')
+                metadata = structured_response.get('metadata')
+
+                # Save text exchange to DB with books data
+                MessageManager.save_exchange(
+                    conversation_id=conversation_id,
+                    user_message=user_message,
+                    assistant_message=response_text,
+                    latency_ms=latency_ms,
+                    books=books,
+                    metadata=metadata
+                )
+                logger.debug("Saved exchange to DB for conversation %s (with %d books)", conversation_id, len(books) if books else 0)
+            except Exception as db_error:
+                logger.warning(f"Failed to save to DB: {str(db_error)}")
+
+            books = structured_response.get('books') or []
+            logger.info(
+                "Generated structured response: %d chars, %d books",
+                len(response_text),
+                len(books)
+            )
+            return structured_response
+
+        except (ValidationError, EmptyResponseError):
+            raise
+        except Exception as e:
+            logger.error("Error in generate_response_structured: %s", str(e), exc_info=True)
             raise GeminiAPIError(f"Lỗi khi gọi AI: {str(e)}") from e
 
 

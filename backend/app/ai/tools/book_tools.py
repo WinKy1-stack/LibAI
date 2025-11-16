@@ -18,11 +18,16 @@ class SearchBooksTool(BaseTool):
         - Gợi ý sách: "Gợi ý sách lập trình"
         - Hỏi về tên sách cụ thể: "Python Crash Course"
 
+        Lưu ý quan trọng:
+        - Từ khóa tìm kiếm nên dùng tiếng Anh để có kết quả tốt nhất
+        - Nếu user hỏi bằng tiếng Việt, hãy chuyển đổi sang tiếng Anh trước khi tìm kiếm
+        - VD: "sách lập trình" -> "programming", "sách văn học" -> "literature"
+
         Tool sẽ tìm trong:
         1. Local MongoDB database (nhanh)
         2. Z39.50 LOC & UW (nếu không đủ)
 
-        Trả về tối thiểu 4 cuốn sách phù hợp."""
+        Trả về chính xác 4 cuốn sách phù hợp."""
 
     @property
     def parameters_schema(self) -> Dict[str, Any]:
@@ -31,7 +36,7 @@ class SearchBooksTool(BaseTool):
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "Từ khóa tìm kiếm (VD: 'Python', 'lập trình', 'văn học')"
+                    "description": "Từ khóa tìm kiếm bằng tiếng Anh để có kết quả tốt nhất. Nếu user hỏi bằng tiếng Việt, hãy chuyển đổi sang tiếng Anh trước khi tìm. VD: 'Python', 'programming', 'literature', 'artificial intelligence'. Tránh dùng tiếng Việt như 'lập trình', 'văn học'."
                 }
             },
             "required": ["query"]
@@ -41,15 +46,15 @@ class SearchBooksTool(BaseTool):
         """
         Execute search_books tool
         Searches from Local DB first, then Z39.50 if needed
+        Returns exactly 4 books
         """
         try:
             from app.ai.pipelines.prompt.search_helper import search_books_multi_source
 
-            logger.info(f"🔧 [TOOL] Executing search_books(query='{query}')")
+            logger.info(f"[TOOL] Executing search_books(query='{query}')")
+            books_data = search_books_multi_source(query, limit=4)
 
-            books_data = search_books_multi_source(query, min_results=4)
-
-            logger.info(f"🔧 [TOOL] Found {len(books_data)} books")
+            logger.info(f"[TOOL] Found {len(books_data)} books")
 
             return ToolResult(
                 success=True,
@@ -66,7 +71,6 @@ class SearchBooksTool(BaseTool):
 
 
 # class GetBookDetailsTool(BaseTool):
-    #TODO: Bật lại khi có collection MARC_RECORDS trong MongoDB
 
 #     @property
 #     def name(self) -> str:

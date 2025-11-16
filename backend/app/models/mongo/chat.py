@@ -23,6 +23,8 @@ def get_message_schema() -> Dict[str, Any]:
         "role": MessageRole.USER.value,
         "content": "",
         "citations": [],
+        "books": None,
+        "metadata": None,
         "latency_ms": 0,
         "ts": utc_now(),
     }

@@ -20,21 +20,20 @@ class ToolRegistry:
     def get_all(self) -> Dict[str, BaseTool]:
         return self._tools.copy()
 
-    def get_function_declarations(self) -> List[types.Tool]:
-        """
-        Convert all registered tools to Gemini SDK Tool format
-        Returns list of Tool objects containing FunctionDeclarations
-        """
+    def get_function_declarations(self) -> List[types.FunctionDeclaration]:
         if not self._tools:
-            return None
+            return []
 
         function_declarations = []
         for tool in self._tools.values():
-            func_decl = tool.to_gemini_declaration()
-            function_declarations.append(func_decl)
-            logger.debug(f"Created FunctionDeclaration for {tool.name}")
-
-        return [types.Tool(function_declarations=function_declarations)]
+            try:
+                func_decl = tool.to_gemini_declaration()
+                function_declarations.append(func_decl)
+            except Exception as e:
+                logger.error(f"Failed to create declaration for {tool.__class__.__name__}: {e}")
+                raise
+        
+        return function_declarations
 
 
 _global_registry = ToolRegistry()
@@ -46,8 +45,11 @@ def get_tool_registry() -> ToolRegistry:
 
 def register_default_tools():
     from app.ai.tools.book_tools import SearchBooksTool
+    from app.ai.tools.faq_tools import SearchFAQTool, GetFAQCategoriesTool
 
     registry = get_tool_registry()
     registry.register(SearchBooksTool())
+    registry.register(SearchFAQTool())
+    registry.register(GetFAQCategoriesTool())
 
     logger.info("Registered all default tools")
