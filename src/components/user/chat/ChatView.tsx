@@ -1,5 +1,4 @@
 import ChatMessages, { type ChatMessage } from './ChatMessages';
-import BookSuggestions from './BookSuggestions';
 import FeedbackButtons from './FeedbackButtons';
 
 interface ChatViewProps {
@@ -12,7 +11,6 @@ export default function ChatView({ messages, isTyping }: ChatViewProps) {
     <div className="w-full flex justify-center px-6 pb-6 animate-[fadeInScale_0.4s_ease-out]">
       <div className="w-full max-w-3xl">
         <ChatMessages messages={messages} isTyping={isTyping} />
-        <BookSuggestions />
         <FeedbackButtons/>
       </div>
     </div>

@@ -1,23 +1,16 @@
-"""
-Chat Routes Module - API endpoints cho chat system
-"""
 from flask import Blueprint, jsonify
 
 from .message import message_bp
 from .history import history_bp
-from .recommendation import recommendation_bp
 from .health import health_bp
 
-# Tạo main chat blueprint
 chat_bp = Blueprint('chat', __name__, url_prefix='/api/chat')
 
 
 def register_chat_routes():
     """Register tất cả chat sub-routes vào main blueprint"""
-    # Register blueprints
     chat_bp.register_blueprint(message_bp)
     chat_bp.register_blueprint(history_bp)
-    chat_bp.register_blueprint(recommendation_bp)
     chat_bp.register_blueprint(health_bp)
     
     # Error handlers
@@ -44,7 +37,6 @@ def register_chat_routes():
         }), 405
 
 
-# Auto-register khi import
 register_chat_routes()
 
 __all__ = ['chat_bp']

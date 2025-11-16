@@ -45,7 +45,7 @@ def get_marc_records():
         limit=limit
     )
 
-    total = MongoHelper.count_documents('marc_21', query)
+    total = MongoHelper.count('marc_21', query)
 
     return jsonify({
         'records': records,

@@ -38,7 +38,7 @@ def get_items():
         limit=limit
     )
 
-    total = MongoHelper.count_documents('items', query)
+    total = MongoHelper.count('items', query)
 
     return jsonify({
         'items': items,

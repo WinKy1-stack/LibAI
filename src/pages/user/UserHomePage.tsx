@@ -71,6 +71,7 @@ export default function UserHomePage() {
         type: msg.role === 'user' ? 'user' : 'bot',
         content: msg.content,
         timestamp: new Date(msg.timestamp || Date.now()),
+        books: msg.books,  // Thêm books từ API response
       }));
       setChatMessages(formattedMessages);
     }
@@ -98,19 +99,10 @@ export default function UserHomePage() {
   // Send message to real API
   const sendMessageToAPI = async (userQuery: string) => {
     setIsTyping(true);
-    
+
     try {
-      // Call real API
-      const aiResponse = await sendMessage(userQuery);
-      
-      // Add bot response
-      const botMessage: ChatMessage = {
-        id: Date.now().toString() + '-bot',
-        type: 'bot',
-        content: aiResponse,
-        timestamp: new Date(),
-      };
-      setChatMessages(prev => [...prev, botMessage]);
+      await sendMessage(userQuery);
+
     } catch (err) {
       // Show error message
       const errorMessage: ChatMessage = {
@@ -216,6 +208,13 @@ export default function UserHomePage() {
             currentConversationId={conversationId}
             onSelectConversation={handleSelectConversation}
             onNewConversation={handleNewConversation}
+            onConversationDeleted={(deletedId) => {
+              if (deletedId === conversationId) {
+                clearMessages();
+                setChatMessages([]);
+                setIsChatting(false);
+              }
+            }}
           />
           
           {/* Resize Handle */}

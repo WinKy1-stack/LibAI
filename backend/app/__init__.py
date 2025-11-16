@@ -54,17 +54,24 @@ def create_app(config_class=Config):
          allow_headers=["Content-Type", "Authorization"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
+    with app.app_context():
+        from app.ai.tools import register_default_tools
+        register_default_tools()
+        logger.info("AI tools registered successfully")
+
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
     from app.routes.library import library_bp
     from app.routes.z3950_routes import z3950_bp
     from app.routes.users import users_bp
     from app.routes.chat import chat_bp
+    from app.routes.conversations import conversations_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(users_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
-    app.register_blueprint(chat_bp) 
+    app.register_blueprint(chat_bp)
+    app.register_blueprint(conversations_bp)
     app.register_blueprint(library_bp)
     app.register_blueprint(z3950_bp)
 

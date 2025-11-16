@@ -22,12 +22,39 @@ chatApi.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Handle 403 errors - clear invalid conversation_id
+chatApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403) {
+      // Clear conversation_id khi gặp 403
+      localStorage.removeItem('current_conversation_id');
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Types
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp?: string;
   latency_ms?: number;
+  books?: Book[];  // Thêm books array (optional)
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  accuracy: string;
+  source: string;
+  related: RelatedItem[];
+}
+
+export interface RelatedItem {
+  type: string;  // "chủ đề", "sách cùng tác giả", "thể loại"
+  value: string;
 }
 
 export interface ChatMessageRequest {
@@ -41,13 +68,15 @@ export interface ChatMessageResponse {
   success: boolean;
   data: {
     message: string;
+    books?: Book[] | null;  
     conversation_id: string;
-    user_id: string;
-    timestamp: string;
+    user_id?: string;
+    timestamp?: string;
     metadata: {
       message_length: number;
-      has_context: boolean;
-      history_length: number;
+      books_count?: number;
+      has_context?: boolean;
+      history_length?: number;
       latency_ms?: number;
     };
   };
@@ -57,30 +86,6 @@ export interface ChatMessageResponse {
   };
 }
 
-export interface BookRecommendationRequest {
-  preferences: {
-    category?: string;
-    level?: string;
-    topics?: string;
-  };
-  available_books: Array<{
-    title: string;
-    author: string;
-    category: string;
-    description?: string;
-  }>;
-}
-
-export interface BookSearchRequest {
-  query: string;
-  books_data: Array<{
-    _id: string;
-    title: string;
-    author: string;
-    category: string;
-    description?: string;
-  }>;
-}
 
 export interface Conversation {
   conversation_id: string;
@@ -130,21 +135,9 @@ export const chatService = {
     return response.data;
   },
 
-  // Send chat message (KHÔNG ĐĂNG NHẬP - KHÔNG LƯU)
+  // Send chat message (KHÔNG ĐĂNG NHẬP - LƯU IN-MEMORY)
   sendMessageGuest: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
     const response = await chatApi.post<ChatMessageResponse>('/message/guest', request);
-    return response.data;
-  },
-
-  // Get book recommendations
-  getRecommendations: async (request: BookRecommendationRequest): Promise<ChatMessageResponse> => {
-    const response = await chatApi.post<ChatMessageResponse>('/recommend', request);
-    return response.data;
-  },
-
-  // Search books with AI
-  searchBooks: async (request: BookSearchRequest): Promise<ChatMessageResponse> => {
-    const response = await chatApi.post<ChatMessageResponse>('/search', request);
     return response.data;
   },
 

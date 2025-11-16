@@ -19,7 +19,7 @@ app = create_app(DevelopmentConfig)
 def test_gemini_connection():
     """Test kết nối với Gemini API khi server khởi động"""
     try:
-        from app.services.prompt import PromptService
+        from app.ai.pipelines.prompt import PromptService
 
         print("\n" + "=" * 70)
         print("TESTING GEMINI API CONNECTION...")
@@ -29,10 +29,10 @@ def test_gemini_connection():
             from flask import current_app
             prompt_service = PromptService(current_app.config)
 
-            test_response = prompt_service.generate_response(
+            test_response = prompt_service.generate_response_with_session(
+                conversation_id="test_connection",
                 user_message="Hello, are you working?",
-                chat_history=[],
-                context=None
+                instruction_type='default'
             )
 
             print("GEMINI API CONNECTION: SUCCESS")
@@ -60,12 +60,12 @@ if __name__ == '__main__':
         print("=" * 70)
 
         # Kiểm tra Gemini trước khi khởi động
-        gemini_ok = test_gemini_connection()
+        # gemini_ok = test_gemini_connection()
 
-        if gemini_ok:
-            print("Tất cả hệ thống sẵn sàng - Đang khởi động Flask server...\n")
-        else:
-            print("Cảnh báo: Gemini API không khả dụng - Các tính năng chat có thể không hoạt động\n")
+        # if gemini_ok:
+        #     print("Tất cả hệ thống sẵn sàng - Đang khởi động Flask server...\n")
+        # else:
+        #     print("Cảnh báo: Gemini API không khả dụng - Các tính năng chat có thể không hoạt động\n")
 
         app.run(
             host='0.0.0.0',

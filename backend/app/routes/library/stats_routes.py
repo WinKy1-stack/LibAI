@@ -18,13 +18,13 @@ stats_bp = Blueprint('stats', __name__)
 def get_stats_overview():
     """Lấy thống kê tổng quan"""
     stats = {
-        'total_marc_records': MongoHelper.count_documents('marc_21', {}),
-        'total_items': MongoHelper.count_documents('items', {}),
-        'available_items': MongoHelper.count_documents('items', {'status': ItemStatus.AVAILABLE.value}),
-        'ongoing_loans': MongoHelper.count_documents('loans', {'status': LoanStatus.ONGOING.value}),
-        'overdue_loans': MongoHelper.count_documents('loans', {'status': LoanStatus.OVERDUE.value}),
-        'total_users': MongoHelper.count_documents('users', {}),
-        'total_faq': MongoHelper.count_documents('faq', {'status': FAQStatus.PUBLISHED.value})
+        'total_marc_records': MongoHelper.count('marc_21', {}),
+        'total_items': MongoHelper.count('items', {}),
+        'available_items': MongoHelper.count('items', {'status': ItemStatus.AVAILABLE.value}),
+        'ongoing_loans': MongoHelper.count('loans', {'status': LoanStatus.ONGOING.value}),
+        'overdue_loans': MongoHelper.count('loans', {'status': LoanStatus.OVERDUE.value}),
+        'total_users': MongoHelper.count('users', {}),
+        'total_faq': MongoHelper.count('faq', {'status': FAQStatus.PUBLISHED.value})
     }
 
     return jsonify({'stats': stats}), 200

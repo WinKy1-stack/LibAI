@@ -30,11 +30,32 @@ export default function ConversationSidebar({
   const timersRef = useRef<Record<string, number>>({});
   const [lastDeletedId, setLastDeletedId] = useState<string | null>(null);
   const [isUndoVisible, setIsUndoVisible] = useState(false);
+  const lastConvIdRef = useRef<string | null>(null);
+  const hasReloadedRef = useRef(false);
 
   // Load conversations khi mount
   useEffect(() => {
     loadConversations(50, 0);
   }, [loadConversations]);
+
+  // Auto-reload MỘT LẦN khi có conversation ID mới
+  useEffect(() => {
+    if (currentConversationId && currentConversationId !== lastConvIdRef.current) {
+      lastConvIdRef.current = currentConversationId;
+      hasReloadedRef.current = false;
+    }
+    
+    if (currentConversationId && !hasReloadedRef.current) {
+      const exists = conversations.some(c => c.conversation_id === currentConversationId);
+      if (!exists) {
+        hasReloadedRef.current = true;
+        const timer = setTimeout(() => {
+          loadConversations(50, 0);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [currentConversationId, conversations, loadConversations]);
 
   // ✅ Cleanup timers khi component unmount → tránh memory leak
   useEffect(() => {

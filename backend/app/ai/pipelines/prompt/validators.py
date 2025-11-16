@@ -1,10 +1,7 @@
-"""
-Prompt Validators - Validation logic cho chat service
-"""
 import logging
 from typing import List, Dict
 
-from app.services.exceptions import ValidationError
+from app.ai.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -78,19 +75,3 @@ class PromptValidator:
                 raise ValidationError(f"Invalid role: {msg['role']}")
         
         return chat_history
-    
-    def validate_books_list(self, books: list) -> None:
-        """
-        Validate danh sách sách
-        
-        Args:
-            books: Danh sách sách cần validate
-            
-        Raises:
-            ValidationError: Nếu không hợp lệ
-        """
-        if not books:
-            raise ValidationError("Danh sách sách không được để trống")
-        
-        if not isinstance(books, list):
-            raise ValidationError("Books phải là một list")
