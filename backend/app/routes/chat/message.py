@@ -78,12 +78,16 @@ async def _send_message_async(current_user, data):
     response_books = ai_response.get('books') if isinstance(ai_response, dict) else None
     response_metadata = ai_response.get('metadata') if isinstance(ai_response, dict) else None
 
+    normalized_books = None
+    if response_books and isinstance(response_books, list) and len(response_books) > 0:
+        normalized_books = response_books
+
     data = {
         'message': response_text,
         'conversation_id': conversation_id
     }
-    if response_books: 
-        data['books'] = response_books
+    if normalized_books: 
+        data['books'] = normalized_books
 
     response_data = build_success_response(
         data=data,

@@ -226,16 +226,22 @@ class PromptService:
                 books = structured_response.get('books')
                 metadata = structured_response.get('metadata')
 
-                # Save text exchange to DB with books data
+                normalized_books = None
+                if books and isinstance(books, list) and len(books) > 0:
+                    normalized_books = books
+                elif books is not None and not isinstance(books, list):
+                    logger.warning(f"Invalid books type: {type(books)}, expected list")
+                    normalized_books = None
+
                 MessageManager.save_exchange(
                     conversation_id=conversation_id,
                     user_message=user_message,
                     assistant_message=response_text,
                     latency_ms=latency_ms,
-                    books=books,
+                    books=normalized_books,
                     metadata=metadata
                 )
-                logger.debug("Saved exchange to DB for conversation %s (with %d books)", conversation_id, len(books) if books else 0)
+                logger.debug("Saved exchange to DB for conversation %s (with %d books)", conversation_id, len(normalized_books) if normalized_books else 0)
             except Exception as db_error:
                 logger.warning(f"Failed to save to DB: {str(db_error)}")
 

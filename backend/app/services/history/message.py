@@ -45,7 +45,6 @@ class MessageManager:
         try:
             message = get_message_schema()
             
-            # Convert conversation_id to ObjectId
             try:
                 message['conversation_id'] = ObjectId(conversation_id)
             except Exception:
@@ -64,7 +63,6 @@ class MessageManager:
                 message
             )
             
-            # Ensure message_id is string (not ObjectId)
             message_id_str = str(message_id)
             
             logger.debug("Saved message %s to conversation %s", message_id_str, conversation_id)
@@ -98,7 +96,6 @@ class MessageManager:
             Dict với user_message_id và assistant_message_id
         """
         try:
-            # Save user message
             user_msg_id = MessageManager.save(
                 conversation_id=conversation_id,
                 role=MessageRole.USER.value,
@@ -106,7 +103,6 @@ class MessageManager:
                 latency_ms=0
             )
             
-            # Save assistant message
             assistant_msg_id = MessageManager.save(
                 conversation_id=conversation_id,
                 role=MessageRole.ASSISTANT.value,
@@ -121,7 +117,6 @@ class MessageManager:
                 conversation_id
             )
             
-            # Ensure IDs are strings (not ObjectId)
             return {
                 'user_message_id': str(user_msg_id),
                 'assistant_message_id': str(assistant_msg_id)
@@ -147,7 +142,6 @@ class MessageManager:
             List of formatted messages
         """
         try:
-            # Convert to ObjectId
             try:
                 conv_id = ObjectId(conversation_id)
             except Exception:
@@ -159,7 +153,6 @@ class MessageManager:
                 sort=[('ts', 1)],
                 limit=limit
             )
-            # Bảo vệ khi DB trả về None
             if not messages:
                 messages = []
             
@@ -215,7 +208,6 @@ class MessageManager:
                 query
             )
             
-            # Calculate average latency
             pipeline = [
                 {'$match': query} if query else {'$match': {}},
                 {'$match': {'latency_ms': {'$gt': 0}}},

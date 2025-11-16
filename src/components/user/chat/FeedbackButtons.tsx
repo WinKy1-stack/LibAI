@@ -10,7 +10,7 @@ export default function FeedbackButtons() {
   return (
     <div className="text-center pt-4 mb-6 pb-[80px] animate-[fadeIn_0.6s_ease-out_0.8s_both]">
       <p className="text-sm mb-4 text-text-secondary">
-        Kết quả khá đa dạng! Bạn có thể yêu cầu mình làm thêm bất cứ thứ gì nếu cần nhé!
+        Chatbot có thể mắc lỗi, vui lòng kiểm tra lại kết quả và gửi feedback nếu cần.
       </p>
       <div className="flex justify-center gap-3">
         {buttons.map((b, i) => (

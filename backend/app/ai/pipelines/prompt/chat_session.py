@@ -129,8 +129,18 @@ class ChatSession:
                                 )
                             )
 
-                            final_response = self.chat.send_message(function_response)
-                            return final_response.text.strip()
+                            try:
+                                final_response = self.chat.send_message(function_response)
+                                return final_response.text.strip()
+                            except Exception as e:
+                                error_msg = str(e)
+                                if "503" in error_msg or "UNAVAILABLE" in error_msg or "overloaded" in error_msg.lower():
+                                    logger.warning(f"503 error on final response, retrying...")
+                                    import time
+                                    time.sleep(1.0)
+                                    final_response = self.chat.send_message(function_response)
+                                    return final_response.text.strip()
+                                raise
 
             return response.text.strip()
         except GeminiAPIError:
@@ -162,15 +172,18 @@ class ChatSession:
             tool_name = self.last_function_result['tool_name']
             tool_data = self.last_function_result['data']
 
-            # Extract books if it was search_books tool
             if tool_name == 'search_books' and isinstance(tool_data, dict):
-                structured_response['books'] = tool_data.get('books', [])
-                structured_response['metadata'] = {
-                    'tool_used': tool_name,
-                    'query': tool_data.get('query'),
-                    'total_found': tool_data.get('total_found', 0)
-                }
-                logger.info(f"📚 Structured response with {len(structured_response['books'])} books")
+                books = tool_data.get('books', [])
+                if books and isinstance(books, list) and len(books) > 0:
+                    structured_response['books'] = books
+                    structured_response['metadata'] = {
+                        'tool_used': tool_name,
+                        'query': tool_data.get('query'),
+                        'total_found': tool_data.get('total_found', 0)
+                    }
+                    logger.info(f"Structured response with {len(books)} books")
+                else:
+                    logger.debug("No books found in search_books result")
 
         return structured_response
     
@@ -187,7 +200,7 @@ class ChatSession:
         tool_name = function_call.name
         tool_args = dict(function_call.args) if hasattr(function_call, 'args') else {}
 
-        logger.info(f"🔧 [FUNCTION CALL] {tool_name}({tool_args})")
+        logger.info(f"  [FUNCTION CALL] {tool_name}({tool_args})")
 
         tool = self.tool_registry.get(tool_name)
         if not tool:
