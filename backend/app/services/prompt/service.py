@@ -413,7 +413,7 @@ class ChatSession:
     Cho phép AI nhớ được lịch sử chat
     """
     
-    def __init__(self, client: genai.Client, model_id: str, config: Dict[str, Any], system_instruction: str, initial_history: List[Dict[str, str]] = None):
+    def __init__(self, client: genai.Client, model_id: str, config: Dict[str, Any], system_instruction: str, initial_history: List[Dict[str, str]] = None, tools: Any = None):
         """
         Args:
             client: Gemini client
@@ -421,38 +421,55 @@ class ChatSession:
             config: Chat config dictionary
             system_instruction: System instruction cho chat
             initial_history: Lịch sử ban đầu từ database (format: [{'role': 'user/model', 'content': str}])
+            tools: Tools list cho function calling (optional)
         """
         self.client = client
         self.model_id = model_id
         self.config = config
         self.system_instruction = system_instruction
         
+        # Build config với tools nếu có
+        chat_config = types.GenerateContentConfig(
+            temperature=config.get('GEMINI_TEMPERATURE', 0.7),
+            max_output_tokens=config.get('GEMINI_MAX_TOKENS', 1000),
+            top_p=config.get('GEMINI_TOP_P', 0.95),
+            top_k=config.get('GEMINI_TOP_K', 40),
+            system_instruction=system_instruction,
+        )
+        
+        if tools:
+            chat_config.tools = tools
+            chat_config.tool_config = types.ToolConfig(
+                function_calling_config=types.FunctionCallingConfig(
+                    mode="ANY"
+                )
+            )
+        
         # Tạo chat session với SDK mới
         self.chat = self.client.chats.create(
             model=self.model_id,
-            config=types.GenerateContentConfig(
-                temperature=config.get('GEMINI_TEMPERATURE', 0.7),
-                max_output_tokens=config.get('GEMINI_MAX_TOKENS', 1000),
-                top_p=config.get('GEMINI_TOP_P', 0.95),
-                top_k=config.get('GEMINI_TOP_K', 40),
-                system_instruction=system_instruction,
-            )
+            config=chat_config
         )
         
         # Load initial history từ database nếu có
+        # Lưu ý: Gemini SDK không hỗ trợ add history trực tiếp
+        # Nên ta lưu history trong instance để dùng khi cần
+        self._loaded_history = []
         if initial_history:
             for msg in initial_history:
                 try:
-                    # Convert DB format sang format Gemini API
-                    role = "user" if msg.get('role') == 'user' else "model"
+                    role = msg.get('role', 'user')
                     content = msg.get('content', '')
-                    # Thêm vào history bằng cách gửi message (history tự động được lưu)
-                    # Nhưng chỉ add nếu không phải message mới nhất
-                    logger.debug(f"Loaded message from history: role={role}, len={len(content)}")
+                    if content.strip():
+                        self._loaded_history.append({
+                            'role': 'user' if role == 'user' else 'model',
+                            'content': content
+                        })
+                        logger.debug(f"Prepared history message: role={role}, len={len(content)}")
                 except Exception as e:
-                    logger.warning(f"Failed to load history message: {str(e)}")
+                    logger.warning(f"Failed to prepare history message: {str(e)}")
         
-        logger.info("Created new chat session with model %s (history_size=%d)", model_id, len(initial_history) if initial_history else 0)
+        logger.info("Created new chat session with model %s (history_size=%d)", model_id, len(self._loaded_history))
     
     def send_message(self, message: str) -> str:
         """
@@ -475,6 +492,15 @@ class ChatSession:
         except Exception as e:
             logger.error("Error in chat session: %s", str(e))
             raise GeminiAPIError(f"Lỗi khi chat với AI: {str(e)}") from e
+    
+    def get_loaded_history(self) -> List[Dict[str, str]]:
+        """
+        Lấy history đã load từ DB (để dùng khi gọi API với contents)
+        
+        Returns:
+            List of history messages
+        """
+        return self._loaded_history.copy()
     
     def send_message_stream(self, message: str):
         """
@@ -613,15 +639,20 @@ class PromptService:
                     except Exception as e:
                         logger.warning(f"Failed to load history from DB: {str(e)}")
                 
+                # Load tools cho function calling
+                from app.services.prompt.tools import get_library_tools
+                tools = get_library_tools()
+                
                 self._chat_sessions[conversation_id] = ChatSession(
                     client=self.client,
                     model_id=self.model_id,
                     config=self.config,
                     system_instruction=system_instruction,
-                    initial_history=initial_history
+                    initial_history=initial_history,
+                    tools=tools
                 )
                 
-                logger.info("Created chat session for conversation %s with %d history messages", conversation_id, len(initial_history))
+                logger.info("Created chat session for conversation %s with %d history messages and tools enabled", conversation_id, len(initial_history))
             
             return self._chat_sessions[conversation_id]
     
@@ -798,81 +829,6 @@ class PromptService:
         result = " ".join(query_words[:5])  # Lấy tối đa 5 từ khóa
         logger.debug(f"Extracted search query (fallback): '{result}'")
         return result
-    
-    def generate_response_with_session(
-        self,
-        conversation_id: str,
-        user_message: str,
-        instruction_type: str = 'default',
-        history_service = None,
-        latency_ms: int = 0,
-        patron_id: Optional[str] = None,
-        auto_inject_koha_context: bool = True
-    ) -> str:
-        """
-        Tạo response sử dụng chat session (có memory) - ORIGINAL METHOD
-        
-        Args:
-            conversation_id: ID của conversation
-            user_message: Tin nhắn từ người dùng
-            instruction_type: Loại instruction
-            history_service: ChatHistoryService để lưu/lấy history (optional)
-            latency_ms: Độ trễ của request (để lưu vào DB)
-            patron_id: ID bạn đọc để lấy thông tin từ Koha (optional)
-            auto_inject_koha_context: Tự động thêm context từ Koha khi phát hiện keywords
-        
-        Returns:
-            Response text từ AI
-        """
-        try:
-            # Validate input
-            self.validator.validate_message(user_message)
-            
-            # Get or create chat session (với history từ DB nếu có)
-            chat_session = self.get_or_create_chat_session(
-                conversation_id, 
-                instruction_type,
-                history_service
-            )
-            
-            # Build Koha context tự động nếu cần
-            enhanced_message = user_message
-            if auto_inject_koha_context:
-                koha_context = self._build_koha_context_from_message(user_message, patron_id)
-                if koha_context:
-                    enhanced_message = f"{user_message}\n\n[CONTEXT]:\n{koha_context}"
-                    logger.debug(f"Injected Koha context: {len(koha_context)} chars")
-            
-            # Send message through session (history tự động được lưu trong session memory)
-            logger.debug("Sending message to chat session %s", conversation_id)
-            response_text = chat_session.send_message(enhanced_message)
-            
-            if not response_text or not response_text.strip():
-                logger.warning("Empty response text")
-                raise EmptyResponseError("AI trả về nội dung trống")
-            
-            # Lưu vào database nếu có history_service (chỉ lưu message gốc, không lưu context)
-            if history_service:
-                try:
-                    history_service.save_chat_exchange(
-                        conversation_id=conversation_id,
-                        user_message=user_message,  # Lưu message gốc
-                        assistant_message=response_text,
-                        latency_ms=latency_ms
-                    )
-                    logger.debug("Saved exchange to DB for conversation %s", conversation_id)
-                except Exception as db_error:
-                    logger.warning(f"Failed to save to DB: {str(db_error)}")
-                    # Continue even if DB save fails
-            
-            logger.info("Generated response: %d characters (with session)", len(response_text))
-            return response_text.strip()
-                
-        except (ValidationError, EmptyResponseError):
-            raise
-        except Exception as e:
-            logger.error("Error in generate_response_with_session: %s", str(e), exc_info=True)
-            raise GeminiAPIError(f"Lỗi khi gọi AI: {str(e)}") from e
     
     def generate_response(
         self,
@@ -1168,7 +1124,7 @@ class PromptService:
             raise GeminiAPIError(user_message) from e
     
     # ============================================================================
-    # NEW METHODS - FUNCTION CALLING & STRUCTURED OUTPUT (Chưa dùng - để tích hợp sau)
+    # FUNCTION CALLING & STRUCTURED OUTPUT
     # ============================================================================
     
     def generate_response_with_session_structured(
@@ -1178,15 +1134,14 @@ class PromptService:
         instruction_type: str = 'default',
         history_service = None,
         latency_ms: int = 0,
-        patron_id: Optional[str] = None
+        patron_id: Optional[str] = None,
+        auto_inject_koha_context: bool = False
     ):
         """
-        Tạo response với FUNCTION CALLING
-        - Nếu AI gọi tool → Trả về JSON {text, books}
-        - Nếu AI không gọi tool → Trả về TEXT thuần
+        Tạo response với FUNCTION CALLING - LUÔN trả về JSON format {text, books}
         
         Returns:
-            Dict {text, books} HOẶC String (tùy theo AI có gọi tool không)
+            Dict {text: str, books: list|null} - LUÔN là JSON format
         """
         try:
             import json
@@ -1202,55 +1157,86 @@ class PromptService:
                 history_service
             )
             
+            # Build Koha context tự động nếu cần
+            enhanced_message = user_message
+            if auto_inject_koha_context:
+                koha_context = self._build_koha_context_from_message(user_message, patron_id)
+                if koha_context:
+                    enhanced_message = f"{user_message}\n\n[CONTEXT]:\n{koha_context}"
+                    logger.debug(f"Injected Koha context: {len(koha_context)} chars")
+            
             # Call AI với tools enabled
             schema = get_chat_response_schema()
             response, has_tool_call = self._call_gemini_api_with_tools(
                 chat_session=chat_session,
-                message=user_message,
+                message=enhanced_message,
                 schema=schema
             )
             
-            # Nếu AI GỌI TOOL → Trả về JSON
-            if has_tool_call:
+            try:
                 response_json = json.loads(response.text)
-                
-                # Validate
-                if not response_json.get('text'):
-                    raise EmptyResponseError("AI không trả về text")
-                
-                # Lưu DB
-                if history_service:
-                    try:
-                        history_service.save_chat_exchange(
-                            conversation_id=conversation_id,
-                            user_message=user_message,
-                            assistant_message=json.dumps(response_json, ensure_ascii=False),
-                            latency_ms=latency_ms
-                        )
-                    except Exception as db_error:
-                        logger.warning(f"Failed to save to DB: {str(db_error)}")
-                
-                logger.info(f"Generated JSON response: text={len(response_json.get('text', ''))} chars, books={len(response_json.get('books') or [])}")
-                return response_json
+            except (json.JSONDecodeError, AttributeError) as e:
+                # Fallback: Nếu không parse được JSON, tạo JSON từ text
+                logger.warning(f"Failed to parse JSON response: {e}, using fallback")
+                response_text = response.text.strip() if hasattr(response, 'text') else str(response)
+                response_json = {
+                    "text": response_text,
+                    "books": None
+                }
             
-            # Nếu AI KHÔNG GỌI TOOL → Trả về TEXT
-            else:
-                response_text = response.text.strip()
-                
-                # Lưu DB
-                if history_service:
+            # Validate
+            if not response_json.get('text'):
+                raise EmptyResponseError("AI không trả về text")
+            
+            if 'books' not in response_json:
+                response_json['books'] = None
+            
+            if response_json.get('books') and isinstance(response_json['books'], list) and len(response_json['books']) > 0:
+                def get_accuracy_score(book):
+                    accuracy_str = book.get('accuracy', '0%')
                     try:
-                        history_service.save_chat_exchange(
-                            conversation_id=conversation_id,
-                            user_message=user_message,
-                            assistant_message=response_text,
-                            latency_ms=latency_ms
-                        )
-                    except Exception as db_error:
-                        logger.warning(f"Failed to save to DB: {str(db_error)}")
+                        return float(accuracy_str.replace('%', '').strip())
+                    except (ValueError, AttributeError):
+                        return 0.0
                 
-                logger.info(f"Generated TEXT response: {len(response_text)} chars")
-                return response_text
+                sorted_books = sorted(response_json['books'], key=get_accuracy_score, reverse=True)
+                response_json['books'] = sorted_books[:4]
+            
+            # Update history trong ChatSession sau khi có response
+            try:
+                response_text = response_json.get('text', '')
+                if response_text:
+                    # Add user message và AI response vào history
+                    chat_session._loaded_history.append({
+                        'role': 'user',
+                        'content': user_message
+                    })
+                    chat_session._loaded_history.append({
+                        'role': 'model',
+                        'content': response_text
+                    })
+                    # Giới hạn history để tránh quá dài
+                    max_history = 20
+                    if len(chat_session._loaded_history) > max_history * 2:
+                        chat_session._loaded_history = chat_session._loaded_history[-max_history * 2:]
+                    logger.debug(f"Updated chat session history: {len(chat_session._loaded_history)} messages")
+            except Exception as e:
+                logger.warning(f"Failed to update chat session history: {str(e)}")
+            
+            if history_service:
+                try:
+                    history_service.save_chat_exchange(
+                        conversation_id=conversation_id,
+                        user_message=user_message,
+                        assistant_message=response_json.get('text', ''),
+                        latency_ms=latency_ms
+                    )
+                except Exception as db_error:
+                    logger.warning(f"Failed to save to DB: {str(db_error)}")
+            
+            books_count = len(response_json.get('books') or [])
+            logger.info(f"Generated JSON response: text={len(response_json.get('text', ''))} chars, books={books_count}")
+            return response_json
             
         except (ValidationError, EmptyResponseError):
             raise
@@ -1298,11 +1284,11 @@ class PromptService:
         max_iterations: int = 3
     ):
         """
-        Gọi Gemini API với Function Calling
+        Gọi Gemini API với Function Calling - SỬ DỤNG HISTORY từ ChatSession
         
         Args:
-            chat_session: ChatSession instance
-            message: User message
+            chat_session: ChatSession instance (chứa history)
+            message: User message hiện tại
             schema: Response schema (dùng khi có tool call)
             max_iterations: Max số lần gọi tool
             
@@ -1315,12 +1301,35 @@ class PromptService:
             
             tools = get_library_tools()
             
-            # BƯỚC 1: Generate với TOOLS ONLY (không có schema để AI có thể gọi tool)
-            # Sử dụng tool_config mode=ANY để FORCE AI gọi tool
-            logger.debug("Step 1: Calling Gemini with tools enabled (mode=ANY)...")
+            # Build contents từ history + current message
+            # Gemini SDK mới cần format: list of Content objects
+            history = chat_session.get_loaded_history()
+            
+            # Luôn build contents là list of Content objects
+            contents = []
+            
+            # Nếu có history, add history messages vào contents
+            if history:
+                for msg in history:
+                    role = "user" if msg.get('role') == 'user' else "model"
+                    content = msg.get('content', '')
+                    if content.strip():
+                        # Sử dụng types.Content object
+                        contents.append(types.Content(
+                            role=role,
+                            parts=[types.Part(text=content)]
+                        ))
+            
+            # Add current message
+            contents.append(types.Content(
+                role='user',
+                parts=[types.Part(text=message)]
+            ))
+            
+            # Gọi API với history + tools
             response_with_tools = self.client.models.generate_content(
                 model=self.model_id,
-                contents=message,
+                contents=contents,
                 config=types.GenerateContentConfig(
                     temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
                     max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 2000),
@@ -1330,74 +1339,94 @@ class PromptService:
                     tools=tools,  # Enable tools
                     tool_config=types.ToolConfig(
                         function_calling_config=types.FunctionCallingConfig(
-                            mode="ANY"  # FORCE gọi tool (string, không phải enum)
+                            mode="ANY"
                         )
                     )
                 )
             )
             
             response = response_with_tools
+            has_tool_call = False
+            tool_books_data = []
             
-            # Handle function calls (nếu AI quyết định gọi tool)
             iteration = 0
             while iteration < max_iterations:
-                # Check if AI wants to call a function
                 if hasattr(response, 'candidates') and response.candidates:
                     candidate = response.candidates[0]
-                    if hasattr(candidate.content, 'parts'):
-                        for part in candidate.content.parts:
-                            # Check if this is a function call
-                            if hasattr(part, 'function_call') and part.function_call:
-                                function_call = part.function_call
-                                tool_name = function_call.name
-                                tool_args = dict(function_call.args) if function_call.args else {}
-                                
-                                logger.info(f"🤖 AI wants to call tool: {tool_name}({tool_args})")
-                                
-                                # Execute tool
-                                tool_result = execute_tool(tool_name, tool_args)
-                                
-                                logger.info(f"🔧 Tool executed: {tool_name} → success={tool_result.get('success')}")
-                                
-                                # Send tool result back to AI
-                                # Format tool result as context
-                                if tool_name == "search_books" and tool_result.get('success'):
-                                    books_data = tool_result.get('books', [])
-                                    books_context = self._format_books_for_context(books_data)
+                    
+                    if hasattr(candidate, 'content'):
+                        content = candidate.content
+                        
+                        if hasattr(content, 'parts'):
+                            parts = content.parts
+                            
+                            function_called = False
+                            for idx, part in enumerate(parts):
+                                if hasattr(part, 'function_call') and part.function_call:
+                                    function_call = part.function_call
+                                    tool_name = function_call.name
+                                    tool_args = dict(function_call.args) if function_call.args else {}
                                     
-                                    logger.info(f"📚 Tool returned {len(books_data)} books, generating final response with schema...")
+                                    tool_result = execute_tool(tool_name, tool_args)
                                     
-                                    # BƯỚC 2: AI generates STRUCTURED response (có schema, KHÔNG có tools)
-                                    response = self.client.models.generate_content(
-                                        model=self.model_id,
-                                        contents=f"{message}\n\n[TOOL RESULT]:\n{books_context}",
-                                        config=types.GenerateContentConfig(
-                                            temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
-                                            max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 2000),
-                                            system_instruction=SYSTEM_INSTRUCTIONS.get('default'),
-                                            response_mime_type="application/json",  # CÓ schema
-                                            response_schema=schema  # KHÔNG có tools
+                                    if tool_name == "search_books" and tool_result.get('success'):
+                                        tool_books_data = tool_result.get('books', [])
+                                        has_tool_call = True
+                                        books_context = self._format_books_for_context(tool_books_data)
+                                        
+                                        # Build contents với history + current message + tool result
+                                        # contents luôn là list of Content objects
+                                        contents_with_result = contents.copy()
+                                        contents_with_result.append(types.Content(
+                                            role='model',
+                                            parts=[types.Part(text=f"[TOOL RESULT]:\n{books_context}")]
+                                        ))
+                                        
+                                        response = self.client.models.generate_content(
+                                            model=self.model_id,
+                                            contents=contents_with_result,
+                                            config=types.GenerateContentConfig(
+                                                temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
+                                                max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 2000),
+                                                system_instruction=SYSTEM_INSTRUCTIONS.get('default'),
+                                                response_mime_type="application/json",
+                                                response_schema=schema
+                                            )
                                         )
-                                    )
-                                
-                                iteration += 1
-                                continue
-                
-                # No more function calls, break
-                break
+                                        function_called = True
+                                        iteration += 1
+                                        break
+                        
+                            if not function_called:
+                                break
+                        else:
+                            break
+                    else:
+                        break
+                else:
+                    break
             
-            # Nếu AI KHÔNG gọi tool → Trả về text thường (không JSON)
-            if iteration == 0:
-                logger.info("ℹ️ AI did NOT call any tools, returning text response")
-                has_tool_call = False
-            else:
-                logger.info(f"✅ AI called {iteration} tool(s), returning JSON response")
-                has_tool_call = True
+            if not has_tool_call:
+                # Không có tool call, gọi với history + current message
+                # contents đã được format đúng ở trên
+                response = self.client.models.generate_content(
+                    model=self.model_id,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
+                        max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 2000),
+                        top_p=self.config.get('GEMINI_TOP_P', 0.95),
+                        top_k=self.config.get('GEMINI_TOP_K', 40),
+                        system_instruction=SYSTEM_INSTRUCTIONS.get('default'),
+                        response_mime_type="application/json",
+                        response_schema=schema
+                    )
+                )
             
             return response, has_tool_call
             
         except Exception as e:
-            logger.error(f"Error calling Gemini with tools: {str(e)}")
+            logger.error(f"Error calling Gemini with tools: {str(e)}", exc_info=True)
             raise GeminiAPIError(f"Lỗi khi gọi AI: {str(e)}") from e
 
 

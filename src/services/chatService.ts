@@ -56,13 +56,15 @@ export interface ChatMessageResponse {
   success: boolean;
   data: {
     message: string;
+    books?: Book[] | null;  
     conversation_id: string;
-    user_id: string;
-    timestamp: string;
+    user_id?: string;
+    timestamp?: string;
     metadata: {
       message_length: number;
-      has_context: boolean;
-      history_length: number;
+      books_count?: number;
+      has_context?: boolean;
+      history_length?: number;
       latency_ms?: number;
     };
   };

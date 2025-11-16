@@ -22,7 +22,7 @@ message_bp = Blueprint('chat_message', __name__)
 
 @message_bp.route('/message', methods=['POST'])
 @token_required
-async def send_message(current_user):
+def send_message(current_user):
     """
     Gửi tin nhắn và nhận phản hồi từ AI (CÓ ĐĂNG NHẬP - LƯU LỊCH SỬ)
     
@@ -67,21 +67,25 @@ async def send_message(current_user):
     # Lấy patron_id từ user profile nếu có
     patron_id = current_user.get('koha_patron_id') or current_user.get('patron_id')
     
-    # Dùng method có session để lưu history conversation (ASYNC với timeout & error handling)
+    # Dùng method có session structured để trả về JSON format {text, books}
     try:
-        ai_response = await asyncio.wait_for(
-            asyncio.to_thread(
-                prompt_service.generate_response_with_session,
-                conversation_id=conversation_id,
-                user_message=user_message,
-                instruction_type='default',
-                history_service=history_service,  # Truyền history_service để lưu/lấy từ DB
-                latency_ms=int((time.time() - start_time) * 1000),  # Tính latency
-                patron_id=patron_id,  # Truyền patron_id để lấy thông tin từ Koha
-                auto_inject_koha_context=True  # Tự động inject Koha context
-            ),
-            timeout=30.0  # 30 seconds timeout
-        )
+        # Run async code in sync context using asyncio.run()
+        async def _generate_response():
+            return await asyncio.wait_for(
+                asyncio.to_thread(
+                    prompt_service.generate_response_with_session_structured,
+                    conversation_id=conversation_id,
+                    user_message=user_message,
+                    instruction_type='default',
+                    history_service=history_service,  # Truyền history_service để lưu/lấy từ DB
+                    latency_ms=int((time.time() - start_time) * 1000),  # Tính latency
+                    patron_id=patron_id,  # Truyền patron_id để lấy thông tin từ Koha
+                    auto_inject_koha_context=False  # TẮT TẠM THỜI - Tắt auto inject Koha context (KOHA_BASE_URL chưa được thiết lập)
+                ),
+                timeout=30.0  # 30 seconds timeout
+            )
+        
+        ai_response = asyncio.run(_generate_response())
     except asyncio.TimeoutError:
         logger.error("AI response timeout for user %s after 30s", current_user['id'])
         raise ApiError("AI đang xử lý quá lâu, vui lòng thử lại", status_code=503)
@@ -94,17 +98,25 @@ async def send_message(current_user):
     
     latency_ms = int((time.time() - start_time) * 1000)
 
-    # Lưu vào database đã được thực hiện bên trong generate_response_with_session()
-    # Nên không cần lưu lại ở đây
+    # ai_response là Dict {text, books} từ structured method
+    # Lưu vào database đã được thực hiện bên trong generate_response_with_session_structured()
+    
+    # Extract text và books từ response
+    response_text = ai_response.get('text', '') if isinstance(ai_response, dict) else str(ai_response)
+    response_books = ai_response.get('books') if isinstance(ai_response, dict) else None
+    
+    logger.info(f"Response parsed: text={len(response_text)} chars, books={len(response_books) if response_books else 0}")
 
     response_data = build_success_response(
         data={
-            'message': ai_response,
+            'message': response_text,  # Text response
+            'books': response_books,  # Books array hoặc null
             'conversation_id': conversation_id
         },
         user_id=current_user['id'],
         metadata={
-            'message_length': len(ai_response),
+            'message_length': len(response_text),
+            'books_count': len(response_books) if response_books else 0,
             'has_context': context is not None,
             'history_length': len(chat_history),
             'latency_ms': latency_ms
@@ -116,7 +128,7 @@ async def send_message(current_user):
 
 
 @message_bp.route('/message/guest', methods=['POST'])
-async def send_message_guest():
+def send_message_guest():
     """
     Gửi tin nhắn KHÔNG CẦN ĐĂNG NHẬP (KHÔNG LƯU LỊCH SỬ) - ASYNC
     
@@ -141,15 +153,19 @@ async def send_message_guest():
     prompt_service = get_prompt_service()
     
     try:
-        ai_response = await asyncio.wait_for(
-            asyncio.to_thread(
-                prompt_service.generate_response,
-                user_message=user_message,
-                chat_history=chat_history,
-                context=context
-            ),
-            timeout=30.0  # 30 seconds timeout
-        )
+        # Run async code in sync context using asyncio.run()
+        async def _generate_response():
+            return await asyncio.wait_for(
+                asyncio.to_thread(
+                    prompt_service.generate_response,
+                    user_message=user_message,
+                    chat_history=chat_history,
+                    context=context
+                ),
+                timeout=30.0  # 30 seconds timeout
+            )
+        
+        ai_response = asyncio.run(_generate_response())
     except asyncio.TimeoutError:
         logger.error("AI response timeout for guest after 30s")
         raise ApiError("AI đang xử lý quá lâu, vui lòng thử lại", status_code=503)

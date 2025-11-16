@@ -60,11 +60,14 @@ def create_app(config_class=Config):
     from app.routes.z3950_routes import z3950_bp
     from app.routes.users import users_bp
     from app.routes.chat import chat_bp
+    from app.routes.conversations_alias import conversations_alias_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(users_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
     app.register_blueprint(chat_bp) 
+    # Alias to support frontend calling /api/conversations/*
+    app.register_blueprint(conversations_alias_bp, url_prefix='/api/conversations')
     app.register_blueprint(library_bp)
     app.register_blueprint(z3950_bp)
 

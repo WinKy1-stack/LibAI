@@ -147,6 +147,9 @@ class MessageManager:
                 sort=[('ts', 1)],  # Ascending order
                 limit=limit
             )
+            # Bảo vệ khi DB trả về None
+            if not messages:
+                messages = []
             
             # Format messages for frontend
             formatted_messages = []

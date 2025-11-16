@@ -1,30 +1,47 @@
-import { userChatBooks } from "../../../data";
 import { StarIcon, BookOpenIcon, SparklesIcon } from "@heroicons/react/24/solid";
 import { ClockIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
+import type { Book } from "../../../services/chatService";
 
-export default function BookSuggestions() {
+interface BookSuggestionsProps {
+  books: Book[];
+}
+
+export default function BookSuggestions({ books }: BookSuggestionsProps) {
+  if (!books || !Array.isArray(books) || books.length === 0) {
+    return null;
+  }
+
+  const sortedBooks = [...books].sort((a, b) => {
+    const accuracyA = parseFloat(a.accuracy.replace('%', '')) || 0;
+    const accuracyB = parseFloat(b.accuracy.replace('%', '')) || 0;
+    return accuracyB - accuracyA;
+  });
+  
+  const displayBooks = sortedBooks.slice(0, 4);
+
   return (
     <div className="mb-10 animate-[slideInFromBottom_0.7s_ease-out_0.3s_both]">
-      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
           <BookOpenIcon className="w-7 h-7 text-[#8B5CF6]" />
           Gợi ý sách
         </h2>
         <span className="text-sm text-text-secondary">
-          {userChatBooks.length} quyển
+          {displayBooks.length} quyển
         </span>
       </div>
 
-      {/* Books Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
-        {userChatBooks.map((book, index) => {
-          const isAvailable = book.status === "available";
+        {displayBooks.map((book, index) => {
+          const accuracy = parseFloat(book.accuracy.replace('%', '')) || 0;
+          const rating = accuracy / 20;
+          const isAvailable = true;
+          const isBestMatch = accuracy >= 90;
           const ratingColor =
-            book.rating >= 4
+            rating >= 4
               ? "text-yellow-400"
-              : book.rating >= 3
+              : rating >= 3
               ? "text-orange-400"
               : "text-gray-400";
 
@@ -43,8 +60,7 @@ export default function BookSuggestions() {
                 animation: "fadeInUp 0.5s ease-out both",
               }}
             >
-              {/* Best Match Badge */}
-              {book.bestMatch && (
+              {isBestMatch && (
                 <div className="absolute -top-2 -right-2 z-10">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-primary rounded-full blur-md opacity-60 animate-pulse" />
@@ -56,9 +72,7 @@ export default function BookSuggestions() {
                 </div>
               )}
 
-              {/* Book Content */}
               <div className="flex flex-col h-full">
-                {/* Title & Author */}
                 <div className="flex-1 mb-4">
                   <h3 className="text-base font-semibold mb-2 leading-snug text-text-primary line-clamp-2 group-hover:text-[#8B5CF6] transition-colors duration-200">
                     {book.title}
@@ -67,17 +81,29 @@ export default function BookSuggestions() {
                     {book.author}
                   </p>
 
-                  {/* Rating */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <div className={clsx("flex items-center gap-1.5", ratingColor)}>
                       <StarIcon className="w-4 h-4 drop-shadow-sm" />
-                      <span className="text-sm font-semibold">{book.rating.toFixed(1)}</span>
+                      <span className="text-sm font-semibold">{rating.toFixed(1)}</span>
                     </div>
                     <span className="text-xs text-text-secondary">/ 5.0</span>
+                    <span className="text-xs text-text-secondary">•</span>
+                    <span className="text-xs text-text-secondary">{book.accuracy}</span>
                   </div>
+                  {(() => {
+                    const rel = Array.isArray(book.related) ? book.related : [];
+                    const genreItem =
+                      rel.find(r => (r.type || '').toLowerCase().includes('thể loại')) ||
+                      rel.find(r => (r.type || '').toLowerCase().includes('chủ đề'));
+                    const genre = genreItem?.value?.trim();
+                    return genre ? (
+                      <p className="text-xs text-text-secondary mt-1">
+                        {genre}
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex flex-col gap-2.5 mt-auto pt-3">
                   <button
                     className="w-full px-4 py-2 rounded-xl text-sm font-medium
@@ -115,7 +141,6 @@ export default function BookSuggestions() {
                 </div>
               </div>
 
-              {/* Hover Glow Effect */}
               <div className="absolute inset-0 rounded-2xl bg-gradient-primary opacity-0 group-hover:opacity-[0.07] dark:group-hover:opacity-[0.12] transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-none" />
             </div>
           );
