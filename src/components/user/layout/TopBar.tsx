@@ -44,14 +44,13 @@ export default function TopBar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background-primary/95 backdrop-blur-xl shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-5">
-        <div className="flex items-center justify-between h-16 sm:h-[68px]">
-          {/* Logo */}
-          <Link
-            to="/"
-            onClick={() => setIsChatting(false)}
-            className="flex items-center gap-2.5 no-underline group flex-shrink-0"
-          >
+      <div className="flex items-center justify-between h-16 sm:h-[68px] w-full">
+        {/* Logo */}
+        <Link
+          to="/"
+          onClick={() => setIsChatting(false)}
+          className="flex items-center gap-2.5 no-underline group flex-shrink-0 pl-5 sm:pl-6"
+        >
             <div className="relative">
               <img
                 src={mode === "light" ? "/logo.png" : "/logo_darkmode.png"}
@@ -68,10 +67,10 @@ export default function TopBar() {
                 AI Library Assistant
               </span>
             </div>
-          </Link>
+        </Link>
 
-          {/* Right side */}
-          <div className="flex items-center gap-2 sm:gap-3">
+        {/* Right side */}
+        <div className="flex items-center gap-2 sm:gap-3 pr-5 sm:pr-6">
             {/* Theme toggle */}
             <button
               onClick={toggleMode}
@@ -188,7 +187,6 @@ export default function TopBar() {
                 Đăng nhập
               </Link>
             )}
-          </div>
         </div>
       </div>
     </header>

@@ -67,7 +67,14 @@ export default function ConversationSidebar({
   }, []);
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "Vừa xong";
+    
     const date = new Date(dateString);
+    // Kiểm tra nếu date không hợp lệ
+    if (isNaN(date.getTime())) {
+      return "Vừa xong";
+    }
+    
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const min = Math.floor(diff / 60000);
@@ -306,31 +313,33 @@ export default function ConversationSidebar({
                           handleDeleteClick(c.conversation_id);
                         }
                       }}
-                      className="p-1 rounded-md opacity-70 transition cursor-pointer
-                                 hover:opacity-100 hover:text-red-500 focus:outline-none
+                      className="p-1 rounded-md transition-all duration-300 cursor-pointer
+                                 text-text-secondary hover:text-red-500 focus:outline-none
                                  focus:ring-2 focus:ring-red-500/40"
                       title="Xóa cuộc trò chuyện"
                       role="button"
                       tabIndex={0}
                     >
-                      <TrashIcon className="w-4 h-4" />
+                      <TrashIcon className="w-4 h-4 transition-colors duration-300" />
                     </div>
 
-                    <span className="text-xs text-text-secondary/80">
+                    <span className="text-xs text-text-secondary transition-colors duration-300">
                       {formatDate(c.started_at)}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-text-secondary/90 relative z-[1]">
+                <div className="flex items-center gap-2 text-xs relative z-[1]">
                   <FireIcon
-                    className={`w-3.5 h-3.5 ${
+                    className={`w-3.5 h-3.5 transition-colors duration-300 ${
                       active
-                        ? "text-color-primary/95 drop-shadow-sm"
-                        : "text-text-secondary/70"
+                        ? "text-primary drop-shadow-sm"
+                        : "text-text-secondary"
                     }`}
                   />
-                  <span className={active ? "text-text-primary/90" : ""}>
+                  <span className={`transition-colors duration-300 ${
+                    active ? "text-text-primary" : "text-text-secondary"
+                  }`}>
                     {c.message_count || 0} tin
                   </span>
                 </div>
