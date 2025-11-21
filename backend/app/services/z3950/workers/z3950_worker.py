@@ -69,14 +69,14 @@ class Z3950Worker:
 
     def _build_yaz_query(self, query: str, query_type: str) -> str:
         """
-        Build YAZ query string
+        Build advanced YAZ query string with phrase search and structure
 
         Args:
             query: Search query
             query_type: Type of search
 
         Returns:
-            YAZ query string
+            YAZ query string optimized for accuracy
         """
         # Bib-1 attribute mapping
         attr_map = {
@@ -88,7 +88,44 @@ class Z3950Worker:
         }
 
         attr = attr_map.get(query_type, "1016")
-        return f'@attrset bib-1 @attr 1={attr} "{query}"'
+
+        # For ISBN searches - exact match only
+        if query_type == "isbn":
+            # Remove hyphens and spaces from ISBN
+            clean_isbn = query.replace('-', '').replace(' ', '')
+            return f'@attrset bib-1 @attr 1={attr} "{clean_isbn}"'
+
+        # For title and author - use phrase search with position attribute
+        # @attr 4=2 means phrase search (terms must appear in order)
+        if query_type in ["title", "author"]:
+            # If query has multiple words, use phrase search
+            if ' ' in query.strip():
+                # Add structure attribute: 4=2 for phrase, 4=6 for word list
+                # Add completeness attribute: 6=3 for complete field
+                return f'@attrset bib-1 @attr 1={attr} @attr 4=2 "{query}"'
+            else:
+                # Single word - use truncation for better matching
+                # @attr 5=1 means right truncation (e.g., "python*")
+                return f'@attrset bib-1 @attr 1={attr} @attr 5=1 "{query}"'
+
+        # For subject - phrase search for precision
+        if query_type == "subject":
+            return f'@attrset bib-1 @attr 1={attr} @attr 4=2 "{query}"'
+
+        # For keyword search - use word list to find all words
+        # @attr 4=6 means word list (all words must appear but order doesn't matter)
+        if ' ' in query.strip() and len(query.split()) > 1:
+            # Multi-word keyword search - all words must appear
+            words = query.split()
+            if len(words) == 2:
+                # For 2 words, build AND query
+                return f'@attrset bib-1 @and @attr 1={attr} "{words[0]}" @attr 1={attr} "{words[1]}"'
+            else:
+                # For 3+ words, use word list (simpler and often more effective)
+                return f'@attrset bib-1 @attr 1={attr} @attr 4=6 "{query}"'
+
+        # Single keyword - use truncation for flexibility
+        return f'@attrset bib-1 @attr 1={attr} @attr 5=1 "{query}"'
 
     def search(
         self,
@@ -141,7 +178,8 @@ show 1+{limit}
 quit
 """
 
-            logger.info(f"Searching {self.config['name']} for: {query}")
+            logger.info(f"Searching {self.config['name']} with query_type={query_type}")
+            logger.info(f"Original query: '{query}' -> YAZ query: {yaz_query}")
 
             # Execute yaz-client
             # Use UTF-8 encoding with error handling to avoid UnicodeDecodeError
