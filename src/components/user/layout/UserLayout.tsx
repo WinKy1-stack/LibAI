@@ -14,6 +14,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
   
   // Determine if the current page is the user's home page
   const isHomePage = location.pathname === '/' || location.pathname === '/user/home';
+  
+  // Determine if the current page is profile page
+  const isProfilePage = location.pathname === '/profile';
 
   // Render nothing but the children for auth pages
   if (isAuthPage) {
@@ -26,7 +29,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
       <TopBar />
 
       {/* Page Content */}
-      <main className={`flex-1 ${isHomePage ? '' : 'p-4 sm:p-6 pt-[88px]'}`}>
+      <main className={`flex-1 ${isHomePage || isProfilePage ? '' : 'p-4 sm:p-6 pt-[88px]'} ${isProfilePage ? 'pt-[88px]' : ''}`}>
         {children}
       </main>
     </div>

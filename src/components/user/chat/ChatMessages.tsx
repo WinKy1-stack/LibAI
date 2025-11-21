@@ -66,7 +66,7 @@ export default function ChatMessages({ messages, isTyping }: ChatMessagesProps) 
               >
                 <div
                   className={`py-2.5 px-4 rounded-2xl text-sm sm:text-[15px] leading-relaxed break-words whitespace-pre-wrap
-                    transition-all duration-200 shadow-[0_2px_12px_rgba(0,0,0,0.1)]
+                    transition-all duration-300 shadow-[0_2px_12px_rgba(0,0,0,0.1)]
                     ${
                       isUser
                         ? "bg-gradient-primary text-white rounded-br-md"
@@ -75,7 +75,7 @@ export default function ChatMessages({ messages, isTyping }: ChatMessagesProps) 
                 >
                   {message.content}
                 </div>
-                <span className="text-xs text-text-secondary px-1 select-none">
+                <span className="text-xs text-text-secondary px-1 select-none transition-colors duration-300">
                   {formatTime(message.timestamp)}
                 </span>
               </div>

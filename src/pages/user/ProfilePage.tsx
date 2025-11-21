@@ -192,8 +192,8 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background-primary pt-16 sm:pt-20 pb-8 sm:pb-12 px-3 sm:px-4">
-        <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen bg-background-primary pt-16 sm:pt-20 pb-8 sm:pb-12 px-4 sm:px-6">
+        <div className="w-full">
           <div className="mb-6 sm:mb-8 animate-pulse">
             <div className="h-8 sm:h-9 bg-background-secondary rounded-lg w-48 mb-2"></div>
             <div className="h-4 sm:h-5 bg-background-secondary rounded-lg w-64"></div>
@@ -256,8 +256,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background-primary pt-16 sm:pt-20 pb-8 sm:pb-12 px-3 sm:px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen w-full bg-background-primary pb-8 sm:pb-12 px-4 sm:px-6">
+      <div className="w-full">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">

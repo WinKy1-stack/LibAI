@@ -33,7 +33,7 @@ export default function ConversationHistory() {
     loadConversations();
   };
 
-  const formatDate = (dateString: string) =>
+  const formatDate = (dateString: string) => 
     formatDistanceToNow(new Date(dateString), {
       addSuffix: true,
       locale: vi,
@@ -131,10 +131,10 @@ export default function ConversationHistory() {
 
               {/* Body */}
               <div className="flex items-center justify-between text-sm">
-                <span className="text-text-primary font-medium group-hover:text-primary transition-colors">
+                <span className="text-text-primary font-medium group-hover:text-primary transition-colors duration-300">
                   {conv.message_count || 0} tin nhắn
                 </span>
-                <span className="text-text-secondary text-xs">
+                <span className="text-text-secondary text-xs transition-colors duration-300">
                   {formatDate(conv.started_at)}
                 </span>
               </div>
@@ -142,7 +142,7 @@ export default function ConversationHistory() {
               {/* End Info */}
               {conv.ended_at && (
                 <div className="pt-2 mt-2 border-t border-border-primary/50">
-                  <small className="text-xs text-text-secondary">
+                  <small className="text-xs text-text-secondary transition-colors duration-300">
                     Kết thúc: {formatDate(conv.ended_at)}
                   </small>
                 </div>

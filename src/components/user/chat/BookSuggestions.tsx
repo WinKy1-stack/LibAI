@@ -123,7 +123,7 @@ export default function BookSuggestions({ books }: BookSuggestionsProps) {
                       "w-full px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] flex items-center justify-center gap-2",
                       isAvailable
                         ? "borrow-button text-white shadow-md hover:shadow-[0_0_12px_rgba(139,92,246,0.4)] hover:scale-[1.04] active:scale-[0.97]"
-                        : "bg-background-tertiary/40 text-text-secondary/60 cursor-not-allowed"
+                        : "bg-background-tertiary/40 text-text-secondary transition-colors duration-300 cursor-not-allowed"
                     )}
                   >
                     {isAvailable ? (

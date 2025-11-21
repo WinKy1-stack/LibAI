@@ -29,7 +29,7 @@ export default function HomeView({
       <HeroSection />
 
       {/* Description */}
-      <p className="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto text-center text-text-secondary/90">
+      <p className="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto text-center text-text-secondary transition-colors duration-300">
         Hỏi đáp tự do cùng AI — hệ thống sẽ giúp bạn tìm tài liệu, tra cứu thông tin 
         và giải đáp mọi thắc mắc về thư viện một cách nhanh chóng và chính xác.
       </p>
