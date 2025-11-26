@@ -259,7 +259,7 @@ def _build_isbn_queries(query: str, escaped_query: str) -> List[Dict[str, Any]]:
 
 def _sort_by_relevance(records: List[Dict[str, Any]], query: str) -> List[Dict[str, Any]]:
     """
-    Sort results by relevance
+    Sort results by relevance with improved scoring
 
     Args:
         records: List of records to sort
@@ -269,23 +269,58 @@ def _sort_by_relevance(records: List[Dict[str, Any]], query: str) -> List[Dict[s
         Sorted list of records
     """
     query_lower = query.lower()
+    query_words = set(query_lower.split())
 
-    def sort_key(record):
-        title_main = record.get('title', {}).get('main', '').lower()
+    def calculate_match_score(record):
+        """Calculate comprehensive match score"""
+        title_info = record.get('title', {})
+        title_main = title_info.get('main', '').lower() if isinstance(title_info, dict) else str(title_info).lower()
+        title_words = set(title_main.split())
 
+        # Exact title match (highest priority)
         if title_main == query_lower:
-            return (0, 0, 0)
-        elif title_main.startswith(query_lower):
-            return (1, 0, 0)
-        elif query_lower in title_main:
-            return (2, 0, 0)
-        elif 'score' in record:
-            return (3, -record.get('score', 0), 0)
-        elif 'score' in record:
-            return (3, -record.get('score', 0), 0)
-        else:
-            created_at = record.get('created_at', '')
-            return (4, 0, created_at)
+            return (0, 100, 0)
 
-    records.sort(key=sort_key)
+        # Title starts with query
+        if title_main.startswith(query_lower):
+            return (1, 90, 0)
+
+        # All query words in title (word boundary)
+        if query_words and query_words.issubset(title_words):
+            word_match_percentage = len(query_words) / len(title_words) if title_words else 0
+            return (2, int(word_match_percentage * 100), 0)
+
+        # Query substring in title
+        if query_lower in title_main:
+            position = title_main.index(query_lower)
+            # Earlier position = higher score
+            position_score = max(0, 100 - position)
+            return (3, position_score, 0)
+
+        # Partial word matches
+        matching_words = query_words.intersection(title_words)
+        if matching_words:
+            match_ratio = len(matching_words) / len(query_words) if query_words else 0
+            return (4, int(match_ratio * 100), 0)
+
+        # Check in author/subjects if not in title
+        contributors = record.get('contributors', [])
+        author_text = ' '.join([c.get('name', '').lower() for c in contributors])
+        subjects_text = ' '.join(record.get('subjects', [])).lower()
+
+        if query_lower in author_text:
+            return (5, 70, 0)
+
+        if query_lower in subjects_text:
+            return (6, 50, 0)
+
+        # MongoDB text search score
+        if 'score' in record:
+            return (7, record.get('score', 0), 0)
+
+        # Default: by creation date
+        created_at = record.get('created_at', '')
+        return (8, 0, created_at)
+
+    records.sort(key=calculate_match_score)
     return records

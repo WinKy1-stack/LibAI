@@ -3,7 +3,6 @@ import {
   QuestionCircleOutlined, 
   CheckCircleOutlined, 
   EditOutlined, 
-  EyeOutlined 
 } from "@ant-design/icons";
 import StatCard from "../dashboard/StatCard";
 
@@ -21,19 +20,31 @@ interface FaqStatsOverviewProps {
 export function FaqStatsOverview({ totals }: FaqStatsOverviewProps) {
   return (
     <Row gutter={[16, 16]}>
-      <Col xs={12} md={6}>
-        <StatCard title="Tổng câu hỏi" value={totals.totalQuestions} icon={<QuestionCircleOutlined />} />
+      <Col xs={12} md={8}>
+        <StatCard
+          title="Tổng câu hỏi"
+          value={totals.totalQuestions}
+          icon={<QuestionCircleOutlined />}
+        />
       </Col>
-      <Col xs={12} md={6}>
-        <StatCard title="Đã xuất bản" value={totals.publishedQuestions} icon={<CheckCircleOutlined />} />
+
+      <Col xs={12} md={8}>
+        <StatCard
+          title="Đã xuất bản"
+          value={totals.publishedQuestions}
+          icon={<CheckCircleOutlined />}
+        />
       </Col>
-      <Col xs={12} md={6}>
-        <StatCard title="Đang soạn" value={totals.draftQuestions} icon={<EditOutlined />} />
-      </Col>
-      <Col xs={12} md={6}>
-        <StatCard title="Lượt xem" value={totals.totalViews} icon={<EyeOutlined />} />
+
+      <Col xs={12} md={8}>
+        <StatCard
+          title="Đang soạn"
+          value={totals.draftQuestions}
+          icon={<EditOutlined />}
+        />
       </Col>
     </Row>
+
   );
 }
 

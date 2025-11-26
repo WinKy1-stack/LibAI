@@ -1,11 +1,10 @@
 """
 Z39.50 Workers
-Export all worker classes
+
+All Z39.50 sources use the unified Z3950Worker class.
+Source-specific configuration (URLs, auth, etc.) is handled via config.py.
 """
 
 from .z3950_worker import Z3950Worker
-from .loc_worker import LOCWorker
-from .uw_worker import UWWorker
-from .oclc_worker import OCLCWorker
 
-__all__ = ['Z3950Worker', 'LOCWorker', 'UWWorker', 'OCLCWorker']
+__all__ = ['Z3950Worker']

@@ -9,12 +9,9 @@ import {
   StatCard,
   UsersTable,
   BooksTable,
-  TopChoicesGrid,
-  BooksIssuedTable,
-  VisitorsBorrowersChart,
-  OverdueBookTable,
+  // TopChoicesGrid,
 } from "../../components/admin/dashboard";
-import { useCurrentUser, useDashboardStats, useOverdueBooks } from "../../hooks/useAdminQueries";
+import { useCurrentUser, useDashboardStats } from "../../hooks/useAdminQueries";
 
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -31,22 +28,22 @@ export default function DashboardPage() {
   const screens = useBreakpoint();
   const { token } = useToken();
   const [timeRange, setTimeRange] = useState("this-week");
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 4;
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const pageSize = 4;
 
   // Use react-query hooks
   const { data: user } = useCurrentUser();
   const { data: dashboardStats } = useDashboardStats();
-  const { data: overdueBooks = [], isLoading: overdueLoading } = useOverdueBooks();
+  // const { data: overdueBooks = [], isLoading: overdueLoading } = useOverdueBooks();
 
   const currentDateString = useMemo(
     () => new Date().toLocaleDateString("vi-VN", dateOptions),
     []
   );
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  // const handlePageChange = (page: number) => {
+  //   setCurrentPage(page);
+  // };
 
   return (
     <div style={{ maxWidth: 1400, marginInline: "auto", width: "100%" }}>
@@ -148,10 +145,10 @@ export default function DashboardPage() {
             </Col>
           </Row>
 
-          <TopChoicesGrid />
+          {/* <TopChoicesGrid /> */}
 
           {/* --- Overdue Books Section --- */}
-          <Card
+          {/* <Card
             variant="borderless"
             style={{ borderRadius: 16, marginTop: 16 }}
           >
@@ -168,17 +165,17 @@ export default function DashboardPage() {
               total={overdueBooks.length}
               onPageChange={handlePageChange}
             />
-          </Card>
+          </Card> */}
 
           {/* --- Books Issued & Statistics Section --- */}
-          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+          {/* <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
             <Col xs={24} xl={14}>
               <BooksIssuedTable />
             </Col>
             <Col xs={24} xl={10}>
               <VisitorsBorrowersChart />
             </Col>
-          </Row>
+          </Row> */}
         </Space>
     </div>
   );

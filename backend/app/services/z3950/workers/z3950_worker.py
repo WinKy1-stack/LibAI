@@ -17,24 +17,29 @@ logger = logging.getLogger(__name__)
 class Z3950Worker:
     """Base worker for Z39.50 operations using yaz-client"""
 
-    def __init__(self, source_key: str):
+    def __init__(self, source_key: str = None, config: Dict[str, Any] = None):
         """
         Initialize Z39.50 worker
 
         Args:
             source_key: Key from Z3950_SOURCES config (e.g., 'loc', 'uw', 'oclc')
+            config: Direct configuration dictionary (overrides source_key)
         """
-        if source_key not in Z3950_SOURCES:
-            raise ValueError(f"Unknown source: {source_key}")
+        if config:
+            self.source_key = source_key or "custom"
+            self.config = config
+        elif source_key and source_key in Z3950_SOURCES:
+            self.source_key = source_key
+            self.config = Z3950_SOURCES[source_key]
+        else:
+            raise ValueError("Must provide either valid source_key or config dict")
 
-        self.source_key = source_key
-        self.config = Z3950_SOURCES[source_key]
         self.connection = None
 
     def connect(self) -> bool:
         """
-        Test connection to Z39.50 server
-
+        Check if yaz-client is installed
+        
         Returns:
             True if yaz-client is available
         """
@@ -50,7 +55,7 @@ class Z3950Worker:
             )
 
             if result.returncode == 0:
-                logger.info(f"yaz-client available for {self.config['name']}")
+                # logger.info(f"yaz-client available for {self.config.get('name', 'custom')}")
                 return True
             else:
                 logger.error("yaz-client not found. Please install YAZ toolkit.")
@@ -62,6 +67,66 @@ class Z3950Worker:
         except Exception as e:
             logger.error(f"Failed to test yaz-client: {str(e)}")
             return False
+
+    def test_connection(self) -> Dict[str, Any]:
+        """
+        Test actual connection to the Z39.50 server
+        
+        Returns:
+            Dict with success boolean and message
+        """
+        if not self.connect():
+             return {"success": False, "message": "YAZ client not installed"}
+
+        try:
+            host = self.config.get('host')
+            port = self.config.get('port')
+            database = self.config.get('database')
+            
+            if not all([host, port, database]):
+                return {"success": False, "message": "Missing host, port, or database"}
+
+            # Build simple connection script
+            script = f"open {host}:{port}/{database}\nquit\n"
+            
+            # Run yaz-client
+            result = subprocess.run(
+                ["yaz-client"],
+                input=script,
+                capture_output=True,
+                text=True,
+                encoding='utf-8',
+                errors='replace',
+                timeout=10
+            )
+            
+            output = result.stdout
+            error = result.stderr
+
+            # Check for success indicators
+            if "Connecting..." in output and "ID:" in output:
+                 return {"success": True, "message": "Connection successful"}
+
+            # Check for explicit failure indicators
+            if "fail" in output.lower() or "refused" in output.lower() or "error" in output.lower() or "timeout" in output.lower():
+                 # Extract error message if possible
+                 error_msg = output.strip() if output else error.strip()
+                 return {"success": False, "message": f"Connection failed: {error_msg[:200]}"}
+
+            # Check process return code
+            if result.returncode != 0:
+                 return {"success": False, "message": f"Process error (code {result.returncode}): {error or output}"}
+
+            # Check for "OK" indicator which means connection established
+            if "OK" in output:
+                return {"success": True, "message": "Connection established"}
+
+            # If we got here without clear indicators, it's likely a failure
+            # Successful connections usually show clear "Connecting..." + "ID:" or "OK"
+            return {"success": False, "message": f"Unable to verify connection. Server response unclear: {output[:200]}"}
+
+        except Exception as e:
+            return {"success": False, "message": str(e)}
 
     def disconnect(self):
         """Close Z39.50 connection (not needed for yaz-client)"""
@@ -211,6 +276,9 @@ quit
             # Parse MARC records
             records = self._parse_yaz_output(output)
 
+            # Add catalog URLs from config if available
+            self._add_catalog_urls(records, query)
+
             logger.info(f"Parsed {len(records)} records from {self.config['name']}")
             return records
 
@@ -220,6 +288,49 @@ quit
         except Exception as e:
             logger.error(f"Search error on {self.config['name']}: {str(e)}")
             return []
+
+    def _add_catalog_urls(self, records: List[Dict[str, Any]], query: str = "") -> None:
+        """
+        Add catalog URLs to records based on config template
+
+        Supports template variables:
+        - {control_number}: Record control number
+        - {query}: Original search query
+
+        Args:
+            records: List of records to enrich
+            query: Original search query
+        """
+        catalog_url_template = self.config.get('catalog_url')
+        if not catalog_url_template:
+            return
+
+        for record in records:
+            access = record.get('access') or {}
+
+            # Skip if URL already set
+            if access.get('online_url'):
+                continue
+
+            # Build URL from template
+            url = catalog_url_template
+
+            # Replace template variables
+            if '{control_number}' in url:
+                control_number = record.get('control_number', '')
+                if control_number:
+                    url = url.replace('{control_number}', control_number)
+                else:
+                    # Can't build URL without control_number
+                    continue
+
+            if '{query}' in url:
+                url = url.replace('{query}', query)
+
+            # Set URL
+            access['online_url'] = url
+            access['restrictions'] = access.get('restrictions', '')
+            record['access'] = access
 
     def _parse_yaz_output(self, output: str) -> List[Dict[str, Any]]:
         """

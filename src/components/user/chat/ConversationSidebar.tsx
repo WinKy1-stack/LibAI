@@ -59,8 +59,9 @@ export default function ConversationSidebar({
 
   // ✅ Cleanup timers khi component unmount → tránh memory leak
   useEffect(() => {
+    const currentTimers = timersRef.current;
     return () => {
-      Object.values(timersRef.current).forEach(timer => {
+      Object.values(currentTimers).forEach(timer => {
         if (timer) window.clearTimeout(timer);
       });
     };

@@ -66,6 +66,7 @@ def create_app(config_class=Config):
     from app.routes.users import users_bp
     from app.routes.chat import chat_bp
     from app.routes.conversations import conversations_bp
+    from app.routes.admin_config import admin_config_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(users_bp, url_prefix='/api')
@@ -74,6 +75,8 @@ def create_app(config_class=Config):
     app.register_blueprint(conversations_bp)
     app.register_blueprint(library_bp)
     app.register_blueprint(z3950_bp)
+    app.register_blueprint(admin_config_bp)
+
 
     @app.route('/health')
     def health():

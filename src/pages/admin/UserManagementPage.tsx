@@ -1,23 +1,17 @@
 import { useMemo, useState } from "react";
-import { Col, Grid, Row, Space, App as AntdApp } from "antd";
+import { Grid, Space, App as AntdApp } from "antd";
 import { HeaderCard } from "../../components/admin/userManagement/HeaderCard";
 import { StatsOverview, type UserTotals } from "../../components/admin/userManagement/StatsOverview";
 import { UsersTablePanel } from "../../components/admin/userManagement/UsersTablePanel";
-import { RetentionCard } from "../../components/admin/userManagement/RetentionCard";
-import { RoleDistributionCard } from "../../components/admin/userManagement/RoleDistributionCard";
-import { ActivityCard } from "../../components/admin/userManagement/ActivityCard";
 import { UserDetailModal } from "../../components/admin/userManagement/UserDetailModal";
 import { GenericFormModal } from "../../components/admin/common";
 import {
   useUsers,
-  useUserActivities,
-  useUserRetention,
-  useUserRoleDistribution,
   useCreateUser,
   useUpdateUser,
   useDeleteUser,
 } from "../../hooks/useAdminQueries";
-import type { UserRole, UserStatus, AdminUser } from "../../data";
+import { type UserRole, type UserStatus, type AdminUser } from "../../data";
 import type { FormField } from "../../components/admin/common/GenericFormModal";
 import type { UpdateUserData } from "../../services/userService";
 
@@ -47,9 +41,6 @@ export default function UserManagementPage() {
 
   // Use react-query hooks
   const { data: adminUsers = [], isLoading: usersLoading } = useUsers();
-  const { data: latestUserActivities = [] } = useUserActivities();
-  const { data: userRetentionTrend = [] } = useUserRetention();
-  const { data: userRoleDistribution = [] } = useUserRoleDistribution();
   
   // Mutations
   const createUserMutation = useCreateUser();
@@ -88,11 +79,6 @@ export default function UserManagementPage() {
     flagged: totals.flagged,
   };
 
-  const totalRoleCount = useMemo(
-    () => userRoleDistribution.reduce((accumulator, item) => accumulator + item.count, 0),
-    [userRoleDistribution],
-  );
-
   const filteredUsers = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
 
@@ -109,20 +95,6 @@ export default function UserManagementPage() {
       return matchSearch && matchStatus && matchRole;
     });
   }, [statusFilter, roleFilter, searchValue, adminUsers]);
-
-  const retentionChange = useMemo(() => {
-    if (userRetentionTrend.length < 2) {
-      return { active: 0, churn: 0 };
-    }
-
-    const last = userRetentionTrend[userRetentionTrend.length - 1];
-    const previous = userRetentionTrend[userRetentionTrend.length - 2];
-
-    return {
-      active: last.active - previous.active,
-      churn: last.churned - previous.churned,
-    };
-  }, [userRetentionTrend]);
 
   // Handle add user
   const handleAddUser = async (userData: Partial<UserFormData>) => {
@@ -296,7 +268,7 @@ export default function UserManagementPage() {
           />
 
           {/* Metrics Cards Row */}
-          <Row gutter={[16, 16]}>
+          {/* <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
               <RetentionCard trend={userRetentionTrend} change={{ active: retentionChange.active, churn: retentionChange.churn }} />
             </Col>
@@ -307,10 +279,10 @@ export default function UserManagementPage() {
                 averageCompletion={totals.completedAverage}
               />
             </Col>
-          </Row>
+          </Row> */}
 
           {/* Activity Card - Full Width */}
-          <ActivityCard activities={latestUserActivities} />
+          {/* <ActivityCard activities={latestUserActivities} /> */}
         </Space>
 
         {/* Add User Modal */}
