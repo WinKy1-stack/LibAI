@@ -1,27 +1,142 @@
-import { Card, Form, Input, Select, Switch, Button, Space, Typography, Divider, InputNumber, Row, Col, theme } from "antd";
-import { SettingOutlined, SaveOutlined, GlobalOutlined } from "@ant-design/icons";
+import { Card, Form, Input, Select, Switch, Button, Space, Typography, Divider, InputNumber, Row, Col, theme, App, Alert } from "antd";
+import { SettingOutlined, SaveOutlined, GlobalOutlined, DatabaseOutlined, DeleteOutlined, PlusOutlined, ThunderboltOutlined, EditOutlined, CloseOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getSettingsColors } from "./constants";
+import { adminConfigService } from "../../../services/adminConfigService";
+import type { SystemConfig } from "../../../services/adminConfigService";
 
 const { Title, Text } = Typography;
 
 export default function SystemConfigCard() {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
-  const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [testingConnection, setTestingConnection] = useState<number | null>(null);
   const { token } = theme.useToken();
   const settingsColors = getSettingsColors(token);
+  const queryClient = useQueryClient();
+
+  // Default values
+  const defaults: SystemConfig = {
+    siteName: "Thư viện AI",
+    siteUrl: "https://library.ai.vn",
+    adminEmail: "admin@library.ai.vn",
+    timezone: "Asia/Ho_Chi_Minh",
+    dateFormat: "DD/MM/YYYY",
+    language: "vi",
+    itemsPerPage: 20,
+    sessionTimeout: 30,
+    maxUploadSize: 10,
+    enableRegistration: true,
+    enableMaintenance: false,
+    enableAnalytics: true,
+    enableDebugMode: false,
+    z3950Libraries: [
+      {
+        key: "loc",
+        name: "Library of Congress",
+        host: "z3950.loc.gov",
+        port: 7090,
+        database: "voyager",
+        syntax: "USMARC",
+        enabled: true
+      },
+      {
+        key: "uw",
+        name: "UW-Madison",
+        host: "na02.alma.exlibrisgroup.com",
+        port: 1921,
+        database: "01UWI_MAD",
+        syntax: "USMARC",
+        enabled: true
+      }
+    ]
+  };
+
+  // Fetch system config with React Query
+  const { data: configData, isLoading: loading } = useQuery({
+    queryKey: ['systemConfig'],
+    queryFn: async () => {
+      const config = await adminConfigService.getSystemConfig();
+
+      if (config && Object.keys(config).length > 0) {
+        // Merge defaults with config
+        return {
+          ...defaults,
+          ...config,
+          z3950Libraries: config.z3950Libraries && config.z3950Libraries.length > 0
+            ? config.z3950Libraries
+            : defaults.z3950Libraries
+        };
+      }
+      return defaults;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Update system config mutation
+  const updateMutation = useMutation({
+    mutationFn: (data: SystemConfig) => adminConfigService.updateSystemConfig(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['systemConfig'] });
+      message.success("Đã lưu cấu hình hệ thống thành công");
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      console.error("Failed to save config:", error);
+      message.error("Lỗi khi lưu cấu hình");
+    },
+  });
 
   const handleSave = async () => {
     try {
-      setSaving(true);
       const values = await form.validateFields();
-      console.log("System Config values:", values);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSaving(false);
-    } catch {
-      setSaving(false);
+      updateMutation.mutate(values as SystemConfig);
+    } catch (error) {
+      console.error("Form validation failed:", error);
     }
   };
+
+  const handleCancel = () => {
+    form.setFieldsValue(configData);
+    setIsEditing(false);
+  };
+
+  const handleTestConnection = async (index: number) => {
+    try {
+      const libraries = form.getFieldValue('z3950Libraries');
+      const libConfig = libraries[index];
+
+      if (!libConfig || !libConfig.host || !libConfig.port || !libConfig.database) {
+        message.warning("Vui lòng nhập đầy đủ Host, Port và Database");
+        return;
+      }
+
+      setTestingConnection(index);
+      const result = await adminConfigService.testZ3950Connection(libConfig);
+
+      if (result.success) {
+        message.success("Kết nối thành công!");
+      } else {
+        message.error(`Kết nối thất bại: ${result.message}`);
+      }
+    } catch (error) {
+      message.error("Lỗi khi kiểm tra kết nối");
+      console.error(error);
+    } finally {
+      setTestingConnection(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card
+        style={{ background: settingsColors.backgrounds.card, minHeight: 400 }}
+        loading
+      />
+    );
+  }
 
   return (
     <Card
@@ -38,24 +153,19 @@ export default function SystemConfigCard() {
         background: settingsColors.backgrounds.card,
       }}
     >
+      <Alert
+        message="Lưu ý quan trọng"
+        description="Các cấu hình hệ thống dưới đây được lưu vào cơ sở dữ liệu và sẽ áp dụng cho toàn bộ ứng dụng. Một số thay đổi có thể yêu cầu tải lại trang để có hiệu lực."
+        type="warning"
+        showIcon
+        style={{ marginBottom: 24 }}
+      />
+
       <Form
         form={form}
         layout="vertical"
-        initialValues={{
-          siteName: "Thư viện AI",
-          siteUrl: "https://library.ai.vn",
-          adminEmail: "admin@library.ai.vn",
-          timezone: "Asia/Ho_Chi_Minh",
-          dateFormat: "DD/MM/YYYY",
-          language: "vi",
-          itemsPerPage: 20,
-          sessionTimeout: 30,
-          maxUploadSize: 10,
-          enableRegistration: true,
-          enableMaintenance: false,
-          enableAnalytics: true,
-          enableDebugMode: false,
-        }}
+        initialValues={configData || undefined}
+        disabled={!isEditing}
       >
         <Divider orientation="left">
           <Text strong>Thông tin cơ bản</Text>
@@ -187,6 +297,142 @@ export default function SystemConfigCard() {
         </Row>
 
         <Divider orientation="left">
+          <Text strong>Thư viện Z39.50</Text>
+        </Divider>
+
+        <Form.List name="z3950Libraries">
+          {(fields, { add, remove }) => (
+            <>
+              {fields.map(({ key, name, ...restField }) => (
+                <Card
+                  size="small"
+                  key={key}
+                  style={{ marginBottom: 16, background: token.colorFillAlter }}
+                  title={
+                    <Space>
+                      <DatabaseOutlined />
+                      <Text strong>Library Source #{key + 1}</Text>
+                    </Space>
+                  }
+                  extra={
+                    <Space>
+                      <Button
+                        type="text"
+                        icon={<ThunderboltOutlined />}
+                        loading={testingConnection === name}
+                        onClick={() => handleTestConnection(name)}
+                        disabled={!isEditing}
+                      >
+                        Test
+                      </Button>
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => remove(name)}
+                        disabled={!isEditing}
+                      />
+                    </Space>
+                  }
+                >
+                  <Row gutter={16}>
+                    <Col span={6}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'key']}
+                        label="Key (ID)"
+                        rules={[{ required: true, message: 'Nhập key' }]}
+                        tooltip="Mã định danh duy nhất (ví dụ: loc, uw, oclc)"
+                      >
+                        <Input placeholder="loc" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'name']}
+                        label="Tên thư viện"
+                        rules={[{ required: true, message: 'Nhập tên' }]}
+                      >
+                        <Input placeholder="Library of Congress" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'host']}
+                        label="Host Address"
+                        rules={[{ required: true, message: 'Nhập host' }]}
+                      >
+                        <Input placeholder="z3950.loc.gov" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={2}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'port']}
+                        label="Port"
+                        rules={[{ required: true, message: 'Port' }]}
+                      >
+                        <InputNumber style={{ width: '100%' }} placeholder="7090" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={2}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'enabled']}
+                        valuePropName="checked"
+                        label="Active"
+                      >
+                        <Switch />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={16}>
+                    <Col span={8}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'database']}
+                        label="Database Name"
+                        rules={[{ required: true, message: 'Nhập DB name' }]}
+                      >
+                        <Input placeholder="voyager" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'syntax']}
+                        label="Syntax"
+                      >
+                        <Select
+                          options={[
+                            { label: 'USMARC', value: 'USMARC' },
+                            { label: 'UKMARC', value: 'UKMARC' },
+                            { label: 'UNIMARC', value: 'UNIMARC' },
+                          ]}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </Card>
+              ))}
+              <Form.Item>
+                <Button
+                  type="dashed"
+                  onClick={() => add({ enabled: true, syntax: 'USMARC' })}
+                  block
+                  icon={<PlusOutlined />}
+                  disabled={!isEditing}
+                >
+                  Thêm thư viện Z39.50
+                </Button>
+              </Form.Item>
+            </>
+          )}
+        </Form.List>
+
+        <Divider orientation="left">
           <Text strong>Tính năng hệ thống</Text>
         </Divider>
 
@@ -255,22 +501,38 @@ export default function SystemConfigCard() {
             </Space>
           </Form.Item>
         </Space>
+      </Form>
 
-        <Divider />
+      <Divider />
 
-        <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-          <Button onClick={() => form.resetFields()}>Đặt lại</Button>
+      <Space style={{ width: "100%", justifyContent: "flex-end" }}>
+        {!isEditing ? (
           <Button
             type="primary"
-            icon={<SaveOutlined />}
-            onClick={handleSave}
-            loading={saving}
+            icon={<EditOutlined />}
+            onClick={() => setIsEditing(true)}
           >
-            Lưu cấu hình
+            Chỉnh sửa
           </Button>
-        </Space>
-      </Form>
+        ) : (
+          <>
+            <Button
+              icon={<CloseOutlined />}
+              onClick={handleCancel}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={handleSave}
+              loading={updateMutation.isPending}
+            >
+              Lưu cấu hình
+            </Button>
+          </>
+        )}
+      </Space>
     </Card>
   );
 }
-

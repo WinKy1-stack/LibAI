@@ -17,6 +17,39 @@ z3950_bp = Blueprint('z3950', __name__, url_prefix='/api/z3950')
 z3950_service = Z3950Service(cache_enabled=True)
 
 
+@z3950_bp.route('/test', methods=['POST'])
+@jwt_required()
+@librarian_required()
+def test_connection():
+    """
+    Test Z39.50 connection
+    
+    Body:
+        - host: Host address
+        - port: Port number
+        - database: Database name
+        - ...
+        
+    Returns:
+        Connection result
+    """
+    try:
+        config = request.json
+        if not config:
+             return jsonify({'error': 'No configuration provided'}), 400
+             
+        required = ['host', 'port', 'database']
+        if not all(k in config for k in required):
+             return jsonify({'error': f'Missing required fields: {required}'}), 400
+             
+        result = z3950_service.test_connection(config)
+        return jsonify(result), 200
+
+    except Exception as e:
+        logger.error(f"Error testing connection: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
 @z3950_bp.route('/search/all', methods=['GET'])
 def search_all_sources():
     """

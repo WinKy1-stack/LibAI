@@ -4,8 +4,8 @@ import {
   DashboardOutlined,
   TeamOutlined,
   BookOutlined,
-  ReadOutlined,
-  BarChartOutlined,
+  // ReadOutlined,
+  // BarChartOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
   LogoutOutlined,
@@ -46,18 +46,18 @@ const allMenuItems = [
     label: "Books",
     roles: ['admin', 'librarian'] // Available for both
   },
-  {
-    key: "/admin/borrows",
-    icon: <ReadOutlined />,
-    label: "Borrow Records",
-    roles: ['admin', 'librarian'] // Available for both
-  },
-  {
-    key: "/admin/reports",
-    icon: <BarChartOutlined />,
-    label: "Reports",
-    roles: ['admin', 'librarian'] // Available for both
-  },
+  // {
+  //   key: "/admin/borrows",
+  //   icon: <ReadOutlined />,
+  //   label: "Borrow Records",
+  //   roles: ['admin', 'librarian'] // Available for both
+  // },
+  // {
+  //   key: "/admin/reports",
+  //   icon: <BarChartOutlined />,
+  //   label: "Reports",
+  //   roles: ['admin', 'librarian'] // Available for both
+  // },
   {
     key: "/admin/faq",
     icon: <QuestionCircleOutlined />,

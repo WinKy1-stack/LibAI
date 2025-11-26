@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from .workers import LOCWorker, UWWorker, OCLCWorker
+from .workers.z3950_worker import Z3950Worker
 from .cache import Z3950Cache
 from .config import Z3950_SOURCES
 from .local_db_search import search_local_db
@@ -28,11 +28,26 @@ class Z3950Service:
             cache_enabled: Whether to use Redis caching
         """
         self.cache = Z3950Cache() if cache_enabled else None
+        # Auto-generate worker map from config - no need for separate worker classes!
+        self._reload_sources()
+
+    def _reload_sources(self):
+        """Reload Z39.50 sources from database"""
+        from .config import get_z3950_sources
+        sources = get_z3950_sources()
         self.worker_map = {
-            'loc': LOCWorker,
-            'uw': UWWorker,
-            'oclc': OCLCWorker
+            source_key: Z3950Worker
+            for source_key in sources.keys()
         }
+        logger.info(f"Loaded {len(self.worker_map)} Z39.50 sources")
+
+    def reload_config(self):
+        """
+        Public method to reload configuration from database
+        Should be called after updating system config with new Z39.50 libraries
+        """
+        self._reload_sources()
+        logger.info("Z39.50 configuration reloaded")
 
     def search_single(
         self,
@@ -198,11 +213,19 @@ class Z3950Service:
 
         all_records = []
         z3950_records = []
+        # Track source for each record
+        record_sources = {}  # {record_id: source_key}
+
         for source_key, records in raw_results.items():
             all_records.extend(records)
 
             if source_key != 'local':
                 z3950_records.extend(records)
+                # Track source for each record using control_number or ISBN as key
+                for record in records:
+                    record_id = record.get('control_number') or record.get('identifiers', {}).get('isbn', [None])[0]
+                    if record_id:
+                        record_sources[str(record_id)] = source_key
 
         stats = {
             "total_found": len(all_records),
@@ -213,6 +236,12 @@ class Z3950Service:
         }
 
         if save_to_db and z3950_records:
+            # Build source mapping automatically from config (extensible!)
+            from app.models.mongo.enums import MARCRecordSource
+            from .config import get_source_enum_map
+
+            source_enum_map = get_source_enum_map()
+
             for record in z3950_records:
                 try:
                     isbn_values = record.get('identifiers', {}).get('isbn', [])
@@ -236,11 +265,19 @@ class Z3950Service:
                         logger.info(f"Record already exists: {control_number or isbn_values[0] if isbn_values else 'unknown'}")
                         continue
 
+                    # Enrich with Google Books data
                     record = enrich_with_google_books(record)
+
+                    # Set source field based on which Z39.50 server it came from
+                    record_id = control_number or (isbn_values[0] if isbn_values else None)
+                    source_key = record_sources.get(str(record_id)) if record_id else None
+                    record_source = source_enum_map.get(source_key, MARCRecordSource.Z3950.value)
+
+                    record['source'] = record_source
 
                     MongoHelper.insert_one('marc_21', record)
                     stats['saved_to_db'] += 1
-                    logger.info(f"Saved new record: {record.get('title', {}).get('main', 'Unknown')}")
+                    logger.info(f"Saved new record from {record_source}: {record.get('title', {}).get('main', 'Unknown')}")
 
                 except Exception as e:
                     logger.error(f"Error saving record to DB: {str(e)}")
@@ -274,3 +311,19 @@ class Z3950Service:
         if self.cache:
             return self.cache.get_stats()
         return {"enabled": False}
+
+    def test_connection(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Test connection to a Z39.50 server with provided config
+        
+        Args:
+            config: Z39.50 configuration dict (host, port, database, etc.)
+            
+        Returns:
+            Dict with success boolean and message
+        """
+        try:
+            worker = Z3950Worker(config=config)
+            return worker.test_connection()
+        except Exception as e:
+            return {"success": False, "message": f"Service error: {str(e)}"}

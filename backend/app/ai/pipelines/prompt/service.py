@@ -16,6 +16,7 @@ from app.ai.clients import (
 from app.ai.pipelines.prompt.validators import PromptValidator
 from app.ai.pipelines.prompt.instructions import SYSTEM_INSTRUCTIONS
 from app.ai.pipelines.prompt.chat_session import ChatSession
+from app.services.admin_config import AdminConfigService
 
 logger = logging.getLogger(__name__)
 
@@ -53,17 +54,49 @@ def retry_on_503(max_retries=3, base_delay=1.0):
 class PromptService:
     def __init__(self, config):
         try:
-            self.config = config
+            # Start with app config (convert to dict to avoid mutation issues if needed)
+            self.config = dict(config)
+            
+            # Load dynamic config from DB - PRIORITY 1
+            try:
+                ai_config = AdminConfigService.get_ai_config()
+                if ai_config:
+                    logger.info("Loading AI configuration from database")
+                    
+                    # Use DB values as primary, ENV as fallback
+                    self.config['GEMINI_MODEL'] = ai_config.get('model') or self.config.get('GEMINI_MODEL', 'gemini-2.0-flash')
+                    self.config['GEMINI_TEMPERATURE'] = float(ai_config.get('temperature') or self.config.get('GEMINI_TEMPERATURE', 0.7))
+                    self.config['GEMINI_MAX_TOKENS'] = int(ai_config.get('maxTokens') or self.config.get('GEMINI_MAX_TOKENS', 2000))
+                    self.config['GEMINI_TOP_P'] = float(ai_config.get('topP') or self.config.get('GEMINI_TOP_P', 0.9))
+                    self.config['GEMINI_TOP_K'] = int(ai_config.get('topK') or self.config.get('GEMINI_TOP_K', 40))
+                    self.config['MAX_BOOKS_IN_CONTEXT'] = int(ai_config.get('maxBooksInContext') or self.config.get('MAX_BOOKS_IN_CONTEXT', 30))
+                    self.config['MAX_CHAT_HISTORY'] = int(ai_config.get('maxChatHistory') or self.config.get('MAX_CHAT_HISTORY', 10))
+                    self.config['MAX_MESSAGE_LENGTH'] = int(ai_config.get('maxMessageLength') or self.config.get('MAX_MESSAGE_LENGTH', 2000))
+                    
+                    if ai_config.get('systemPrompt'):
+                        self.config['SYSTEM_PROMPT'] = ai_config['systemPrompt']
+                    
+                    # API Key from DB (Priority) or ENV
+                    if ai_config.get('apiKey'):
+                        self.config['GEMINI_API_KEY'] = ai_config['apiKey']
+                    
+                    if not self.config.get('GEMINI_API_KEY'):
+                        raise ValueError("GEMINI_API_KEY must be set in environment variables or database")
+                    
+                else:
+                    logger.warning("No AI config in database, using ENV variables")
+            except Exception as e:
+                logger.warning(f"Failed to load config from DB: {str(e)}")
 
             settings = GeminiClientSettings(
-                model=self.config['GEMINI_MODEL'],
+                model=self.config.get('GEMINI_MODEL'),
                 temperature=self.config.get('GEMINI_TEMPERATURE', 0.7),
                 max_output_tokens=self.config.get('GEMINI_MAX_TOKENS', 1000),
                 top_p=self.config.get('GEMINI_TOP_P', 0.95),
                 top_k=self.config.get('GEMINI_TOP_K', 40),
             )
             self.genai_client = GoogleGenAIClient(
-                api_key=self.config['GEMINI_API_KEY'],
+                api_key=self.config.get('GEMINI_API_KEY'),
                 settings=settings
             )
             self.model_id = settings.model
@@ -80,9 +113,20 @@ class PromptService:
             logger.info("GEMINI AI SERVICE INITIALIZATION")
             logger.info("=" * 60)
             logger.info("✓ Model: %s", self.model_id)
+            api_key = self.config.get('GEMINI_API_KEY', '')
             logger.info("✓ API Key: %s...%s",
-                        self.config['GEMINI_API_KEY'][:10],
-                        self.config['GEMINI_API_KEY'][-4:])
+                        api_key[:10] if len(api_key) > 10 else '***',
+                        api_key[-4:] if len(api_key) > 4 else '***')
+            logger.info("✓ Temperature: %.2f", self.config.get('GEMINI_TEMPERATURE', 0.7))
+            logger.info("✓ Max Tokens: %d", self.config.get('GEMINI_MAX_TOKENS', 1000))
+            logger.info("✓ Top P: %.2f", self.config.get('GEMINI_TOP_P', 0.95))
+            logger.info("✓ Top K: %d", self.config.get('GEMINI_TOP_K', 40))
+            logger.info("✓ Max Books in Context: %d", self.config.get('MAX_BOOKS_IN_CONTEXT', 30))
+            logger.info("✓ Max Chat History: %d", self.config.get('MAX_CHAT_HISTORY', 10))
+            logger.info("✓ Max Message Length: %d", self.config.get('MAX_MESSAGE_LENGTH', 2000))
+            system_prompt = self.config.get('SYSTEM_PROMPT', '')
+            if system_prompt:
+                logger.info("✓ Custom System Prompt: %s...", system_prompt[:50])
             logger.info("✓ Gemini API configured successfully")
             logger.info("=" * 60)
             
@@ -100,10 +144,14 @@ class PromptService:
     ) -> ChatSession:
         with self._sessions_lock:
             if conversation_id not in self._chat_sessions:
-                system_instruction = SYSTEM_INSTRUCTIONS.get(
-                    instruction_type,
-                    SYSTEM_INSTRUCTIONS['default']
-                )
+                # Use dynamic system prompt if available and type is default
+                if instruction_type == 'default' and self.config.get('SYSTEM_PROMPT'):
+                    system_instruction = self.config['SYSTEM_PROMPT']
+                else:
+                    system_instruction = SYSTEM_INSTRUCTIONS.get(
+                        instruction_type,
+                        SYSTEM_INSTRUCTIONS['default']
+                    )
 
                 initial_history = []
                 try:

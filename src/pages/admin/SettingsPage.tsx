@@ -1,7 +1,7 @@
 import { Space, Tabs, Spin, Grid, Typography } from "antd";
-import { RobotOutlined, SettingOutlined, SafetyOutlined, BellOutlined } from "@ant-design/icons";
-import { useState, useEffect } from "react";
-import { AIConfigCard, SystemConfigCard, SecurityCard, NotificationSettingsCard } from "../../components/admin/settings";
+import { RobotOutlined, SettingOutlined } from "@ant-design/icons";
+import { useState, useEffect, useMemo } from "react";
+import { AIConfigCard, SystemConfigCard } from "../../components/admin/settings";
 
 const { useBreakpoint } = Grid;
 const { Title } = Typography;
@@ -19,6 +19,22 @@ export default function SettingsPage() {
     }, 800);
     return () => clearTimeout(timer);
   }, []);
+
+  // Must be called before any early returns (Rules of Hooks)
+  const tabItems = useMemo(() => [
+    {
+      key: "ai",
+      label: screens.md && "AI Configuration",
+      icon: <RobotOutlined />,
+      children: activeTab === "ai" ? <AIConfigCard key="ai-card" /> : <div />,
+    },
+    {
+      key: "system",
+      label: screens.md && "System Config",
+      icon: <SettingOutlined />,
+      children: activeTab === "system" ? <SystemConfigCard key="system-card" /> : <div />,
+    },
+  ], [activeTab, screens.md]);
 
   if (loading) {
     return (
@@ -38,33 +54,6 @@ export default function SettingsPage() {
     );
   }
 
-  const tabItems = [
-    {
-      key: "ai",
-      label: screens.md && "AI Configuration",
-      icon: <RobotOutlined />,
-      children: <AIConfigCard />,
-    },
-    {
-      key: "system",
-      label: screens.md && "System Config",
-      icon: <SettingOutlined />,
-      children: <SystemConfigCard />,
-    },
-    {
-      key: "security",
-      label: screens.md && "Security & Access",
-      icon: <SafetyOutlined />,
-      children: <SecurityCard />,
-    },
-    {
-      key: "notifications",
-      label: screens.md && "Notifications",
-      icon: <BellOutlined />,
-      children: <NotificationSettingsCard />,
-    },
-  ];
-
   return (
     <div style={{ maxWidth: 1200, marginInline: "auto", width: "100%" }}>
       <Space direction="vertical" size={24} style={{ display: "block", width: "100%" }}>
@@ -74,7 +63,7 @@ export default function SettingsPage() {
             Cài đặt hệ thống
           </Title>
           <Typography.Text type="secondary">
-            Quản lý cấu hình AI, hệ thống, bảo mật và thông báo
+            Quản lý cấu hình AI và hệ thống
           </Typography.Text>
         </div>
 

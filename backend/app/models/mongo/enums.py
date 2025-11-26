@@ -70,4 +70,7 @@ class SIP2EventType(str, Enum):
 class MARCRecordSource(str, Enum):
     LOCAL = "local"
     Z3950 = "z3950"
+    Z3950_LOC = "z3950_loc"
+    Z3950_UW = "z3950_uw"
+    Z3950_OCLC = "z3950_oclc"
     OAI = "oai"

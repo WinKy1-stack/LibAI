@@ -69,7 +69,7 @@ export default function TopBar({ collapsed, onToggle, mode, setMode, user }: Top
       localStorage.removeItem('user');
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, notification]);
 
   // Logic responsive cho các kích thước màn hình
   const isMobile = !screens.md; // < 768px

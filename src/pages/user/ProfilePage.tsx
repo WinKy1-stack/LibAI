@@ -126,10 +126,12 @@ export default function ProfilePage() {
       setIsEditingProfile(false);
       window.dispatchEvent(new CustomEvent("user-updated", { detail: response.user }));
       setTimeout(() => setMessage(null), 3000);
-    } catch (error: any) {
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       setMessage({
         type: "error",
-        text: error.response?.data?.message || "Cập nhật thất bại",
+        text: err.response?.data?.message || "Cập nhật thất bại",
       });
     } finally {
       setLoading(false);
@@ -172,10 +174,12 @@ export default function ProfilePage() {
       setPasswordForm({ old_password: "", new_password: "" });
       setConfirmPassword("");
       setTimeout(() => setMessage(null), 3000);
-    } catch (error: any) {
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
       setMessage({
         type: "error",
-        text: error.response?.data?.message || "Đổi mật khẩu thất bại",
+        text: err.response?.data?.message || "Đổi mật khẩu thất bại",
       });
     } finally {
       setLoading(false);

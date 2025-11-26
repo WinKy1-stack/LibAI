@@ -1,4 +1,4 @@
-import { StarIcon, BookOpenIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { StarIcon, BookOpenIcon, SparklesIcon, BuildingLibraryIcon } from "@heroicons/react/24/solid";
 import { ClockIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import type { Book } from "../../../services/chatService";
@@ -77,9 +77,29 @@ export default function BookSuggestions({ books }: BookSuggestionsProps) {
                   <h3 className="text-base font-semibold mb-2 leading-snug text-text-primary line-clamp-2 group-hover:text-[#8B5CF6] transition-colors duration-200">
                     {book.title}
                   </h3>
-                  <p className="text-xs text-text-secondary italic line-clamp-1 mb-3">
+                  <p className="text-xs text-text-secondary italic line-clamp-1 mb-2">
                     {book.author}
                   </p>
+
+                  {/* Source Badge */}
+                  {book.source && (
+                    <div className="mb-3">
+                      {(() => {
+                        const isLocal = book.source.toLowerCase().includes("local");
+                        return (
+                          <span className={clsx(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm border",
+                            isLocal 
+                              ? "bg-emerald-100/80 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30"
+                              : "bg-blue-100/80 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30"
+                          )}>
+                            <BuildingLibraryIcon className="w-3.5 h-3.5" />
+                            {book.source}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2 flex-wrap">
                     <div className={clsx("flex items-center gap-1.5", ratingColor)}>
