@@ -63,6 +63,7 @@ def create_app(config_class=Config):
     from app.routes.auth import auth_bp
     from app.routes.library import library_bp
     from app.routes.z3950_routes import z3950_bp
+    from app.routes.koha_routes import koha_bp
     from app.routes.users import users_bp
     from app.routes.chat import chat_bp
     from app.routes.conversations import conversations_bp
@@ -75,6 +76,7 @@ def create_app(config_class=Config):
     app.register_blueprint(conversations_bp)
     app.register_blueprint(library_bp)
     app.register_blueprint(z3950_bp)
+    app.register_blueprint(koha_bp)
     app.register_blueprint(admin_config_bp)
 
 

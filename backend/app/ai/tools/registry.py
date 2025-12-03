@@ -46,10 +46,32 @@ def get_tool_registry() -> ToolRegistry:
 def register_default_tools():
     from app.ai.tools.book_tools import SearchBooksTool
     from app.ai.tools.faq_tools import SearchFAQTool, GetFAQCategoriesTool
+    from app.ai.tools.koha_tools import (
+        SearchKohaBooksTool,
+        GetKohaBookDetailTool,
+        CheckKohaBookAvailabilityTool,
+        GetKohaPatronInfoTool,
+        GetKohaPatronCheckoutsTool,
+        GetKohaPatronHoldsTool,
+        GetKohaLibrariesTool,
+        TestKohaConnectionTool
+    )
 
     registry = get_tool_registry()
+    
+    # Register existing tools
     registry.register(SearchBooksTool())
     registry.register(SearchFAQTool())
     registry.register(GetFAQCategoriesTool())
+    
+    # Register Koha tools
+    registry.register(SearchKohaBooksTool())
+    registry.register(GetKohaBookDetailTool())
+    registry.register(CheckKohaBookAvailabilityTool())
+    registry.register(GetKohaPatronInfoTool())
+    registry.register(GetKohaPatronCheckoutsTool())
+    registry.register(GetKohaPatronHoldsTool())
+    registry.register(GetKohaLibrariesTool())
+    registry.register(TestKohaConnectionTool())
 
     logger.info("Registered all default tools")
