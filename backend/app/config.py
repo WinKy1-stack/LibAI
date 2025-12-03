@@ -110,12 +110,9 @@ class Config:
     MAX_CHAT_HISTORY = env_config.MAX_CHAT_HISTORY
     MAX_MESSAGE_LENGTH = env_config.MAX_MESSAGE_LENGTH
 
+    # Koha ILS API Configuration
     KOHA_BASE_URL = os.getenv('KOHA_BASE_URL', '')
-    # Chọn chế độ xác thực: api_key | basic
-    KOHA_AUTH_MODE = os.getenv('KOHA_AUTH_MODE', 'api_key')
-    # API key để truy cập REST API
-    KOHA_API_KEY = os.getenv('KOHA_API_KEY')
-    # Thông tin xác thực Basic Auth
+    # Staff credentials for cookie-based authentication
     KOHA_USERNAME = os.getenv('KOHA_USERNAME')
     KOHA_PASSWORD = os.getenv('KOHA_PASSWORD')
 
