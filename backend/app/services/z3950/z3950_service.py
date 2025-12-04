@@ -81,7 +81,7 @@ class Z3950Service:
 
         try:
             worker_class = self.worker_map[source]
-            with worker_class() as worker:
+            with worker_class(source_key=source) as worker:
                 results = worker.search(query, query_type, limit)
 
             if use_cache and self.cache and results:

@@ -63,7 +63,6 @@ class PromptService:
                 if ai_config:
                     logger.info("Loading AI configuration from database")
                     
-                    # Use DB values as primary, ENV as fallback
                     self.config['GEMINI_MODEL'] = ai_config.get('model') or self.config.get('GEMINI_MODEL', 'gemini-2.0-flash')
                     self.config['GEMINI_TEMPERATURE'] = float(ai_config.get('temperature') or self.config.get('GEMINI_TEMPERATURE', 0.7))
                     self.config['GEMINI_MAX_TOKENS'] = int(ai_config.get('maxTokens') or self.config.get('GEMINI_MAX_TOKENS', 2000))
@@ -76,17 +75,16 @@ class PromptService:
                     if ai_config.get('systemPrompt'):
                         self.config['SYSTEM_PROMPT'] = ai_config['systemPrompt']
                     
-                    # API Key from DB (Priority) or ENV
                     if ai_config.get('apiKey'):
                         self.config['GEMINI_API_KEY'] = ai_config['apiKey']
-                    
-                    if not self.config.get('GEMINI_API_KEY'):
-                        raise ValueError("GEMINI_API_KEY must be set in environment variables or database")
                     
                 else:
                     logger.warning("No AI config in database, using ENV variables")
             except Exception as e:
                 logger.warning(f"Failed to load config from DB: {str(e)}")
+            
+            if not self.config.get('GEMINI_API_KEY'):
+                raise ValueError("GEMINI_API_KEY must be set in environment variables or database")
 
             settings = GeminiClientSettings(
                 model=self.config.get('GEMINI_MODEL'),

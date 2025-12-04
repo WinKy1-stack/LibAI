@@ -59,7 +59,7 @@ class EnvConfig:
             MONGO_URI=mongo_uri,
             MONGO_DBNAME=mongo_dbname,
             GEMINI_API_KEY=api_key,
-            GEMINI_MODEL=os.getenv('GEMINI_MODEL', 'gemini-2.0-flash'),
+            GEMINI_MODEL=os.getenv('GEMINI_MODEL', 'gemini-2.0-flash-exp'),
             GEMINI_MAX_TOKENS=int(os.getenv('GEMINI_MAX_TOKENS', '1000')),
             GEMINI_TEMPERATURE=float(os.getenv('GEMINI_TEMPERATURE', '0.7')),
             GEMINI_TOP_P=float(os.getenv('GEMINI_TOP_P', '0.95')),

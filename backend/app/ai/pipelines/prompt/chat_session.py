@@ -111,36 +111,52 @@ class ChatSession:
             if hasattr(response, 'candidates') and response.candidates:
                 candidate = response.candidates[0]
                 if hasattr(candidate, 'content') and candidate.content:
+                    # Collect ALL function calls from the response
+                    function_calls = []
                     for part in candidate.content.parts:
                         if hasattr(part, 'function_call') and part.function_call:
-                            logger.info(f"Detected function call: {part.function_call.name}")
-                            result = self._handle_function_call(part.function_call)
+                            function_calls.append(part.function_call)
 
+                    # If there are function calls, handle ALL of them
+                    if function_calls:
+                        from google.genai import types
+
+                        logger.info(f"Detected {len(function_calls)} function call(s)")
+
+                        # Execute all function calls and create responses
+                        function_responses = []
+                        for function_call in function_calls:
+                            logger.info(f"Executing function call: {function_call.name}")
+                            result = self._handle_function_call(function_call)
+
+                            # Store the last function result for structured response
                             self.last_function_result = {
-                                'tool_name': part.function_call.name,
+                                'tool_name': function_call.name,
                                 'data': result
                             }
 
-                            from google.genai import types
-                            function_response = types.Part(
-                                function_response=types.FunctionResponse(
-                                    name=part.function_call.name,
-                                    response=result
+                            function_responses.append(
+                                types.Part(
+                                    function_response=types.FunctionResponse(
+                                        name=function_call.name,
+                                        response=result
+                                    )
                                 )
                             )
 
-                            try:
-                                final_response = self.chat.send_message(function_response)
+                        # Send ALL function responses back to Gemini at once
+                        try:
+                            final_response = self.chat.send_message(function_responses)
+                            return final_response.text.strip()
+                        except Exception as e:
+                            error_msg = str(e)
+                            if "503" in error_msg or "UNAVAILABLE" in error_msg or "overloaded" in error_msg.lower():
+                                logger.warning(f"503 error on final response, retrying...")
+                                import time
+                                time.sleep(1.0)
+                                final_response = self.chat.send_message(function_responses)
                                 return final_response.text.strip()
-                            except Exception as e:
-                                error_msg = str(e)
-                                if "503" in error_msg or "UNAVAILABLE" in error_msg or "overloaded" in error_msg.lower():
-                                    logger.warning(f"503 error on final response, retrying...")
-                                    import time
-                                    time.sleep(1.0)
-                                    final_response = self.chat.send_message(function_response)
-                                    return final_response.text.strip()
-                                raise
+                            raise
 
             return response.text.strip()
         except GeminiAPIError:
